@@ -29,13 +29,14 @@ pub type DbPool = Pool<MyDbConnection>;
 pub type ArcDbPool = Arc<DbPool>;
 pub type DbPoolConnection<'a> = PooledConnection<'a, MyDbConnection>;
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/db/postgres/migrations");
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./src/db/migrations");
 
 pub const DEFAULT_MAX_POOL_SIZE: u32 = 150;
 
 #[derive(QueryId)]
-#[allow(clippy::too_long_first_doc_paragraph)]
-/// Using this will append a where clause at the end of the string upsert function, e.g.
+/// Using this will append a where clause at the end of the string upsert function
+///
+/// e.g.
 /// INSERT INTO ... ON CONFLICT DO UPDATE SET ... WHERE "transaction_version" = excluded."transaction_version"
 /// This is needed when we want to maintain a table with only the latest state
 pub struct UpsertFilterLatestTransactionQuery<T> {
@@ -196,8 +197,8 @@ where
         })
 }
 
-#[allow(clippy::too_long_first_doc_paragraph)]
-/// Returns the entry for the config hashmap, or the default field count for the insert
+/// Returns the entry for the config hashmap, or the default field count for the insert.
+///
 /// Given diesel has a limit of how many parameters can be inserted in a single operation (u16::MAX),
 /// we default to chunk an array of items based on how many columns are in the table.
 pub fn get_config_table_chunk_size<T: field_count::FieldCount>(
@@ -229,9 +230,12 @@ where
         where_clause: additional_where_clause,
     };
     let debug_string = diesel::debug_query::<Backend, _>(&final_query).to_string();
-    final_query.execute(conn).await.inspect_err(|e| {
-        warn!("Error running query: {:?}\n{:?}", e, debug_string);
-    })
+    tracing::debug!("Executing query: {:?}", debug_string);
+    let res = final_query.execute(conn).await;
+    if let Err(ref e) = res {
+        tracing::warn!("Error running query: {:?}\n{:?}", e, debug_string);
+    }
+    res
 }
 
 async fn execute_or_retry_cleaned<U, T>(
@@ -246,19 +250,19 @@ where
     T: serde::Serialize + for<'de> serde::Deserialize<'de> + Clone,
 {
     match execute_with_better_error(conn.clone(), query, additional_where_clause).await {
-        Ok(_) => {}
+        Ok(_) => {},
         Err(_) => {
             let cleaned_items = clean_data_for_db(items, true);
             let (cleaned_query, additional_where_clause) = build_query(cleaned_items);
             match execute_with_better_error(conn.clone(), cleaned_query, additional_where_clause)
                 .await
             {
-                Ok(_) => {}
+                Ok(_) => {},
                 Err(e) => {
                     return Err(e);
-                }
+                },
             }
-        }
+        },
     }
     Ok(())
 }
@@ -291,6 +295,7 @@ pub async fn run_migrations(postgres_connection_string: String, _conn_pool: ArcD
 #[cfg(not(feature = "libpq"))]
 pub async fn run_migrations(postgres_connection_string: String, conn_pool: ArcDbPool) {
     use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+
     info!("Running migrations: {:?}", postgres_connection_string);
     let conn = conn_pool
         // We need to use this since AsyncConnectionWrapper doesn't know how to
@@ -328,4 +333,10 @@ where
         }
         Ok(())
     }
+}
+
+pub struct DbContext<'a> {
+    pub conn: DbPoolConnection<'a>,
+    pub query_retries: u32,
+    pub query_retry_delay_ms: u64,
 }

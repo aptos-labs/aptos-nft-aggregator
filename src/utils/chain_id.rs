@@ -1,6 +1,6 @@
 use super::database::ArcDbPool;
 use crate::{
-    db::common::models::ledger_info::LedgerInfo, schema::ledger_infos,
+    db::ledger_info::LedgerInfo, schema::ledger_infos,
     utils::database::execute_with_better_error_conn,
 };
 use anyhow::{Context, Result};

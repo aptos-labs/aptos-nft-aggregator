@@ -4,16 +4,21 @@
 #![allow(clippy::extra_unused_lifetimes)]
 
 use crate::{schema::backfill_processor_status, utils::database::DbPoolConnection};
-use diesel::deserialize;
-use diesel::deserialize::{FromSql, FromSqlRow};
-use diesel::expression::AsExpression;
-use diesel::pg::{Pg, PgValue};
-use diesel::serialize;
-use diesel::serialize::{IsNull, Output, ToSql};
-use diesel::sql_types::Text;
-use diesel::{AsChangeset, ExpressionMethods, Insertable, OptionalExtension, QueryDsl, Queryable};
+use diesel::{
+    deserialize,
+    deserialize::{FromSql, FromSqlRow},
+    expression::AsExpression,
+    pg::{Pg, PgValue},
+    serialize,
+    serialize::{IsNull, Output, ToSql},
+    sql_types::Text,
+    AsChangeset, ExpressionMethods, Insertable, OptionalExtension, QueryDsl, Queryable,
+};
 use diesel_async::RunQueryDsl;
 use std::io::Write;
+
+const IN_PROGRESS: &[u8] = b"in_progress";
+const COMPLETE: &[u8] = b"complete";
 
 #[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq)]
 #[diesel(sql_type = Text)]
@@ -27,8 +32,8 @@ pub enum BackfillStatus {
 impl ToSql<Text, Pg> for BackfillStatus {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
         match *self {
-            BackfillStatus::InProgress => out.write_all(b"in_progress")?,
-            BackfillStatus::Complete => out.write_all(b"complete")?,
+            BackfillStatus::InProgress => out.write_all(IN_PROGRESS)?,
+            BackfillStatus::Complete => out.write_all(COMPLETE)?,
         }
         Ok(IsNull::No)
     }
@@ -53,7 +58,7 @@ pub struct BackfillProcessorStatus {
     pub last_success_version: i64,
     pub last_transaction_timestamp: Option<chrono::NaiveDateTime>,
     pub backfill_start_version: i64,
-    pub backfill_end_version: i64,
+    pub backfill_end_version: Option<i64>,
 }
 
 #[derive(AsChangeset, Debug, Queryable)]
@@ -66,7 +71,7 @@ pub struct BackfillProcessorStatusQuery {
     pub last_updated: chrono::NaiveDateTime,
     pub last_transaction_timestamp: Option<chrono::NaiveDateTime>,
     pub backfill_start_version: i64,
-    pub backfill_end_version: i64,
+    pub backfill_end_version: Option<i64>,
 }
 
 impl BackfillProcessorStatusQuery {
