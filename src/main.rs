@@ -1,15 +1,19 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
 use anyhow::Result;
-use aptos_indexer_processor_example::config::indexer_processor_config::IndexerProcessorConfig;
 use aptos_indexer_processor_sdk_server_framework::ServerArgs;
 use clap::Parser;
+use nft_aggregator::config::indexer_processor_config::IndexerProcessorConfig;
 
 #[cfg(unix)]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
+const RUNTIME_WORKER_MULTIPLIER: usize = 2;
+
 fn main() -> Result<()> {
     let num_cpus = num_cpus::get();
-    let worker_threads = (num_cpus).max(16);
+    let worker_threads = (num_cpus * RUNTIME_WORKER_MULTIPLIER).max(16);
 
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder
