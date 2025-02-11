@@ -3,7 +3,7 @@
 use anyhow::Result;
 use aptos_indexer_processor_sdk_server_framework::ServerArgs;
 use clap::Parser;
-use nft_aggregator::config::indexer_processor_config::IndexerProcessorConfig;
+use nft_aggregator::processors::config_boilerplate::IndexerProcessorConfig;
 
 #[cfg(unix)]
 #[global_allocator]

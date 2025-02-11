@@ -1,11 +1,6 @@
-use crate::{
-    config::indexer_processor_config::{DbConfig, IndexerProcessorConfig, ProcessorConfig},
-    utils::{
-        chain_id::check_or_update_chain_id,
-        database::{new_db_pool, run_migrations, ArcDbPool},
-        processor_status_saver::get_processor_status_saver,
-        starting_version::get_starting_version,
-    },
+use super::{
+    config_boilerplate::{DbConfig, IndexerProcessorConfig, ProcessorConfig},
+    database_utils::{new_db_pool, run_migrations, ArcDbPool},
 };
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
@@ -65,14 +60,15 @@ impl ProcessorTrait for Processor {
         .await;
 
         //  Merge the starting version from config and the latest processed version from the DB
-        let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
+        // let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
+        let starting_version = 0;
 
         // Check and update the ledger chain id to ensure we're indexing the correct chain
-        let grpc_chain_id = TransactionStream::new(self.config.transaction_stream_config.clone())
+        let _grpc_chain_id = TransactionStream::new(self.config.transaction_stream_config.clone())
             .await?
             .get_chain_id()
             .await?;
-        check_or_update_chain_id(grpc_chain_id as i64, self.db_pool.clone()).await?;
+        // check_or_update_chain_id(grpc_chain_id as i64, self.db_pool.clone()).await?;
 
         let ProcessorConfig::Processor(processor_config) = self.config.processor_config.clone();
 
@@ -87,16 +83,16 @@ impl ProcessorTrait for Processor {
 
         // let _extractor = Extractor {};
         // let _storer = Storer::new(self.db_pool.clone(), processor_config);
-        let version_tracker = VersionTrackerStep::new(
-            get_processor_status_saver(self.db_pool.clone(), self.config.clone()),
-            DEFAULT_UPDATE_PROCESSOR_STATUS_SECS,
-        );
+        // let version_tracker = VersionTrackerStep::new(
+        //     get_processor_status_saver(self.db_pool.clone(), self.config.clone()),
+        //     DEFAULT_UPDATE_PROCESSOR_STATUS_SECS,
+        // );
 
         // Connect processor steps together
         let (_, buffer_receiver) = ProcessorBuilder::new_with_inputless_first_step(
             transaction_stream.into_runnable_step(),
         )
-        .connect_to(version_tracker.into_runnable_step(), channel_size)
+        // .connect_to(version_tracker.into_runnable_step(), channel_size)
         .end_and_return_output_receiver(channel_size);
 
         // (Optional) Parse the results
