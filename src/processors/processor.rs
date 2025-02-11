@@ -7,8 +7,15 @@ use aptos_indexer_processor_sdk::{
     aptos_indexer_transaction_stream::{TransactionStream, TransactionStreamConfig},
     builder::ProcessorBuilder,
     common_steps::TransactionStreamStep,
-    traits::{processor_trait::ProcessorTrait, IntoRunnableStep},
+    traits::{
+        processor_trait::ProcessorTrait, AsyncRunType, AsyncStep, IntoRunnableStep, NamedStep,
+        Processable,
+    },
+    types::transaction_context::TransactionContext,
+    utils::errors::ProcessorError,
 };
+use aptos_protos::transaction::v1::Transaction;
+use tonic::async_trait;
 use tracing::{debug, info};
 
 pub struct Processor {
@@ -79,8 +86,7 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        // let _extractor = Extractor {};
-        // let _storer = Storer::new(self.db_pool.clone(), processor_config);
+        let extractor = ProcessStep {};
         // let version_tracker = VersionTrackerStep::new(
         //     get_processor_status_saver(self.db_pool.clone(), self.config.clone()),
         //     DEFAULT_UPDATE_PROCESSOR_STATUS_SECS,
@@ -108,5 +114,34 @@ impl ProcessorTrait for Processor {
                 },
             }
         }
+    }
+}
+
+pub struct ProcessStep
+where
+    Self: Sized + Send + 'static, {}
+
+#[async_trait]
+impl Processable for ProcessStep {
+    type Input = Vec<Transaction>;
+    type Output = ();
+    type RunType = AsyncRunType;
+
+    async fn process(
+        &mut self,
+        transactions: TransactionContext<Vec<Transaction>>,
+    ) -> Result<Option<TransactionContext<()>>, ProcessorError> {
+        Ok(Some(TransactionContext {
+            data: (),
+            metadata: transactions.metadata,
+        }))
+    }
+}
+
+impl AsyncStep for ProcessStep {}
+
+impl NamedStep for ProcessStep {
+    fn name(&self) -> String {
+        "ProcessStep".to_string()
     }
 }
