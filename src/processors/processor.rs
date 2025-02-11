@@ -1,14 +1,12 @@
 use super::{
     config_boilerplate::{DbConfig, IndexerProcessorConfig, ProcessorConfig},
-    database_utils::{new_db_pool, run_migrations, ArcDbPool},
+    postgres_utils::{new_db_pool, run_migrations, ArcDbPool},
 };
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_indexer_transaction_stream::{TransactionStream, TransactionStreamConfig},
     builder::ProcessorBuilder,
-    common_steps::{
-        TransactionStreamStep, VersionTrackerStep, DEFAULT_UPDATE_PROCESSOR_STATUS_SECS,
-    },
+    common_steps::TransactionStreamStep,
     traits::{processor_trait::ProcessorTrait, IntoRunnableStep},
 };
 use tracing::{debug, info};
