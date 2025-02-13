@@ -1,5 +1,7 @@
 use super::{
-    config_boilerplate::{DbConfig, IndexerProcessorConfig, ProcessorConfig},
+    config_boilerplate::{DbConfig, IndexerProcessorConfig},
+    marketplace_config::MarketplaceEventConfigMapping,
+    models::NftMarketplaceActivity,
     postgres_utils::{new_db_pool, run_migrations, ArcDbPool},
 };
 use anyhow::Result;
@@ -12,11 +14,13 @@ use aptos_indexer_processor_sdk::{
         Processable,
     },
     types::transaction_context::TransactionContext,
-    utils::errors::ProcessorError,
+    utils::{errors::ProcessorError, extract::get_entry_function_from_user_request},
 };
-use aptos_protos::transaction::v1::Transaction;
+use aptos_protos::transaction::v1::{transaction::TxnData, Transaction};
+use chrono::NaiveDateTime;
+use std::sync::Arc;
 use tonic::async_trait;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 pub struct Processor {
     pub config: IndexerProcessorConfig,
@@ -51,7 +55,7 @@ impl Processor {
 #[async_trait::async_trait]
 impl ProcessorTrait for Processor {
     fn name(&self) -> &'static str {
-        self.config.processor_config.name()
+        "nft_marketplace_processor"
     }
 
     async fn run_processor(&self) -> Result<()> {
@@ -75,9 +79,7 @@ impl ProcessorTrait for Processor {
             .await?;
         // check_or_update_chain_id(grpc_chain_id as i64, self.db_pool.clone()).await?;
 
-        let ProcessorConfig::Processor(processor_config) = self.config.processor_config.clone();
-
-        let channel_size = processor_config.channel_size;
+        let channel_size = self.config.channel_size as usize;
 
         // Define processor steps
         let transaction_stream = TransactionStreamStep::new(TransactionStreamConfig {
@@ -86,7 +88,17 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let extractor = ProcessStep {};
+        let event_mapping = self
+            .config
+            .nft_marketplace_config
+            .get_event_mapping()
+            .unwrap_or_else(|e| {
+                error!("Failed to get event mapping: {:?}", e);
+                panic!("Failed to get event mapping: {:?}", e);
+            });
+        let process = ProcessStep {
+            event_mapping: Arc::new(event_mapping),
+        };
         // let version_tracker = VersionTrackerStep::new(
         //     get_processor_status_saver(self.db_pool.clone(), self.config.clone()),
         //     DEFAULT_UPDATE_PROCESSOR_STATUS_SECS,
@@ -97,6 +109,7 @@ impl ProcessorTrait for Processor {
             transaction_stream.into_runnable_step(),
         )
         // .connect_to(version_tracker.into_runnable_step(), channel_size)
+        .connect_to(process.into_runnable_step(), channel_size)
         .end_and_return_output_receiver(channel_size);
 
         // (Optional) Parse the results
@@ -119,7 +132,10 @@ impl ProcessorTrait for Processor {
 
 pub struct ProcessStep
 where
-    Self: Sized + Send + 'static, {}
+    Self: Sized + Send + 'static,
+{
+    pub event_mapping: Arc<MarketplaceEventConfigMapping>,
+}
 
 #[async_trait]
 impl Processable for ProcessStep {
@@ -131,6 +147,42 @@ impl Processable for ProcessStep {
         &mut self,
         transactions: TransactionContext<Vec<Transaction>>,
     ) -> Result<Option<TransactionContext<()>>, ProcessorError> {
+        // let config = self.config.clone();
+        let txns = transactions.data;
+
+        for txn in txns {
+            let txn_data = txn.txn_data.as_ref().unwrap();
+            if let TxnData::User(tx_inner) = txn_data {
+                let req = tx_inner
+                    .request
+                    .as_ref()
+                    .expect("Sends is not present in user txn");
+                let entry_function_id_str = get_entry_function_from_user_request(req);
+                let events = tx_inner.events.clone();
+                let txn_timestamp = txn
+                    .timestamp
+                    .as_ref()
+                    .expect("Transaction timestamp doesn't exist!")
+                    .seconds;
+                #[allow(deprecated)]
+                let txn_timestamp = NaiveDateTime::from_timestamp_opt(txn_timestamp, 0)
+                    .expect("Txn Timestamp is invalid!");
+                for (index, event) in events.iter().enumerate() {
+                    if let Ok(activity) = NftMarketplaceActivity::from_event(
+                        &event,
+                        txn.version as i64,
+                        index as i64,
+                        txn_timestamp,
+                        &entry_function_id_str,
+                        &self.event_mapping,
+                    ) {
+                        // TODO: Do something with the activity
+                        println!("Activity: {:?}", activity);
+                    }
+                }
+            }
+        }
+
         Ok(Some(TransactionContext {
             data: (),
             metadata: transactions.metadata,
