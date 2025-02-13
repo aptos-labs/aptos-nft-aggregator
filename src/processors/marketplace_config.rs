@@ -92,6 +92,7 @@ impl NFTMarketplaceConfig {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct MarketplaceEventConfig {
     pub event_type: MarketplaceEventType,
     pub creator_address: HashableJsonPath,

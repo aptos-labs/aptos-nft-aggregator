@@ -24,6 +24,7 @@ pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Result<String> {
     Ok(value.as_str().context("Expected string")?.to_string())
 }
 /// A wrapper around JsonPath so that it can be hashed
+#[derive(Clone, Debug)]
 pub struct HashableJsonPath {
     json_path: JsonPath,
     /// The raw string representation of the JsonPath
