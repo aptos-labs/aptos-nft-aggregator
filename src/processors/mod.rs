@@ -15,13 +15,12 @@ pub mod processor;
 
 pub fn extract_bigdecimal(path: &HashableJsonPath, from: &Value) -> Result<BigDecimal> {
     let value = path.extract_from(from)?;
-    let num = value.as_u64().context("Expected integer")?;
-    Ok(BigDecimal::from(num))
+    let str_val = value.as_str().context("Expected string")?;
+    Ok(BigDecimal::from_str(str_val).context("Failed to parse BigDecimal")?)
 }
 
 pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Result<String> {
     let value = path.extract_from(from)?;
-    println!("Path: {:?}, From: {:?}, Value: {:?}", path.raw, from, value);
     Ok(value.as_str().context("Expected string")?.to_string())
 }
 /// A wrapper around JsonPath so that it can be hashed

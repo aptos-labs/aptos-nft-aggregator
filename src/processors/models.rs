@@ -56,7 +56,7 @@ impl NftMarketplaceActivity {
             let token_name = extract_string(&config.token_name, &event_data).unwrap();
             let price = extract_bigdecimal(&config.price, &event_data).unwrap();
             let token_amount = extract_bigdecimal(&config.token_amount, &event_data).unwrap();
-            let buyer = standardize_address(&extract_string(&config.buyer, &event_data).unwrap());
+            let seller = standardize_address(&extract_string(&config.seller, &event_data).unwrap());
 
             let activity = Self {
                 transaction_version: txn_version,
@@ -71,8 +71,8 @@ impl NftMarketplaceActivity {
                 token_name: Some(token_name),
                 price: Some(price),
                 token_amount: Some(token_amount),
-                buyer: Some(buyer),
-                seller: None, // Not available in event config
+                buyer: None, // Not available in event config
+                seller: Some(seller),
                 json_data: event_data,
                 marketplace: "marketplace".to_string(), // TODO: Get from config
                 contract_address: "contract".to_string(), // TODO: Get from config

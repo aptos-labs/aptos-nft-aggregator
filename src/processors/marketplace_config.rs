@@ -100,7 +100,7 @@ pub struct MarketplaceEventConfig {
     pub token_name: HashableJsonPath,
     pub price: HashableJsonPath,
     pub token_amount: HashableJsonPath,
-    pub buyer: HashableJsonPath,
+    pub seller: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
@@ -115,7 +115,7 @@ impl MarketplaceEventConfig {
             token_name: HashableJsonPath::new(&event_config.token_name)?,
             price: HashableJsonPath::new(&event_config.price)?,
             token_amount: HashableJsonPath::new(&event_config.token_amount)?,
-            buyer: HashableJsonPath::new(&event_config.buyer)?,
+            seller: HashableJsonPath::new(&event_config.seller)?,
         })
     }
 }
@@ -155,7 +155,6 @@ pub struct EventConfig {
     pub token_name: String,
     pub price: String,
     pub token_amount: String,
-    pub buyer: String,
     pub seller: String,
 }
 

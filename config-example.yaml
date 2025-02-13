@@ -18,7 +18,6 @@ server_config:
       token_name: "$.token_id.token_data_id.token_name"
       price: "$.price"
       token_amount: "$.amount"
-      buyer: "$.buyer"
       seller: "$.seller"
     listing:
       cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
