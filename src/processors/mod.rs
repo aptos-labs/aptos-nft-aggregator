@@ -21,6 +21,7 @@ pub fn extract_bigdecimal(path: &HashableJsonPath, from: &Value) -> Result<BigDe
 
 pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Result<String> {
     let value = path.extract_from(from)?;
+    println!("Path: {:?}, From: {:?}, Value: {:?}", path.raw, from, value);
     Ok(value.as_str().context("Expected string")?.to_string())
 }
 /// A wrapper around JsonPath so that it can be hashed

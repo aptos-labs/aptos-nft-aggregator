@@ -2,7 +2,6 @@ use super::{
     extract_bigdecimal, extract_string, marketplace_config::MarketplaceEventConfigMapping,
 };
 use crate::schema::nft_marketplace_activities;
-use anyhow::{Context, Result};
 use aptos_indexer_processor_sdk::utils::convert::standardize_address;
 use aptos_protos::transaction::v1::Event;
 use bigdecimal::BigDecimal;
@@ -45,24 +44,19 @@ impl NftMarketplaceActivity {
         timestamp: NaiveDateTime,
         entry_function_id_str: &Option<String>,
         event_mapping: &MarketplaceEventConfigMapping,
-    ) -> Result<Option<Self>> {
+    ) -> Option<Self> {
         let event_type = event.type_str.to_string();
 
-        let event_data: Value =
-            serde_json::from_str(event.data.as_str()).context("Event data should be valid JSON")?;
+        let event_data: Value = serde_json::from_str(event.data.as_str()).unwrap();
 
         if let Some(config) = event_mapping.get(&event_type) {
             let standard_event_type = config.event_type.as_str().to_string();
-            let creator_address =
-                standardize_address(&extract_string(&config.creator_address, &event_data)?);
-            let collection_id =
-                standardize_address(&extract_string(&config.collection_id, &event_data)?);
-            let token_data_id =
-                standardize_address(&extract_string(&config.token_data_id, &event_data)?);
-            let token_name = extract_string(&config.token_name, &event_data)?;
-            let price = extract_bigdecimal(&config.price, &event_data)?;
-            let token_amount = extract_bigdecimal(&config.token_amount, &event_data)?;
-            let buyer = standardize_address(&extract_string(&config.buyer, &event_data)?);
+            let creator_address = standardize_address(&extract_string(&config.creator_address, &event_data).unwrap());
+            let collection_id = standardize_address(&extract_string(&config.collection_id, &event_data).unwrap());
+            let token_name = extract_string(&config.token_name, &event_data).unwrap();
+            let price = extract_bigdecimal(&config.price, &event_data).unwrap();
+            let token_amount = extract_bigdecimal(&config.token_amount, &event_data).unwrap();
+            let buyer = standardize_address(&extract_string(&config.buyer, &event_data).unwrap());
 
             let activity = Self {
                 transaction_version: txn_version,
@@ -72,7 +66,7 @@ impl NftMarketplaceActivity {
                 creator_address: Some(creator_address),
                 collection_id: Some(collection_id),
                 collection_name: None, // Not available in event config
-                token_data_id: Some(token_data_id),
+                token_data_id: None,
                 token_id: None, // Not available in event config
                 token_name: Some(token_name),
                 price: Some(price),
@@ -85,8 +79,9 @@ impl NftMarketplaceActivity {
                 entry_function_id_str: entry_function_id_str.clone(),
                 transaction_timestamp: timestamp,
             };
-            return Ok(Some(activity));
+            Some(activity)
+        } else {
+            None
         }
-        Ok(None)
     }
 }

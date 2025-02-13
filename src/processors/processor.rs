@@ -172,7 +172,7 @@ impl Processable for ProcessStep {
                 let txn_timestamp = NaiveDateTime::from_timestamp_opt(txn_timestamp, 0)
                     .expect("Txn Timestamp is invalid!");
                 for (index, event) in events.iter().enumerate() {
-                    if let Ok(activity) = NftMarketplaceActivity::from_event(
+                    if let Some(activity) = NftMarketplaceActivity::from_event(
                         &event,
                         txn.version as i64,
                         index as i64,
