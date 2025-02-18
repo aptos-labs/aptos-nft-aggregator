@@ -1273,6 +1273,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hash"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a11d3646252f5040e17a5d820fba80e3956d674fa4f0c42b3b27d1f8b2320ce5"
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1800,6 +1806,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "keccak"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecc2af9a1119c51f12a14607e783cb977bde58bc069ff0c3da1095e635d70654"
+dependencies = [
+ "cpufeatures",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2104,6 +2119,7 @@ dependencies = [
  "field_count",
  "futures",
  "futures-util",
+ "hash",
  "hex",
  "itertools 0.12.1",
  "jemallocator",
@@ -2114,6 +2130,8 @@ dependencies = [
  "postgres-native-tls",
  "serde",
  "serde_json",
+ "sha2",
+ "sha3",
  "strum",
  "tokio",
  "tokio-postgres",
@@ -3133,6 +3151,16 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "sha3"
+version = "0.10.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75872d278a8f37ef87fa0ddbda7802605cb18344497949862c0d4dcb291eba60"
+dependencies = [
+ "digest",
+ "keccak",
 ]
 
 [[package]]

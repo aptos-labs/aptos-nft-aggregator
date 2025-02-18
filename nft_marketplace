@@ -1,0 +1,64 @@
+{
+    // topaz
+    "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2": {
+        "events": {
+            "DelistEvent": 1043,
+            "ListEvent": 58
+        },
+        "token_coin_swap": {
+            "TokenListingEvent": 58
+        }
+    },
+//  rarible
+    "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790": {
+        "events": {
+            "ListingPlaced": 886,
+            "ListingCanceled": 263,
+            "ListingFilled": 182
+        }
+    },
+    // Wapal
+    "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9": {
+        "events": {
+            "ListingPlacedEvent": 18209,
+            "ListingFilledEvent": 15187,
+            "ListingCanceledEvent": 3449
+        }
+    },
+    // 
+    "0x7b1a44013ea80ac02461709bbbbdaa9354cea090dda988f97e2e9fb781e37e55": {
+        "events": {
+            "ListingPlaced": 621,
+            "ListingCanceled": 244,
+            "ListingFilled": 80
+        }
+    },
+    // blue move
+    "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e": {
+        "marketplaceV2": {
+            "ListEvent": 980,
+            "DelistEvent": 500
+        }
+    },
+    // trade port
+    "0xd520d8669b0a3de23119898dcdff3e0a27910db247663646ad18cf16e44c6f5": {
+        "events": {
+            "ListingFilledEvent": 1389,
+            "ListingPlacedEvent": 1292,
+            "ListingCanceledEvent": 363
+        }
+    },
+    // trade port
+    "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26": {
+        "listings": {
+            "InsertListingEvent": 6418,
+            "DeleteListingEvent": 5176,
+            "BuyEvent": 646
+        },
+        "listings_v2": {
+            "InsertListingEvent": 5072,
+            "DeleteListingEvent": 3082,
+            "BuyEvent": 1744
+        }
+    },
+}

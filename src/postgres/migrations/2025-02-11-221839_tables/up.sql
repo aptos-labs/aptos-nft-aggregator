@@ -1,7 +1,7 @@
 -- actvities table
 CREATE TABLE IF NOT EXISTS nft_marketplace_activities (
-  transaction_version BIGINT,
-  index BIGINT,
+  txn_version BIGINT,
+  event_index BIGINT,
   raw_event_type VARCHAR NOT NULL,
   standard_event_type VARCHAR NOT NULL,
   creator_address VARCHAR(66),
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_activities (
   contract_address VARCHAR(66) NOT NULL,
   entry_function_id_str VARCHAR NOT NULL,
   transaction_timestamp TIMESTAMP NOT NULL,
-  PRIMARY KEY (transaction_version, index)
+  PRIMARY KEY (txn_version, event_index)
 );
 -- current nft marketplace bids table
 CREATE TABLE IF NOT EXISTS current_nft_marketplace_bids (
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS current_nft_marketplace_bids (
 -- nft marketplace bids table
 CREATE TABLE IF NOT EXISTS nft_marketplace_bids (
   transaction_version BIGINT,
-  index BIGINT,
+  event_index BIGINT,
   token_id VARCHAR(66),
   token_data_id VARCHAR(66),
   buyer VARCHAR(66),
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_bids (
   entry_function_id_str VARCHAR NOT NULL,
   event_type VARCHAR NOT NULL,
   transaction_timestamp TIMESTAMP NOT NULL,
-  PRIMARY KEY (transaction_version, index)
+  PRIMARY KEY (transaction_version, event_index)
 );
 -- current nft marketplace collection bids table
 CREATE TABLE IF NOT EXISTS current_nft_marketplace_collection_bids (
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS current_nft_marketplace_collection_bids (
 -- nft marketplace collection bids table
 CREATE TABLE IF NOT EXISTS nft_marketplace_collection_bids (
   transaction_version BIGINT,
-  index BIGINT,
+  event_index BIGINT,
   creator_address VARCHAR(66),
   collection_name VARCHAR,
   collection_id VARCHAR(66),
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_collection_bids (
   entry_function_id_str VARCHAR NOT NULL,
   event_type VARCHAR NOT NULL,
   transaction_timestamp TIMESTAMP NOT NULL,
-  PRIMARY KEY (transaction_version, index)
+  PRIMARY KEY (transaction_version, event_index)
 );
 -- current nft marketplace listings table
 CREATE TABLE IF NOT EXISTS current_nft_marketplace_listings (
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS current_nft_marketplace_listings (
 -- nft marketplace listings table
 CREATE TABLE IF NOT EXISTS nft_marketplace_listings (
   transaction_version BIGINT,
-  index BIGINT,
+  event_index BIGINT,
   creator_address VARCHAR(66),
   token_name VARCHAR,
   token_data_id VARCHAR(66),
@@ -132,5 +132,5 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_listings (
   event_type VARCHAR NOT NULL,
   transaction_timestamp TIMESTAMP NOT NULL,
   inserted_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (transaction_version, index)
+  PRIMARY KEY (transaction_version, event_index)
 );
