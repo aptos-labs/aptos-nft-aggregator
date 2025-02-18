@@ -265,6 +265,7 @@ impl Processable for ProcessStep {
                                 println!("Listing: {:#?}", listing);
                                 println!("Current Listing: {:#?}", current_listing);
                                 listings.push(listing);
+                                current_listings.push(current_listing);
                             },
                             "fill_listing" => {
                                 let (listing, current_listing) =
@@ -272,31 +273,47 @@ impl Processable for ProcessStep {
                                 println!("Listing: {:#?}", listing);
                                 println!("Current Listing: {:#?}", current_listing);
                                 listings.push(listing);
+                                current_listings.push(current_listing);
                             },
                             "place_offer" => {
-                                let offer = NftMarketplaceBid::from_activity(&activity);
-                                println!("Offer: {:#?}", offer);
-                                token_bids.push(offer);
+                                let (bid, current_bid) =
+                                    NftMarketplaceBid::from_activity_to_current(&activity);
+                                println!("Offer: {:#?}", bid);
+                                println!("Current Offer: {:#?}", current_bid);
+                                token_bids.push(bid);
+                                current_token_bids.push(current_bid);
                             },
                             "cancel_offer" => {
-                                let offer = NftMarketplaceBid::from_activity(&activity);
-                                println!("Offer: {:#?}", offer);
-                                token_bids.push(offer);
+                                let (bid, current_bid) =
+                                    NftMarketplaceBid::from_activity_to_current(&activity);
+                                println!("Offer: {:#?}", bid);
+                                println!("Current Offer: {:#?}", current_bid);
+                                token_bids.push(bid);
+                                current_token_bids.push(current_bid);
                             },
                             "fill_offer" => {
-                                let offer = NftMarketplaceBid::from_activity(&activity);
-                                println!("Offer: {:#?}", offer);
-                                token_bids.push(offer);
+                                let (bid, current_bid) =
+                                    NftMarketplaceBid::from_activity_to_current(&activity);
+                                println!("Offer: {:#?}", bid);
+                                println!("Current Offer: {:#?}", current_bid);
+                                token_bids.push(bid);
+                                current_token_bids.push(current_bid);
                             },
                             "place_collection_offer" => {
-                                let offer = NftMarketplaceCollectionBid::from_activity(&activity);
-                                println!("Offer: {:#?}", offer);
-                                collection_bids.push(offer);
+                                let (bid, current_bid) =
+                                    NftMarketplaceCollectionBid::from_activity_to_current(&activity);
+                                println!("Offer: {:#?}", bid);
+                                println!("Current Offer: {:#?}", current_bid);
+                                collection_bids.push(bid);
+                                current_collection_bids.push(current_bid);
                             },
                             "cancel_collection_offer" => {
-                                let offer = NftMarketplaceCollectionBid::from_activity(&activity);
-                                println!("Offer: {:#?}", offer);
-                                collection_bids.push(offer);
+                                let (bid, current_bid) =
+                                    NftMarketplaceCollectionBid::from_activity_to_current(&activity);
+                                println!("Collection Bid: {:#?}", bid);
+                                println!("Current Collection Bid: {:#?}", current_bid);
+                                collection_bids.push(bid);
+                                current_collection_bids.push(current_bid);
                             },
                             "fill_collection_offer" => {
                                 let price = activity.price.clone();
@@ -388,6 +405,7 @@ impl Processable for ProcessStep {
                     if let WriteSetChangeEnum::WriteResource(write_resource) = change {
                         let move_resource_address = standardize_address(&write_resource.address);
                         let move_resource_type = &write_resource.type_str;
+                        let move_resource_type = write_resource.type_str.clone();
 
                         let move_struct_tag = match write_resource.r#type.as_ref() {
                             Some(t) => t,
@@ -462,14 +480,22 @@ impl Processable for ProcessStep {
                             token_offer_v2s.insert(move_resource_address.clone(), token_offer_v2);
                         }
 
-                        if let Some(collection_offer_metadata) = get_collection_offer_metadata(
+                        
+                        match get_collection_offer_metadata(
                             move_resource_type,
                             &data,
                             &self.contract_address,
                         ) {
-                            collection_offer_metadatas
-                                .insert(move_resource_address.clone(), collection_offer_metadata);
-                        }
+                            Ok(collection_offer_metadata) => {
+                                log::info!("Inserting collection offer metadata {:?}", collection_offer_metadata);
+                                collection_offer_metadatas
+                                    .insert(move_resource_address.clone(), collection_offer_metadata);
+                            },
+                            Err(e) => {
+                                log::error!("Error inserting collection offer metadata: {:?}", e);
+                            }
+                        } 
+
                         if let Some(collection_offer_v1) = get_collection_offer_v1(
                             move_resource_type,
                             &data,
@@ -550,9 +576,6 @@ impl Processable for ProcessStep {
                                                 &token_v1_container.token_metadata;
                                             (
                                                 NftMarketplaceListing {
-                                                    token_id: token_v1_metadata
-                                                        .token_data_id
-                                                        .clone(),
                                                     transaction_version: txn.version as i64,
                                                     creator_address: Some(
                                                         token_v1_metadata.creator_address.clone(),
@@ -585,9 +608,6 @@ impl Processable for ProcessStep {
                                                     transaction_timestamp: txn_timestamp,
                                                 },
                                                 CurrentNftMarketplaceListing {
-                                                    token_id: token_v1_metadata
-                                                        .token_data_id
-                                                        .clone(),
                                                     token_data_id: Some(
                                                         token_v1_metadata.token_data_id.clone(),
                                                     ),
@@ -628,7 +648,6 @@ impl Processable for ProcessStep {
 
                                             (
                                                 NftMarketplaceListing {
-                                                    token_id: token_v2_metadata.token_data_id.clone(), // TODO: check if this is correct
                                                     transaction_version: txn.version as i64,
                                                     creator_address: Some(
                                                         token_v2_metadata.creator_address.clone(),
@@ -659,7 +678,6 @@ impl Processable for ProcessStep {
                                                     transaction_timestamp: txn_timestamp,
                                                 },
                                                 CurrentNftMarketplaceListing {
-                                                    token_id: token_v2_metadata.token_data_id.clone(), // TODO: check if this is correct
                                                     token_data_id: Some(
                                                         token_v2_metadata.token_data_id.clone(),
                                                     ),
@@ -716,12 +734,13 @@ impl Processable for ProcessStep {
                                         .expect("Token offer metadata not found");
                                 let token_offer_v1: Option<&TokenOfferV1> =
                                     token_offer_v1s.get(&move_resource_address);
+
+
                                 if let Some(token_offer_v1) = token_offer_v1 {
                                     let token_v1_metadata = &token_offer_v1.token_metadata;
                                     let token_bid: NftMarketplaceBid = NftMarketplaceBid {
                                         transaction_version: txn.version as i64,
                                         event_index: 0,
-                                        token_id: Some(token_v1_metadata.token_data_id.clone()),
                                         token_data_id: token_v1_metadata.token_data_id.clone(),
                                         buyer: token_offer_object.owner.clone(),
                                         price: token_offer_metadata.price.clone(),
@@ -744,7 +763,6 @@ impl Processable for ProcessStep {
                                     };
 
                                     let current_token_bid = CurrentNftMarketplaceBid {
-                                        token_id: Some(token_v1_metadata.token_data_id.clone()),
                                         token_data_id: token_v1_metadata.token_data_id.clone(),
                                         buyer: token_offer_object.owner.clone(),
                                         price: token_offer_metadata.price.clone(),
@@ -780,7 +798,6 @@ impl Processable for ProcessStep {
                                     let token_bid: NftMarketplaceBid = NftMarketplaceBid {
                                         transaction_version: txn.version as i64,
                                         event_index: 0,
-                                        token_id: Some(token_v2_metadata.token_data_id.clone()),
                                         token_data_id: token_v2_metadata.token_data_id.clone(),
                                         buyer: token_offer_object.owner.clone(),
                                         price: token_offer_metadata.price.clone(),
@@ -803,7 +820,6 @@ impl Processable for ProcessStep {
                                     };
 
                                     let current_token_bid = CurrentNftMarketplaceBid {
-                                        token_id: Some(token_v2_metadata.token_data_id.clone()),
                                         token_data_id: token_v2_metadata.token_data_id.clone(),
                                         buyer: token_offer_object.owner.clone(),
                                         price: token_offer_metadata.price.clone(),
@@ -840,6 +856,8 @@ impl Processable for ProcessStep {
                                     "Collection offer resource type: {:?}",
                                     move_resource_type
                                 );
+                                println!("Move resource address {:?}", move_resource_address);
+
                                 let collection_offer_metadata = collection_offer_metadatas
                                     .get(&move_resource_address)
                                     .expect("Collection offer metadata not found");
@@ -886,7 +904,6 @@ impl Processable for ProcessStep {
                                     // Current collection offer
                                     let current_collection_bid =
                                         CurrentNftMarketplaceCollectionBid {
-                                            collection_offer_id: move_resource_address,
                                             collection_id: collection_v1_metadata
                                                 .collection_id
                                                 .clone(),
@@ -953,7 +970,6 @@ impl Processable for ProcessStep {
 
                                     let current_collection_bid =
                                         CurrentNftMarketplaceCollectionBid {
-                                            collection_offer_id: move_resource_address,
                                             collection_id: collection_offer_v2
                                                 .collection_address
                                                 .clone(),
@@ -1014,7 +1030,6 @@ impl Processable for ProcessStep {
                                 };
 
                                 let current_collection_bid = CurrentNftMarketplaceCollectionBid {
-                                    collection_offer_id: move_resource_address,
                                     collection_id: collection_metadata.collection_id,
                                     buyer: Some(collection_offer_filled_metadata.buyer.clone()),
                                     price: collection_offer_filled_metadata.item_price.clone(),
@@ -1118,6 +1133,7 @@ impl Processable for ProcessStep {
                 },
             }
         }
+
 
         Ok(Some(TransactionContext {
             data: (),
@@ -1223,7 +1239,7 @@ pub fn insert_nft_marketplace_bids(
     (
         diesel::insert_into(schema::nft_marketplace_bids::table)
             .values(items_to_insert)
-            .on_conflict((token_data_id, buyer, price))
+            .on_conflict((transaction_version, event_index))
             .do_nothing(),
         None,
     )
@@ -1260,7 +1276,7 @@ pub fn insert_nft_marketplace_collection_bids(
     (
         diesel::insert_into(schema::nft_marketplace_collection_bids::table)
             .values(items_to_insert)
-            .on_conflict((collection_id, buyer, price))
+            .on_conflict((transaction_version, event_index))
             .do_nothing(),
         None,
     )
@@ -1277,7 +1293,7 @@ pub fn insert_nft_marketplace_listings(
     (
         diesel::insert_into(schema::nft_marketplace_listings::table)
             .values(items_to_insert)
-            .on_conflict((transaction_version, token_id))
+            .on_conflict(transaction_version)
             .do_nothing(),
         None,
     )
@@ -1294,10 +1310,11 @@ pub fn insert_current_nft_marketplace_listings(
     (
         diesel::insert_into(schema::current_nft_marketplace_listings::table)
             .values(items_to_insert)
-            .on_conflict((token_id, token_data_id))
+            .on_conflict(token_data_id)
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
+                last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             )),
         Some(" WHERE current_nft_marketplace_listings.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
     )

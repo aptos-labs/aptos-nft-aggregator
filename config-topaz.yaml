@@ -3,10 +3,10 @@ server_config:
   channel_size: 100
   db_config:
     type: "postgres_config"
-    connection_string: postgresql://postgres@localhost:5432/nft_marketplace
+    connection_string: postgresql://postgres@localhost:5432/nft_marketplace3
   transaction_stream_config:
-    starting_version: 2367804069
-    request_ending_version: 2367804069
+    starting_version: 86119627
+    request_ending_version: 86119627
     indexer_grpc_data_service_address: "https://grpc.mainnet.aptoslabs.com:443"
     auth_token: aptoslabs_Kfa6xiJowsr_MfXBcBgxUX2RGNDYNxZGirvwPEQRwxARE
     request_name_header: "nft_marketplace_processor"

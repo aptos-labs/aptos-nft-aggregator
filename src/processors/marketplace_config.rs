@@ -106,9 +106,9 @@ impl NFTMarketplaceConfig {
                 MarketplaceEventType::PlaceCollectionOffer,
                 self.marketplace_name.clone(),
                 self.contract_address.clone(),
-                Some(self.collection_offer_config.collection_name.clone()),
-                Some(self.collection_offer_config.creator_address.clone()),
-                Some(self.collection_offer_config.deadline.clone()),
+                self.collection_offer_config.collection_name.clone(),
+                self.collection_offer_config.creator_address.clone(),
+                self.collection_offer_config.deadline.clone(),
             )?,
         );
         mapping.insert(
@@ -118,9 +118,9 @@ impl NFTMarketplaceConfig {
                 MarketplaceEventType::CancelCollectionOffer,
                 self.marketplace_name.clone(),
                 self.contract_address.clone(),
-                Some(self.collection_offer_config.collection_name.clone()),
-                Some(self.collection_offer_config.creator_address.clone()),
-                Some(self.collection_offer_config.deadline.clone()),
+                self.collection_offer_config.collection_name.clone(),
+                self.collection_offer_config.creator_address.clone(),
+                self.collection_offer_config.deadline.clone(),
             )?,
         );
         mapping.insert(
@@ -130,9 +130,9 @@ impl NFTMarketplaceConfig {
                 MarketplaceEventType::FillCollectionOffer,
                 self.marketplace_name.clone(),
                 self.contract_address.clone(),
-                None,
-                None,
-                Some(self.collection_offer_config.deadline.clone()),
+                self.collection_offer_config.collection_name.clone(),
+                self.collection_offer_config.creator_address.clone(),
+                self.collection_offer_config.deadline.clone(),
             )?,
         );
         Ok(mapping)
@@ -214,7 +214,7 @@ pub struct ListingConfig {
     pub cancel_event: String,
     pub fill_event: String,
     pub place_event: String,
-    pub collection_name: String,
+    pub collection_name: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -235,9 +235,9 @@ pub struct CollectionOfferConfig {
     pub cancel_event: String,
     pub fill_event: String,
     pub place_event: String,
-    pub collection_name: String,
-    pub creator_address: String,
-    pub deadline: String,
+    pub collection_name: Option<String>,
+    pub creator_address: Option<String>,
+    pub deadline: Option<String>,
     // TODO: add more fields for struct
 }
 

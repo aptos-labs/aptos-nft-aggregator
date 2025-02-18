@@ -35,6 +35,7 @@ pub fn extract_value<T: FromStr>(
 
 /// Extracts a string, ensuring proper handling of missing values
 pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Option<String> {
+    println!("Path: {:?}", path.raw);
     if path.raw.is_none() {
         return None;
     }

@@ -3,8 +3,6 @@
 diesel::table! {
     current_nft_marketplace_bids (token_data_id, buyer, price) {
         #[max_length = 66]
-        token_id -> Nullable<Varchar>,
-        #[max_length = 66]
         token_data_id -> Varchar,
         #[max_length = 66]
         buyer -> Varchar,
@@ -27,9 +25,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    current_nft_marketplace_collection_bids (collection_offer_id) {
-        #[max_length = 66]
-        collection_offer_id -> Varchar,
+    current_nft_marketplace_collection_bids (collection_id, buyer, price) {
         #[max_length = 66]
         collection_id -> Varchar,
         #[max_length = 66]
@@ -40,11 +36,11 @@ diesel::table! {
         token_amount -> Nullable<Numeric>,
         collection_name -> Nullable<Varchar>,
         marketplace -> Varchar,
+        coin_type -> Nullable<Varchar>,
         #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
-        expiration_time -> Int8,
-        coin_type -> Varchar,
+        expiration_time -> Nullable<Int8>,
         is_deleted -> Bool,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
@@ -52,11 +48,9 @@ diesel::table! {
 }
 
 diesel::table! {
-    current_nft_marketplace_listings (token_id) {
+    current_nft_marketplace_listings (token_data_id) {
         #[max_length = 66]
-        token_id -> Varchar,
-        #[max_length = 66]
-        token_data_id -> Nullable<Varchar>,
+        token_data_id -> Varchar,
         #[max_length = 66]
         creator_address -> Nullable<Varchar>,
         token_name -> Nullable<Varchar>,
@@ -65,9 +59,10 @@ diesel::table! {
         collection_id -> Nullable<Varchar>,
         price -> Nullable<Numeric>,
         token_amount -> Nullable<Numeric>,
-        token_standard -> Nullable<Varchar>,
         #[max_length = 66]
         seller -> Nullable<Varchar>,
+        #[max_length = 66]
+        token_standard -> Nullable<Varchar>,
         is_deleted -> Bool,
         marketplace -> Varchar,
         #[max_length = 66]
@@ -75,6 +70,7 @@ diesel::table! {
         entry_function_id_str -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        inserted_at -> Timestamp,
     }
 }
 
@@ -91,12 +87,11 @@ diesel::table! {
         collection_name -> Nullable<Varchar>,
         #[max_length = 66]
         token_data_id -> Nullable<Varchar>,
-        #[max_length = 66]
-        token_id -> Nullable<Varchar>,
         token_name -> Nullable<Varchar>,
-        token_standard -> Nullable<Varchar>,
         price -> Nullable<Numeric>,
         token_amount -> Nullable<Numeric>,
+        #[max_length = 66]
+        token_standard -> Nullable<Varchar>,
         #[max_length = 66]
         buyer -> Nullable<Varchar>,
         #[max_length = 66]
@@ -115,8 +110,6 @@ diesel::table! {
         transaction_version -> Int8,
         event_index -> Int8,
         #[max_length = 66]
-        token_id -> Nullable<Varchar>,
-        #[max_length = 66]
         token_data_id -> Nullable<Varchar>,
         #[max_length = 66]
         buyer -> Nullable<Varchar>,
@@ -138,7 +131,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    nft_marketplace_collection_bids (transaction_version) {
+    nft_marketplace_collection_bids (transaction_version, event_index) {
         transaction_version -> Int8,
         event_index -> Int8,
         #[max_length = 66]
@@ -162,32 +155,28 @@ diesel::table! {
 }
 
 diesel::table! {
-    nft_marketplace_listings (transaction_version, event_index) {
+    nft_marketplace_listings (transaction_version) {
         transaction_version -> Int8,
-        event_index -> Int8,
         #[max_length = 66]
         creator_address -> Nullable<Varchar>,
         token_name -> Nullable<Varchar>,
         #[max_length = 66]
         token_data_id -> Nullable<Varchar>,
-        #[max_length = 66]
-        token_id -> Nullable<Varchar>,
         collection_name -> Nullable<Varchar>,
         #[max_length = 66]
         collection_id -> Nullable<Varchar>,
         price -> Nullable<Numeric>,
         token_amount -> Nullable<Numeric>,
+        #[max_length = 66]
+        seller -> Nullable<Varchar>,
+        #[max_length = 66]
         token_standard -> Nullable<Varchar>,
-        #[max_length = 66]
-        seller -> Nullable<Varchar>,
-        #[max_length = 66]
-        buyer -> Nullable<Varchar>,
         marketplace -> Varchar,
         #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
-        event_type -> Varchar,
         transaction_timestamp -> Timestamp,
+        inserted_at -> Timestamp,
     }
 }
 

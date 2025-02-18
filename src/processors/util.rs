@@ -12,7 +12,7 @@ use std::{fmt, str::FromStr};
 
 const MAX_NAME_LENGTH: usize = 128;
 
-// Structs and Enums
+// Structs
 #[derive(Debug, Clone)]
 pub struct TokenDataIdType {
     creator: String,
@@ -243,7 +243,7 @@ pub fn get_token_offer_v2(
         != format!(
             "{}::token_offer::TokenOfferTokenV2",
             marketplace_contract_address
-        )
+        ).as_str()
     {
         return None;
     }
@@ -257,19 +257,33 @@ pub fn get_collection_offer_metadata(
     move_resource_type: &str,
     data: &Value,
     marketplace_contract_address: &str,
-) -> Option<CollectionOfferMetadata> {
+) -> Result<CollectionOfferMetadata, String> {
+    println!("Collection offer metadata building");
     if move_resource_type
         != format!(
             "{}::collection_offer::CollectionOffer",
             marketplace_contract_address
-        )
+        ).as_str()
     {
-        return None;
+        println!("Move resource type does not match {:?}", move_resource_type);
+        return Err("Move resource type does not match".to_string());
     }
-
-    Some(CollectionOfferMetadata {
-        expiration_time: data.get("expiration_time")?.as_i64()?,
-        item_price: BigDecimal::from_str(data.get("item_price")?.as_str()?).ok()?,
+    println!("Start building collection metadata {:?}", data);
+    let expiration_time = data.get("expiration_time")
+        .and_then(|v| v.as_i64())
+        .ok_or_else(|| "Failed to get or parse expiration_time".to_string())?;
+    
+    let item_price_str = data.get("item_price")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Failed to get item_price as string".to_string())?;
+    
+    let item_price = BigDecimal::from_str(item_price_str)
+        .map_err(|_| "Failed to parse item_price as BigDecimal".to_string())?;
+    
+    println!("Collection offer metadata: expiration_time = {}, item_price = {}", expiration_time, item_price);
+    Ok(CollectionOfferMetadata {
+        expiration_time,
+        item_price,
     })
 }
 
