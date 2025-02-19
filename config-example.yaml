@@ -1,0 +1,65 @@
+health_check_port: 8080
+server_config:
+  channel_size: 100
+  db_config:
+    type: "postgres_config"
+    connection_string: postgresql://postgres@localhost:5432/nft_marketplace3
+  transaction_stream_config:
+    starting_version: 2331658551
+    request_ending_version: 2331658551
+    indexer_grpc_data_service_address: "https://grpc.mainnet.aptoslabs.com:443"
+    auth_token: <auth_token>
+    request_name_header: "nft_marketplace_processor"
+  nft_marketplace_configs:
+    marketplace_configs:
+      - contract_address: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2"
+        marketplace_name: "topaz"
+        event_config:
+          creator_address: "$.token_id.token_data_id.creator"
+          token_data_id: "$.token_id"
+          token_name: "$.token_id.token_data_id.name"
+          price: "$.price"
+          token_amount: "$.amount"
+          seller: "$.seller"
+          buyer: "$.buyer"
+          collection_name: "$.token_id.token_data_id.collection" 
+        listing_config:
+          cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
+          fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent" 
+          place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+          collection_name: "$.collection_metadata.collection_name"
+        offer_config:
+          cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelBidEvent"
+          fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BidEvent"
+          place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::SellEvent"
+        collection_offer_config:
+          cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
+          fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::FillCollectionBidEvent"
+          place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionBidEvent"
+          collection_name: "$.collection_name"
+          creator_address: "$.creator"
+          deadline: "$.deadline"
+      - contract_address: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
+        marketplace_name: "wapal"
+        event_config:
+          creator_address: "$.token_metadata.creator_address"
+          token_name: "$.token_metadata.token_name"
+          price: "$.price"
+          token_amount: "$.token_amount"
+          seller: "$.seller"
+          buyer: "$.purchaser"
+          collection_name: "$.token_metadata.collection_name"
+        listing_config:
+          cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent"
+          fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent"
+          place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent"
+        offer_config:
+          cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent"
+          fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent"
+          place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent"
+        collection_offer_config:
+          cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent"
+          fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent"
+          place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent"
+          collection_name: "$.collection_metadata.collection_name"
+          creator_address: "$.collection_metadata.creator_address"

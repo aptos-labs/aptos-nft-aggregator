@@ -8,13 +8,19 @@ use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
 
 pub type MarketplaceEventConfigMapping = AHashMap<String, MarketplaceEventConfig>;
-
+pub type MarketplaceEventConfigMappings = AHashMap<String, MarketplaceEventConfigMapping>;
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct NFTMarketplaceConfig {
+pub struct NFTMarketplaceConfigs {
+    pub marketplace_configs: Vec<MarketplaceConfig>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct MarketplaceConfig {
     pub marketplace_name: String,
     pub contract_address: String,
     pub event_config: EventConfig,
@@ -23,119 +29,124 @@ pub struct NFTMarketplaceConfig {
     pub collection_offer_config: CollectionOfferConfig,
 }
 
-impl NFTMarketplaceConfig {
-    pub fn get_event_mapping(&self) -> Result<MarketplaceEventConfigMapping> {
-        let mut mapping = AHashMap::new();
+impl NFTMarketplaceConfigs {
+    pub fn get_event_mappings(&self) -> Result<MarketplaceEventConfigMappings> {
+        let mut marketplace_to_events_map = AHashMap::new();
 
-        mapping.insert(
-            self.listing_config.place_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::PlaceListing,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                None,
-            )?,
-        );
-        mapping.insert(
-            self.listing_config.cancel_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::CancelListing,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                None,
-            )?,
-        );
-        mapping.insert(
-            self.listing_config.fill_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::FillListing,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                None,
-            )?,
-        );
-        mapping.insert(
-            self.offer_config.place_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::PlaceOffer,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                None,
-            )?,
-        );
-        mapping.insert(
-            self.offer_config.cancel_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::CancelOffer,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                None,
-            )?,
-        );
-        mapping.insert(
-            self.offer_config.fill_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::FillOffer,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                None,
-            )?,
-        );
-        mapping.insert(
-            self.collection_offer_config.place_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::PlaceCollectionOffer,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                Some(self.collection_offer_config.collection_name.clone()),
-                Some(self.collection_offer_config.creator_address.clone()),
-                Some(self.collection_offer_config.deadline.clone()),
-            )?,
-        );
-        mapping.insert(
-            self.collection_offer_config.cancel_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::CancelCollectionOffer,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                Some(self.collection_offer_config.collection_name.clone()),
-                Some(self.collection_offer_config.creator_address.clone()),
-                Some(self.collection_offer_config.deadline.clone()),
-            )?,
-        );
-        mapping.insert(
-            self.collection_offer_config.fill_event.clone(),
-            MarketplaceEventConfig::from_event_config(
-                &self.event_config,
-                MarketplaceEventType::FillCollectionOffer,
-                self.marketplace_name.clone(),
-                self.contract_address.clone(),
-                None,
-                None,
-                Some(self.collection_offer_config.deadline.clone()),
-            )?,
-        );
-        Ok(mapping)
+        for config in &self.marketplace_configs {
+            let mut mapping = AHashMap::new();
+            mapping.insert(
+                config.listing_config.place_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::PlaceListing,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    None,
+                    None,
+                    None,
+                )?,
+            );
+            mapping.insert(
+                config.listing_config.cancel_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::CancelListing,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    None,
+                    None,
+                    None,
+                )?,
+            );
+            mapping.insert(
+                config.listing_config.fill_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::FillListing,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    None,
+                    None,
+                    None,
+                )?,
+            );
+            mapping.insert(
+                config.offer_config.place_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::PlaceOffer,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    None,
+                    None,
+                    None,
+                )?,
+            );
+            mapping.insert(
+                config.offer_config.cancel_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::CancelOffer,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    None,
+                    None,
+                    None,
+                )?,
+            );
+            mapping.insert(
+                config.offer_config.fill_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::FillOffer,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    None,
+                    None,
+                    None,
+                )?,
+            );
+            mapping.insert(
+                config.collection_offer_config.place_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::PlaceCollectionOffer,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    config.collection_offer_config.collection_name.clone(),
+                    config.collection_offer_config.creator_address.clone(),
+                    config.collection_offer_config.deadline.clone(),
+                )?,
+            );
+            mapping.insert(
+                config.collection_offer_config.cancel_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::CancelCollectionOffer,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    config.collection_offer_config.collection_name.clone(),
+                    config.collection_offer_config.creator_address.clone(),
+                    config.collection_offer_config.deadline.clone(),
+                )?,
+            );
+            mapping.insert(
+                config.collection_offer_config.fill_event.clone(),
+                MarketplaceEventConfig::from_event_config(
+                    &config.event_config,
+                    MarketplaceEventType::FillCollectionOffer,
+                    config.marketplace_name.clone(),
+                    config.contract_address.clone(),
+                    config.collection_offer_config.collection_name.clone(),
+                    config.collection_offer_config.creator_address.clone(),
+                    config.collection_offer_config.deadline.clone(),
+                )?,
+            );
+            
+            marketplace_to_events_map.insert(config.contract_address.clone(), mapping);
+        }
+        Ok(marketplace_to_events_map)
     }
 }
 
@@ -152,7 +163,6 @@ pub struct MarketplaceEventConfig {
     pub buyer: HashableJsonPath,
     pub seller: HashableJsonPath,
     pub collection_name: HashableJsonPath,
-    pub property_version: HashableJsonPath,
     pub deadline: HashableJsonPath,
 }
 
@@ -184,9 +194,6 @@ impl MarketplaceEventConfig {
                     event_config.collection_name.clone()
                 },
             )?,
-            property_version: HashableJsonPath::new(
-                event_config.property_version.clone()
-            )?,
             creator_address: HashableJsonPath::new(
                 if creator_address.is_some() {
                     creator_address
@@ -214,7 +221,7 @@ pub struct ListingConfig {
     pub cancel_event: String,
     pub fill_event: String,
     pub place_event: String,
-    pub collection_name: String,
+    pub collection_name: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -235,9 +242,9 @@ pub struct CollectionOfferConfig {
     pub cancel_event: String,
     pub fill_event: String,
     pub place_event: String,
-    pub collection_name: String,
-    pub creator_address: String,
-    pub deadline: String,
+    pub collection_name: Option<String>,
+    pub creator_address: Option<String>,
+    pub deadline: Option<String>,
     // TODO: add more fields for struct
 }
 
@@ -253,7 +260,6 @@ pub struct EventConfig {
     pub buyer: Option<String>,
     pub seller: Option<String>,
     pub collection_name: Option<String>,
-    pub property_version: Option<String>,
     pub deadline: Option<String>,
 }
 
