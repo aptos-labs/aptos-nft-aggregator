@@ -18,7 +18,6 @@ server_config:
       # collection_id: "$.token_id.token_data_id"
       token_data_id: "$.token_id"
       token_name: "$.token_id.token_data_id.name"
-      property_version: "$.token_id.property_version"
       price: "$.price"
       token_amount: "$.amount"
       seller: "$.seller"

@@ -12,7 +12,6 @@ pub mod marketplace_config;
 pub mod models;
 pub mod postgres_utils;
 pub mod processor;
-pub mod util;
 
 
 /// Extracts and converts a value from JSON based on a `HashableJsonPath`
