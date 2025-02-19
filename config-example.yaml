@@ -12,8 +12,7 @@ server_config:
     request_name_header: "nft_marketplace_processor"
   nft_marketplace_configs:
     marketplace_configs:
-      - contract_address: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2"
-        marketplace_name: "topaz"
+      - marketplace_name: "topaz"
         event_config:
           creator_address: "$.token_id.token_data_id.creator"
           token_data_id: "$.token_id"
@@ -36,11 +35,65 @@ server_config:
           cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
           fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::FillCollectionBidEvent"
           place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionBidEvent"
-          collection_name: "$.collection_name"
-          creator_address: "$.creator"
+          collection_name: "$.token_id.token_data_id.name"
+          creator_address: "$.token_id.token_data_id.creator"
           deadline: "$.deadline"
-      - contract_address: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
-        marketplace_name: "wapal"
+      - marketplace_name: "tradeport"
+        event_config:
+          creator_address: "$.token_id.token_data_id.creator"
+          token_data_id: "$.token_id"
+          token_name: "$.token_id.token_data_id.name"
+          price: "$.price"
+          token_amount: "$.amount"
+          seller: "$.bid_seller"
+          buyer: "$.bid_buyer"
+          collection_name: "$.token_id.token_data_id.collection" 
+        listing_config:
+          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::DeleteListingEvent"
+          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::BuyEvent" 
+          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::InsertListingEvent"
+          buyer: "$.buyer" # TODO: check
+          seller: "$.owner"  # TODO: check if owner == seller is correct?
+        offer_config:
+          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteTokenBidEvent"
+          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptTokenBidEvent"
+          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertTokenBidEvent"
+        collection_offer_config:
+          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteCollectionBidEvent"
+          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptCollectionBidEvent"
+          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertCollectionBidEvent"
+          collection_name: "$.collection_id.collection_name"
+          creator_address: "$.collection_id.collection_creator"
+      - marketplace_name: "tradeport_v2"
+        event_config:
+          creator_address: "$.token_metadata.creator_address"
+          token_name: "$.token_metadata.token_name"
+          price: "$.price"
+          token_amount: "$.token_amount"
+          seller: "$.bid_seller"
+          buyer: "$.bid_buyer"
+          collection_name: "$.token_metadata.collection_name"
+          token_inner: "$.token.inner" # v2 field2381810159
+          collection_inner: "$.collection.inner" # v2 field
+        listing_config:
+          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent"
+          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent"
+          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent"
+          buyer: "$.buyer" # TODO: check
+          seller: "$.seller" # TODO: check
+        offer_config:
+          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent"
+          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent"
+          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent"
+          buyer: "$.bid_buyer"
+          seller: "$.bid_seller"
+        collection_offer_config:
+          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent"
+          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent"
+          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertCollectionBidEvent"
+          collection_name: "$.token_metadata.collection_name"
+          creator_address: "$.token_metadata.creator_address"
+      - marketplace_name: "wapal"
         event_config:
           creator_address: "$.token_metadata.creator_address"
           token_name: "$.token_metadata.token_name"
@@ -49,6 +102,8 @@ server_config:
           seller: "$.seller"
           buyer: "$.purchaser"
           collection_name: "$.token_metadata.collection_name"
+          token_inner: "$.token_metadata.collection.vec[0].inner" # v2 field
+          collection_inner: "$.token_metadata.collection.vec[0].inner" # v2 field
         listing_config:
           cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent"
           fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent"
@@ -61,5 +116,3 @@ server_config:
           cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent"
           fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent"
           place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent"
-          collection_name: "$.collection_metadata.collection_name"
-          creator_address: "$.collection_metadata.creator_address"

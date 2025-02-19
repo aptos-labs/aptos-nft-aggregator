@@ -1,6 +1,6 @@
 use super::{
     config_boilerplate::{DbConfig, IndexerProcessorConfig},
-    marketplace_config::MarketplaceEventConfigMappings,
+    marketplace_config::{ContractToMarketplaceMap, MarketplaceEventConfigMappings},
     models::{
         CurrentNftMarketplaceBid, CurrentNftMarketplaceCollectionBid, CurrentNftMarketplaceListing,
         NftMarketplaceActivity, NftMarketplaceBid, NftMarketplaceCollectionBid,
@@ -60,15 +60,6 @@ impl Processor {
             },
         }
     }
-
-    fn get_contract_address(&self) -> String {
-        self.config
-            .nft_marketplace_configs
-            .marketplace_configs
-            .iter()
-            .map(|config| config.contract_address.clone())
-            .collect()
-    }
 }
 
 #[async_trait::async_trait]
@@ -111,7 +102,7 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let event_mappings = self
+        let (event_mappings, contract_to_marketplace_map) = self
             .config
             .nft_marketplace_configs
             .get_event_mappings()
@@ -122,7 +113,7 @@ impl ProcessorTrait for Processor {
 
         let process = ProcessStep::new(
             Arc::new(event_mappings),
-            self.get_contract_address().to_string(),
+            Arc::new(contract_to_marketplace_map),
             self.db_pool.clone(),
         );
         // let version_tracker = VersionTrackerStep::new(
@@ -158,19 +149,19 @@ impl ProcessorTrait for Processor {
 
 pub struct ProcessStep {
     pub event_mappings: Arc<MarketplaceEventConfigMappings>,
-    pub contract_address: String,
+    pub contract_to_marketplace_map: Arc<ContractToMarketplaceMap>,
     pub db_pool: ArcDbPool,
 }
 
 impl ProcessStep {
     pub fn new(
         event_mappings: Arc<MarketplaceEventConfigMappings>,
-        contract_address: String,
+        contract_to_marketplace_map: Arc<ContractToMarketplaceMap>,
         db_pool: ArcDbPool,
     ) -> Self {
         Self {
             event_mappings,
-            contract_address,
+            contract_to_marketplace_map,
             db_pool,
         }
     }
@@ -225,6 +216,7 @@ impl Processable for ProcessStep {
                         txn_timestamp,
                         &entry_function_id,
                         &self.event_mappings,
+                        &self.contract_to_marketplace_map,
                     ) {
                         match activity.standard_event_type.as_str() {
                             "place_listing" => {

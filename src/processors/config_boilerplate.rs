@@ -19,7 +19,6 @@ pub const QUERY_DEFAULT_RETRY_DELAY_MS: u64 = 500;
 pub struct IndexerProcessorConfig {
     pub transaction_stream_config: TransactionStreamConfig,
     pub db_config: DbConfig,
-    // Add your custom configs
     pub channel_size: u32,
     pub nft_marketplace_configs: NFTMarketplaceConfigs,
 }

@@ -35,47 +35,20 @@ pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Option<String> {
         .and_then(|v| v.as_str().map(String::from))
 }
 
+pub fn extract_vec_inner(path: &HashableJsonPath, from: &Value) -> Option<Vec<Value>> {
+    path.raw.as_ref()?;
+    path.extract_from(from)
+        .ok()
+        .and_then(|v| v.as_array().cloned())
+        .map(|v| v.to_vec())
+}
+
 /// Extracts a `BigDecimal` with a default value of `0`
 pub fn extract_bigdecimal(path: &HashableJsonPath, from: &Value) -> BigDecimal {
     if path.raw.is_none() {
         return BigDecimal::from(0);
     }
     extract_value(path, from, BigDecimal::from(0))
-}
-
-// extract marketplace_name
-pub fn extract_marketplace_name(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    path.raw.as_ref()?;
-
-    path.extract_from(from)
-        .ok()
-        .and_then(|v| v.as_str().map(String::from))
-}
-
-// extract contract_address
-pub fn extract_contract_address(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    path.raw.as_ref()?;
-
-    path.extract_from(from)
-        .ok()
-        .and_then(|v| v.as_str().map(String::from))
-}
-
-// extract collection_name
-pub fn extract_collection_name(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    path.raw.as_ref()?;
-
-    path.extract_from(from)
-        .ok()
-        .and_then(|v| serde_json::from_value(v).ok())
-}
-
-pub fn extract_token_id_struct(path: &HashableJsonPath, from: &Value) -> Option<Value> {
-    path.raw.as_ref()?;
-
-    path.extract_from(from)
-        .ok()
-        .and_then(|v| serde_json::from_value(v).ok())
 }
 
 /// A wrapper around JsonPath so that it can be hashed
