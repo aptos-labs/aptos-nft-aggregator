@@ -1,12 +1,11 @@
 use super::{
-    extract_bigdecimal, extract_string, marketplace_config::MarketplaceEventConfigMappings,
+    extract_bigdecimal, extract_string,
+    marketplace_config::{MarketplaceEventConfig, MarketplaceEventConfigMappings},
 };
-use crate::{
-    schema::{
-        current_nft_marketplace_bids, current_nft_marketplace_collection_bids,
-        current_nft_marketplace_listings, nft_marketplace_activities, nft_marketplace_bids,
-        nft_marketplace_collection_bids, nft_marketplace_listings,
-    },
+use crate::schema::{
+    current_nft_marketplace_bids, current_nft_marketplace_collection_bids,
+    current_nft_marketplace_listings, nft_marketplace_activities, nft_marketplace_bids,
+    nft_marketplace_collection_bids, nft_marketplace_listings,
 };
 use aptos_indexer_processor_sdk::utils::convert::standardize_address;
 use aptos_protos::transaction::v1::Event;
@@ -18,7 +17,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
-
+/**
+ * NftMarketplaceActivity is the main model for storing NFT marketplace activities.
+ *
+*/
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
 #[diesel(primary_key(txn_version, event_index))]
 #[diesel(table_name = nft_marketplace_activities)]
@@ -27,16 +29,16 @@ pub struct NftMarketplaceActivity {
     pub event_index: i64,
     pub raw_event_type: String,
     pub standard_event_type: String,
-    pub creator_address: Option<String>,  
-    pub collection_id: Option<String>,    
-    pub collection_name: Option<String>,  
-    pub token_data_id: Option<String>,    // optional v1 from  v2 = standardzie resource address
-    pub token_name: Option<String>,       
-    pub token_standard: Option<String>,   
-    pub price: Option<BigDecimal>,        
-    pub token_amount: Option<BigDecimal>, 
-    pub buyer: Option<String>,            
-    pub seller: Option<String>,           
+    pub creator_address: Option<String>,
+    pub collection_id: Option<String>,
+    pub collection_name: Option<String>,
+    pub token_data_id: Option<String>, // for v1, we don't use property version.
+    pub token_name: Option<String>,
+    pub token_standard: Option<String>,
+    pub price: Option<BigDecimal>,
+    pub token_amount: Option<BigDecimal>,
+    pub buyer: Option<String>,
+    pub seller: Option<String>,
     pub json_data: serde_json::Value,
     pub marketplace: String,
     pub contract_address: String,
@@ -45,6 +47,7 @@ pub struct NftMarketplaceActivity {
 }
 
 impl NftMarketplaceActivity {
+    /// Constructs an `NftMarketplaceActivity` from an event.
     pub fn from_event(
         event: &Event,
         txn_version: i64,
@@ -53,92 +56,52 @@ impl NftMarketplaceActivity {
         entry_function_id_str: &Option<String>,
         event_mappings: &MarketplaceEventConfigMappings,
     ) -> Option<Self> {
-        let contract_address = event.type_str.split("::").next().unwrap_or_default(); // first part of the event type string
-        println!("Contrcat Address: {:?}", contract_address);
+        // Extract the contract address from the event type string.
+        let contract_address = event.type_str.split("::").next().unwrap_or_default();
 
+        // Check if there is a mapping for the contract address.
         if let Some(event_mapping) = event_mappings.get(contract_address) {
-    
             let event_type: String = event.type_str.to_string();
-            println!("Event Type: {:?}", event_type);
             let event_data: Value = serde_json::from_str(event.data.as_str()).unwrap();
-            println!("Event Data: {:?}", event_data);
-            
-            if let Some(config) = event_mapping.get(&event_type) {
-                // let marketplace_name = config.marketplace.clone();
 
-                println!("Config: {:?}", config);
+            // Check if there is a configuration for the event type.
+            if let Some(config) = event_mapping.get(&event_type) {
                 let standard_event_type = config.event_type.as_str().to_string();
 
-                // TODO: what default value should we use here?
-                let creator_address = extract_string(&config.creator_address, &event_data)
-                    .map(|addr| standardize_address(&addr))
-                    .unwrap_or_else(|| "default_creator_address".to_string());
-                println!("Creator Address: {:?}", creator_address);
-
-                // Handle price extraction with default value
+                // Extract various fields from the event data using helper functions.
+                let creator_address = Self::extract_creator_address(config, &event_data);
                 let price = extract_bigdecimal(&config.price, &event_data);
-
-                // Handle token_amount extraction with default value
                 let token_amount = extract_bigdecimal(&config.token_amount, &event_data);
-
-                let collection_name =
-                    extract_string(&config.collection_name, &event_data);
+                let collection_name = extract_string(&config.collection_name, &event_data);
                 let token_name = extract_string(&config.token_name, &event_data);
 
-                let token_data_id = if let Some(token_v2) = event_data
-                    .get("token_metadata")
-                    .and_then(|t| t.get("token").and_then(|v| v.get("vec").and_then(|v| v.as_array())))
-                {
-                    println!("Token V2: {:?}", token_v2);
-                    match token_v2.get(0).and_then(|inner| inner.get("inner").and_then(|inner_str| inner_str.as_str())) {
-                        Some(inner_str) => standardize_address(inner_str),
-                        None => "default_token_data_id".to_string(),
-                    }
-                } else {
-                    let token_data_id_type = TokenDataIdType::new(
-                        creator_address.clone(),
-                        collection_name.clone(),
-                        token_name.clone(),
-                    );
-                    token_data_id_type.to_hash()
-                };
+                // Extract token data ID and collection ID.
+                let token_data_id = Self::extract_token_data_id(
+                    &event_data,
+                    &creator_address,
+                    &collection_name,
+                    &token_name,
+                );
 
-                let collection_id: String = if let Some(collection_v2) = event_data
-                    .get("collection_metadata")
-                    .and_then(|t| t.get("collection").and_then(|v| v.get("vec").and_then(|v| v.as_array())))
-                {
-                    println!("Collection V2: {:?}", collection_v2);
-                    match collection_v2.get(0).and_then(|inner| inner.get("inner").and_then(|inner_str| inner_str.as_str())) {
-                        Some(inner_str) => standardize_address(inner_str),
-                        None => "default_collection_data_id".to_string(),
-                    }
-                } else {
-                    let collection_data_id_type = CollectionDataIdType::new(
-                        creator_address.clone(),
-                        collection_name.clone(),
-                    );  
-                    collection_data_id_type.to_hash()
-                };
+                let collection_id =
+                    Self::extract_collection_id(&event_data, &creator_address, &collection_name);
 
-
+                // Construct the `NftMarketplaceActivity` instance.
                 let activity = Self {
                     txn_version,
                     event_index,
                     raw_event_type: event_type.clone(),
                     standard_event_type,
-                    creator_address: Some(creator_address),
+                    creator_address,
                     collection_id: Some(collection_id),
-                    collection_name: collection_name,
+                    collection_name,
                     token_data_id: Some(token_data_id.clone()),
-                    token_name: token_name,
-                    token_standard: if event_data.get("token_metadata").is_some() || event_data.get("collection_metadata").is_some() {
-                        Some("v2".to_string())
-                    } else {
-                        Some("v1".to_string())
-                    },
+                    token_name,
+                    token_standard: Self::determine_token_standard(&event_data),
                     price: Some(price),
                     token_amount: Some(token_amount),
-                    buyer: extract_string(&config.buyer, &event_data).map(|s| standardize_address(&s)),
+                    buyer: extract_string(&config.buyer, &event_data)
+                        .map(|s| standardize_address(&s)),
                     seller: extract_string(&config.seller, &event_data)
                         .map(|s| standardize_address(&s)),
                     json_data: event_data,
@@ -154,6 +117,92 @@ impl NftMarketplaceActivity {
         } else {
             None
         }
+    }
+
+    /// Extracts the creator address from the event data.
+    fn extract_creator_address(
+        config: &MarketplaceEventConfig,
+        event_data: &Value,
+    ) -> Option<String> {
+        extract_string(&config.creator_address, event_data).map(|addr| standardize_address(&addr))
+    }
+
+    fn extract_inner_token(event_data: &Value) -> Option<String> {
+        event_data
+            .get("token_metadata")
+            .and_then(|t| t.get("token"))
+            .and_then(|v| v.get("vec"))
+            .and_then(|v| v.as_array())
+            .filter(|array| !array.is_empty())?
+            .first()
+            .and_then(|inner| inner.get("inner")?.as_str())
+            .map(|s| s.to_string())
+    }
+
+    fn extract_token_data_id(
+        event_data: &Value,
+        creator_address: &Option<String>,
+        collection_name: &Option<String>,
+        token_name: &Option<String>,
+    ) -> String {
+        if let Some(inner_str) = Self::extract_inner_token(event_data) {
+            return standardize_address(&inner_str);
+        }
+
+        let token_data_id_type = TokenDataIdType::new(
+            creator_address
+                .clone()
+                .expect("creator_address is required"),
+            collection_name.clone(),
+            token_name.clone(),
+        );
+
+        token_data_id_type.to_hash()
+    }
+
+    fn extract_inner_collection(event_data: &Value) -> Option<String> {
+        event_data
+            .get("collection_metadata")
+            .and_then(|t| t.get("collection"))
+            .and_then(|v| v.get("vec"))
+            .and_then(|v| v.as_array())
+            .filter(|array| !array.is_empty())?
+            .first()
+            .and_then(|inner| inner.get("inner")?.as_str())
+            .map(|s| s.to_string())
+    }
+
+    fn extract_collection_id(
+        event_data: &Value,
+        creator_address: &Option<String>,
+        collection_name: &Option<String>,
+    ) -> String {
+        if let Some(inner_str) = Self::extract_inner_collection(event_data) {
+            return standardize_address(&inner_str);
+        }
+
+        let collection_data_id_type = CollectionDataIdType::new(
+            creator_address
+                .clone()
+                .expect("creator_address is required"),
+            collection_name.clone(),
+        );
+
+        collection_data_id_type.to_hash()
+    }
+
+    /// Determines the token standard based on the event data.
+    fn determine_token_standard(event_data: &Value) -> Option<String> {
+        Some(
+            if event_data.get("token_metadata").is_some()
+                || event_data.get("collection_metadata").is_some()
+            {
+                "v2"
+            } else {
+                "v1"
+            }
+            .to_string(),
+        )
     }
 }
 
@@ -175,7 +224,7 @@ pub struct NftMarketplaceListing {
     pub marketplace: String,
     pub contract_address: String,
     pub entry_function_id_str: String,
-    // pub event_type: String, // not available from wscs
+    pub event_type: Option<String>,
     pub transaction_timestamp: NaiveDateTime,
 }
 
@@ -196,6 +245,7 @@ pub struct CurrentNftMarketplaceListing {
     pub marketplace: String,
     pub contract_address: String,
     pub entry_function_id_str: String,
+    pub event_type: Option<String>,
     pub last_transaction_version: Option<i64>,
     pub last_transaction_timestamp: NaiveDateTime,
 }
@@ -219,6 +269,7 @@ impl NftMarketplaceListing {
             marketplace: activity.marketplace.clone(),
             contract_address: activity.contract_address.clone(),
             entry_function_id_str,
+            event_type: Some(activity.standard_event_type.clone()),
             transaction_timestamp: activity.transaction_timestamp,
         }
     }
@@ -239,10 +290,11 @@ impl NftMarketplaceListing {
             token_amount: listing.token_amount.clone(),
             token_standard: listing.token_standard.clone(),
             seller: listing.seller.clone(),
-            is_deleted: is_deleted,
+            is_deleted,
             marketplace: listing.marketplace.clone(),
             contract_address: listing.contract_address.clone(),
             entry_function_id_str: listing.entry_function_id_str.clone(),
+            event_type: listing.event_type.clone(),
             last_transaction_version: Some(activity.txn_version),
             last_transaction_timestamp: listing.transaction_timestamp,
         };
@@ -388,7 +440,7 @@ impl CurrentNftMarketplaceBid {
             marketplace: activity.marketplace.clone(),
             contract_address: activity.contract_address.clone(),
             entry_function_id_str: activity.entry_function_id_str.clone().unwrap_or_default(),
-            is_deleted: is_deleted,
+            is_deleted,
             last_transaction_version: Some(activity.txn_version),
             last_transaction_timestamp: activity.transaction_timestamp,
         }
@@ -429,7 +481,7 @@ impl CurrentNftMarketplaceCollectionBid {
             entry_function_id_str: activity.entry_function_id_str.clone().unwrap_or_default(),
             coin_type: None,
             expiration_time: 0,
-            is_deleted: is_deleted,
+            is_deleted,
             last_transaction_version: Some(activity.txn_version),
             last_transaction_timestamp: activity.transaction_timestamp,
         }
@@ -453,10 +505,8 @@ impl TokenDataIdType {
     }
 
     fn to_hash(&self) -> String {
-        // Create a Sha256 object
         let mut hasher = Sha256::new();
 
-        // Write input data
         hasher.update(format!(
             "{}::{}::{}",
             standardize_address(&self.creator),
@@ -464,14 +514,11 @@ impl TokenDataIdType {
             self.name.clone().unwrap_or_default()
         ));
 
-        // Read hash digest and consume hasher
         let result = hasher.finalize();
 
-        // Convert the result to a hexadecimal string
         format!("{:x}", result)
     }
 }
-
 
 struct CollectionDataIdType {
     creator: String,
@@ -480,7 +527,10 @@ struct CollectionDataIdType {
 
 impl CollectionDataIdType {
     fn new(creator: String, collection_name: Option<String>) -> Self {
-        Self { creator, collection_name }
+        Self {
+            creator,
+            collection_name,
+        }
     }
 
     fn to_hash(&self) -> String {

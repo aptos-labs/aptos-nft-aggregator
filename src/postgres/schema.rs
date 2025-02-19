@@ -68,6 +68,8 @@ diesel::table! {
         #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
+        #[max_length = 66]
+        event_type -> Nullable<Varchar>,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
         inserted_at -> Timestamp,
@@ -175,6 +177,8 @@ diesel::table! {
         #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
+        #[max_length = 66]
+        event_type -> Nullable<Varchar>,
         transaction_timestamp -> Timestamp,
         inserted_at -> Timestamp,
     }

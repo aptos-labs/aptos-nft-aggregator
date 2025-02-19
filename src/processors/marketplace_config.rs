@@ -143,7 +143,7 @@ impl NFTMarketplaceConfigs {
                     config.collection_offer_config.deadline.clone(),
                 )?,
             );
-            
+
             marketplace_to_events_map.insert(config.contract_address.clone(), mapping);
         }
         Ok(marketplace_to_events_map)
@@ -182,9 +182,7 @@ impl MarketplaceEventConfig {
             contract_address,
             token_name: HashableJsonPath::new(event_config.token_name.clone())?,
             price: HashableJsonPath::new(event_config.price.clone())?,
-            token_amount: HashableJsonPath::new(
-                event_config.token_amount.clone()
-            )?,
+            token_amount: HashableJsonPath::new(event_config.token_amount.clone())?,
             seller: HashableJsonPath::new(event_config.seller.clone())?,
             buyer: HashableJsonPath::new(event_config.buyer.clone())?,
             collection_name: HashableJsonPath::new(
@@ -201,9 +199,7 @@ impl MarketplaceEventConfig {
                     event_config.creator_address.clone()
                 },
             )?,
-            collection_id: HashableJsonPath::new(
-                event_config.collection_id.clone(),
-            )?,
+            collection_id: HashableJsonPath::new(event_config.collection_id.clone())?,
             deadline: HashableJsonPath::new(
                 if deadline.is_some() {
                     deadline

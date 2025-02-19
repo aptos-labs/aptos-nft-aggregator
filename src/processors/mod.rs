@@ -13,14 +13,8 @@ pub mod models;
 pub mod postgres_utils;
 pub mod processor;
 
-
 /// Extracts and converts a value from JSON based on a `HashableJsonPath`
-pub fn extract_value<T: FromStr>(
-    path: &HashableJsonPath, 
-    from: &Value, 
-    default: T
-) -> T {
-    
+pub fn extract_value<T: FromStr>(path: &HashableJsonPath, from: &Value, default: T) -> T {
     if path.raw.is_none() {
         return default;
     }
@@ -34,11 +28,11 @@ pub fn extract_value<T: FromStr>(
 
 /// Extracts a string, ensuring proper handling of missing values
 pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    if path.raw.is_none() {
-        return None;
-    }
-    path.extract_from(from).ok()
-        .and_then(|v| v.as_str().map(|s| s.to_string()))
+    path.raw.as_ref()?;
+
+    path.extract_from(from)
+        .ok()
+        .and_then(|v| v.as_str().map(String::from))
 }
 
 /// Extracts a `BigDecimal` with a default value of `0`
@@ -51,43 +45,37 @@ pub fn extract_bigdecimal(path: &HashableJsonPath, from: &Value) -> BigDecimal {
 
 // extract marketplace_name
 pub fn extract_marketplace_name(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    if path.raw.is_none() {
-        return None;
-    }
-    path.extract_from(from).ok()
-        .and_then(|v| v.as_str().map(|s| s.to_string()))
+    path.raw.as_ref()?;
+
+    path.extract_from(from)
+        .ok()
+        .and_then(|v| v.as_str().map(String::from))
 }
 
 // extract contract_address
 pub fn extract_contract_address(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    if path.raw.is_none() {
-        return None;
-    }
-    path.extract_from(from).ok()
-        .and_then(|v| v.as_str().map(|s| s.to_string()))
+    path.raw.as_ref()?;
+
+    path.extract_from(from)
+        .ok()
+        .and_then(|v| v.as_str().map(String::from))
 }
 
 // extract collection_name
 pub fn extract_collection_name(path: &HashableJsonPath, from: &Value) -> Option<String> {
-    if path.raw.is_none() {
-        return None;
-    }
-    let value = path.extract_from(from);
-    if let Ok(value) = value {
-        return serde_json::from_value(value).ok();
-    }
-    None
+    path.raw.as_ref()?;
+
+    path.extract_from(from)
+        .ok()
+        .and_then(|v| serde_json::from_value(v).ok())
 }
 
 pub fn extract_token_id_struct(path: &HashableJsonPath, from: &Value) -> Option<Value> {
-    if path.raw.is_none() {
-        return None;
-    }
-    let value = path.extract_from(from);
-    if let Ok(value) = value {
-        return Some(value);
-    }
-    None
+    path.raw.as_ref()?;
+
+    path.extract_from(from)
+        .ok()
+        .and_then(|v| serde_json::from_value(v).ok())
 }
 
 /// A wrapper around JsonPath so that it can be hashed
@@ -102,14 +90,12 @@ impl HashableJsonPath {
     pub fn new(raw: Option<String>) -> Result<Self> {
         let path_str = raw.as_deref().unwrap_or("$"); // Default to "$" if None
         let json_path = JsonPath::from_str(path_str).context("Failed to parse JSON path")?;
-        Ok(Self {
-            json_path,
-            raw,
-        })
+        Ok(Self { json_path, raw })
     }
 
     pub fn extract_from(&self, value: &Value) -> anyhow::Result<Value> {
-        Ok(self.json_path
+        Ok(self
+            .json_path
             .find_slice(value)
             .first()
             .unwrap() // Unwrap is safe here because the fields are guaranteed by the move types; TODO: Perform checks here or check config
@@ -117,7 +103,6 @@ impl HashableJsonPath {
             .to_data())
     }
 }
-
 
 impl Hash for HashableJsonPath {
     fn hash<H: Hasher>(&self, state: &mut H) {
