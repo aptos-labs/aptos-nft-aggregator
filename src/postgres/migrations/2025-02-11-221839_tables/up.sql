@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS current_nft_marketplace_listings (
   marketplace VARCHAR NOT NULL,
   contract_address VARCHAR(66) NOT NULL,
   entry_function_id_str VARCHAR NOT NULL,
+  event_type VARCHAR(66),
   last_transaction_version BIGINT NOT NULL,
   last_transaction_timestamp TIMESTAMP NOT NULL,
   inserted_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -128,6 +129,7 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_listings (
   marketplace VARCHAR NOT NULL,
   contract_address VARCHAR(66) NOT NULL,
   entry_function_id_str VARCHAR NOT NULL,
+  event_type VARCHAR(66),
   transaction_timestamp TIMESTAMP NOT NULL,
   inserted_at TIMESTAMP NOT NULL DEFAULT NOW(),
   PRIMARY KEY (transaction_version)

@@ -6,7 +6,7 @@ use super::{
         NftMarketplaceActivity, NftMarketplaceBid, NftMarketplaceCollectionBid,
         NftMarketplaceListing,
     },
-    postgres_utils::{execute_in_chunks, new_db_pool, ArcDbPool},
+    postgres_utils::{execute_in_chunks, new_db_pool, run_migrations, ArcDbPool},
 };
 use crate::schema;
 use anyhow::Result;
@@ -19,13 +19,9 @@ use aptos_indexer_processor_sdk::{
         Processable,
     },
     types::transaction_context::TransactionContext,
-    utils::{ errors::ProcessorError,
-        extract::get_entry_function_from_user_request,
-    },
+    utils::{errors::ProcessorError, extract::get_entry_function_from_user_request},
 };
-use aptos_protos::transaction::v1::{
-    transaction::TxnData,  Transaction,
-};
+use aptos_protos::transaction::v1::{transaction::TxnData, Transaction};
 use chrono::NaiveDateTime;
 use diesel::{
     pg::{upsert::excluded, Pg},
@@ -66,7 +62,12 @@ impl Processor {
     }
 
     fn get_contract_address(&self) -> String {
-        self.config.nft_marketplace_configs.marketplace_configs.iter().map(|config| config.contract_address.clone()).collect()
+        self.config
+            .nft_marketplace_configs
+            .marketplace_configs
+            .iter()
+            .map(|config| config.contract_address.clone())
+            .collect()
     }
 }
 
@@ -78,13 +79,13 @@ impl ProcessorTrait for Processor {
 
     async fn run_processor(&self) -> Result<()> {
         // Run migrations
-        let DbConfig::PostgresConfig(ref _postgres_config) = self.config.db_config;
+        let DbConfig::PostgresConfig(ref postgres_config) = self.config.db_config;
 
-        // run_migrations(
-        //     postgres_config.connection_string.clone(),
-        //     self.db_pool.clone(),
-        // )
-        // .await;
+        run_migrations(
+            postgres_config.connection_string.clone(),
+            self.db_pool.clone(),
+        )
+        .await;
 
         //  Merge the starting version from config and the latest processed version from the DB
         // let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
@@ -118,7 +119,7 @@ impl ProcessorTrait for Processor {
                 error!("Failed to get event mapping: {:?}", e);
                 panic!("Failed to get event mapping: {:?}", e);
             });
-    
+
         let process = ProcessStep::new(
             Arc::new(event_mappings),
             self.get_contract_address().to_string(),
@@ -185,9 +186,7 @@ impl Processable for ProcessStep {
         &mut self,
         transactions: TransactionContext<Vec<Transaction>>,
     ) -> Result<Option<TransactionContext<()>>, ProcessorError> {
-        // let config = self.config.clone();
         let txns = transactions.data;
-
 
         let mut activities: Vec<NftMarketplaceActivity> = Vec::new();
 
@@ -230,82 +229,79 @@ impl Processable for ProcessStep {
                         match activity.standard_event_type.as_str() {
                             "place_listing" => {
                                 let (listing, current_listing) =
-                                    NftMarketplaceListing::from_activity_to_current(&activity, false);
-                                println!("Listing: {:#?}", listing);
-                                println!("Current Listing: {:#?}", current_listing);
+                                    NftMarketplaceListing::from_activity_to_current(
+                                        &activity, false,
+                                    );
                                 listings.push(listing);
                                 current_listings.push(current_listing);
                             },
                             "cancel_listing" => {
                                 let (listing, current_listing) =
-                                    NftMarketplaceListing::from_activity_to_current(&activity, true);
-                                println!("Listing: {:#?}", listing);
-                                println!("Current Listing: {:#?}", current_listing);
+                                    NftMarketplaceListing::from_activity_to_current(
+                                        &activity, true,
+                                    );
                                 listings.push(listing);
                                 current_listings.push(current_listing);
                             },
                             "fill_listing" => {
                                 let (listing, current_listing) =
-                                    NftMarketplaceListing::from_activity_to_current(&activity, false);
-                                println!("Listing: {:#?}", listing);
-                                println!("Current Listing: {:#?}", current_listing);
+                                    NftMarketplaceListing::from_activity_to_current(
+                                        &activity, false,
+                                    );
                                 listings.push(listing);
                                 current_listings.push(current_listing);
                             },
                             "place_offer" => {
                                 let (bid, current_bid) =
                                     NftMarketplaceBid::from_activity_to_current(&activity, false);
-                                println!("Offer: {:#?}", bid);
-                                println!("Current Offer: {:#?}", current_bid);
                                 token_bids.push(bid);
                                 current_token_bids.push(current_bid);
                             },
                             "cancel_offer" => {
                                 let (bid, current_bid) =
                                     NftMarketplaceBid::from_activity_to_current(&activity, true);
-                                println!("Offer: {:#?}", bid);
-                                println!("Current Offer: {:#?}", current_bid);
                                 token_bids.push(bid);
                                 current_token_bids.push(current_bid);
                             },
                             "fill_offer" => {
                                 let (bid, current_bid) =
                                     NftMarketplaceBid::from_activity_to_current(&activity, false);
-                                println!("Offer: {:#?}", bid);
-                                println!("Current Offer: {:#?}", current_bid);
                                 token_bids.push(bid);
                                 current_token_bids.push(current_bid);
                             },
                             "place_collection_offer" => {
                                 let (bid, current_bid) =
-                                    NftMarketplaceCollectionBid::from_activity_to_current(&activity, false);
-                                println!("Offer: {:#?}", bid);
-                                println!("Current Offer: {:#?}", current_bid);
+                                    NftMarketplaceCollectionBid::from_activity_to_current(
+                                        &activity, false,
+                                    );
                                 collection_bids.push(bid);
                                 current_collection_bids.push(current_bid);
                             },
                             "cancel_collection_offer" => {
                                 let (bid, current_bid) =
-                                    NftMarketplaceCollectionBid::from_activity_to_current(&activity, true);
-                                println!("Collection Bid: {:#?}", bid);
-                                println!("Current Collection Bid: {:#?}", current_bid);
+                                    NftMarketplaceCollectionBid::from_activity_to_current(
+                                        &activity, true,
+                                    );
                                 collection_bids.push(bid);
                                 current_collection_bids.push(current_bid);
                             },
                             "fill_collection_offer" => {
                                 let (collection_bid, current_collection_bid) =
-                                    NftMarketplaceCollectionBid::from_activity_to_current(&activity, false);
-                                println!("Collection Bid: {:#?}", collection_bid);
-                                println!("Current Collection Bid: {:#?}", current_collection_bid);
+                                    NftMarketplaceCollectionBid::from_activity_to_current(
+                                        &activity, false,
+                                    );
                                 collection_bids.push(collection_bid);
                                 current_collection_bids.push(current_collection_bid);
                             },
                             _ => {
-                                println!("Unknown event type: {:?}", activity.standard_event_type);
+                                return Err(ProcessorError::ProcessError {
+                                    message: format!(
+                                        "Unknown event type: {:?}",
+                                        activity.standard_event_type
+                                    ),
+                                });
                             },
                         }
-
-                        println!("activity: {:#?}", activity);
                         activities.push(activity);
                     }
                 }
@@ -384,7 +380,6 @@ impl Processable for ProcessStep {
             }
         }
 
-
         Ok(Some(TransactionContext {
             data: (),
             metadata: transactions.metadata,
@@ -432,6 +427,9 @@ pub fn insert_current_nft_marketplace_bids(
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
+                last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
+                token_amount.eq(excluded(token_amount)),
+                last_transaction_version.eq(excluded(last_transaction_version)),
             )),
         Some(" WHERE current_nft_marketplace_bids.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
     )
@@ -468,6 +466,10 @@ pub fn insert_current_nft_marketplace_collection_bids(
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
+                last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
+                token_amount.eq(excluded(token_amount)),
+                last_transaction_version.eq(excluded(last_transaction_version)),
+                expiration_time.eq(excluded(expiration_time)),
             )),
         Some(" WHERE current_nft_marketplace_collection_bids.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
     )
@@ -523,6 +525,8 @@ pub fn insert_current_nft_marketplace_listings(
             .set((
                 is_deleted.eq(excluded(is_deleted)),
                 last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
+                token_amount.eq(excluded(token_amount)),
+                last_transaction_version.eq(excluded(last_transaction_version)),
             )),
         Some(" WHERE current_nft_marketplace_listings.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
     )
