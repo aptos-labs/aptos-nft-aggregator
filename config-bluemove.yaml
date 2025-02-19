@@ -1,0 +1,45 @@
+health_check_port: 8080
+server_config:
+  channel_size: 100
+  db_config:
+    type: "postgres_config"
+    connection_string: postgresql://postgres@localhost:5432/nft_marketplace
+  transaction_stream_config:
+    starting_version: 2351092
+    request_ending_version: 2351092
+    indexer_grpc_data_service_address: "https://grpc.mainnet.aptoslabs.com:443"
+    auth_token: aptoslabs_Kfa6xiJowsr_MfXBcBgxUX2RGNDYNxZGirvwPEQRwxARE
+    request_name_header: "nft_marketplace_processor"
+  nft_marketplace_config:
+    marketplace_name: "topaz"
+    contract_address: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2"
+    event_config:
+      creator_address: "$.token_id.token_data_id.creator"
+      # collection_id: "$.token_id.token_data_id"
+      token_data_id: "$.token_id"
+      token_name: "$.token_id.token_data_id.name"
+      property_version: "$.token_id.property_version"
+      price: "$.price"
+      token_amount: "$.amount"
+      seller: "$.seller"
+      buyer: "$.buyer"
+      collection_name: "$.token_id.token_data_id.collection" # this should be name + creator?
+      # timestamp?: "$.timestamp"
+    listing_config:
+      cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
+      fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent" # there is no fill event?
+      place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+      collection_name: "$.data.collection_metadata.collection_name"
+    # offer_config:
+    #   cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
+    #   fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent"
+    #   place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+    #   buyer: "$.buyer"
+    #   seller: "$.seller"
+    #   price: "$.price"
+    # collection_offer_config:
+      # cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
+      # fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionOfferFilledEvent"
+      # place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+      # 189804220: 
+

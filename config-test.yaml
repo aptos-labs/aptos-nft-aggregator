@@ -1,0 +1,42 @@
+health_check_port: 8080
+server_config:
+  channel_size: 100
+  db_config:
+    type: "postgres_config"
+    connection_string: postgresql://postgres@localhost:5432/nft_marketplace
+  transaction_stream_config:
+    starting_version: 208280539
+    request_ending_version: 208280539
+    indexer_grpc_data_service_address: "https://grpc.mainnet.aptoslabs.com:443"
+    auth_token: aptoslabs_Kfa6xiJowsr_MfXBcBgxUX2RGNDYNxZGirvwPEQRwxARE
+    request_name_header: "nft_marketplace_processor"
+  nft_marketplace_config:
+    marketplace_name: "test"
+    contract_address: "0x6de37368e31dff4580b211295198159ee6f98b42ffa93c5683bb955ca1be67e0"
+    event_config:
+      creator_address: "$.token_metadata.creator_address"
+      # collection_id: "$.token_metadata.collection_id" # not available
+      token_name: "$.token_metadata.token_name"
+      price: "$.price"
+      # token_amount: "$.amount" # not available for
+      seller: "$.seller"
+      # buyer: "$.buyer" # not available?
+      collection_name: "$.token_metadata.collection_name"
+    listing_config:
+      cancel_event: "0x6de37368e31dff4580b211295198159ee6f98b42ffa93c5683bb955ca1be67e0::events::ListingCanceledEvent"
+      fill_event: "0x6de37368e31dff4580b211295198159ee6f98b42ffa93c5683bb955ca1be67e0::events::ListingFilledEvent" # there is no fill event?
+      place_event: "0x6de37368e31dff4580b211295198159ee6f98b42ffa93c5683bb955ca1be67e0::events::ListingPlacedEvent"
+      collection_name: "$.token_metadata.collection_name"
+    # offer_config:
+    #   cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
+    #   fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent"
+    #   place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+    #   buyer: "$.buyer"
+    #   seller: "$.seller"
+    #   price: "$.price"
+    # collection_offer_config:
+      # cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
+      # fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent"
+      # place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+      # 189804220: 
+
