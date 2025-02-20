@@ -2,7 +2,7 @@ name: Copy Processor Images to DockerHub on Release
 on:
   push:
     tags:
-      - aptos-indexer-processors-v*
+      - aptos-indexer-processors-v* # TODO: remove this 
 
 permissions:
   contents: read
@@ -33,10 +33,10 @@ jobs:
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # pin https://github.com/pnpm/action-setup/releases/tag/v4.0.0
         with:
           run_install: false
-          package_json_file: ./github/scripts/package.json
+          package_json_file: scripts/package.json
 
       - run: pnpm install --frozen-lockfile
-        working-directory: ./github/scripts
+        working-directory: scripts
 
       - name: Install Dependencies and Run Linter
         uses: ./.github/actions/dep_install_and_lint
@@ -53,4 +53,4 @@ jobs:
           GIT_SHA: ${{ github.sha }}
           GCP_DOCKER_ARTIFACT_REPO: ${{ vars.GCP_DOCKER_ARTIFACT_REPO }}
         run: pnpm release-processor-images --language=${{ inputs.processor_language }} --version-tag=${{ github.ref_name }} --wait-for-image-seconds=3600
-        working-directory: ./github/scripts
+        working-directory: scripts

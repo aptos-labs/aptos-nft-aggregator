@@ -65,9 +65,12 @@ impl NftMarketplaceActivity {
         let marketplace_name = match contract_to_marketplace_map.get(&contract_address) {
             Some(name) => name,
             None => {
-                debug!("Marketplace not found for the given contract address: {}", contract_address);
+                debug!(
+                    "Marketplace not found for the given contract address: {}",
+                    contract_address
+                );
                 return None;
-            }
+            },
         };
 
         if let Some(event_mapping) = event_mappings.get(marketplace_name) {
