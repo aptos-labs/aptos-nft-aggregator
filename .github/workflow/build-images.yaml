@@ -1,0 +1,50 @@
+name: "Build Docker Images"
+on:
+  # Allow us to run this specific workflow without a PR
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# cancel redundant builds
+concurrency:
+  # for push and workflow_dispatch events we use `github.sha` in the concurrency group and don't really cancel each other out/limit concurrency
+  # for pull_request events newer jobs cancel earlier jobs to save on CI etc.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.sha || github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+permissions:
+  contents: read
+  id-token: write #required for GCP Workload Identity federation which we use to login into Google Artifact Registry
+      
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/docker-setup
+        with:
+          GCP_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build and push images
+        run: ./scripts/build_and_push_images.sh
+        env:
+          GIT_BRANCH: ${{ steps.extract_branch.outputs.branch }}
