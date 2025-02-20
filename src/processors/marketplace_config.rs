@@ -9,6 +9,7 @@ use std::{fmt, str::FromStr};
 
 pub type MarketplaceEventConfigMapping = AHashMap<String, MarketplaceEventConfig>;
 pub type MarketplaceEventConfigMappings = AHashMap<String, MarketplaceEventConfigMapping>;
+pub type ContractToMarketplaceMap = AHashMap<String, String>;
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
 
@@ -22,7 +23,6 @@ pub struct NFTMarketplaceConfigs {
 #[serde(deny_unknown_fields)]
 pub struct MarketplaceConfig {
     pub marketplace_name: String,
-    pub contract_address: String,
     pub event_config: EventConfig,
     pub listing_config: ListingConfig,
     pub offer_config: OfferConfig,
@@ -30,21 +30,24 @@ pub struct MarketplaceConfig {
 }
 
 impl NFTMarketplaceConfigs {
-    pub fn get_event_mappings(&self) -> Result<MarketplaceEventConfigMappings> {
+    pub fn get_event_mappings(
+        &self,
+    ) -> Result<(MarketplaceEventConfigMappings, ContractToMarketplaceMap)> {
         let mut marketplace_to_events_map = AHashMap::new();
-
+        let mut contract_to_marketplace_map = AHashMap::new();
         for config in &self.marketplace_configs {
-            let mut mapping = AHashMap::new();
+            let mut mapping: AHashMap<String, MarketplaceEventConfig> = AHashMap::new();
             mapping.insert(
                 config.listing_config.place_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceListing,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     None,
                     None,
                     None,
+                    config.listing_config.buyer.clone(),
+                    config.listing_config.seller.clone(),
                 )?,
             );
             mapping.insert(
@@ -53,10 +56,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::CancelListing,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     None,
                     None,
                     None,
+                    config.listing_config.buyer.clone(),
+                    config.listing_config.seller.clone(),
                 )?,
             );
             mapping.insert(
@@ -65,10 +69,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::FillListing,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     None,
                     None,
                     None,
+                    config.listing_config.buyer.clone(),
+                    config.listing_config.seller.clone(),
                 )?,
             );
             mapping.insert(
@@ -77,10 +82,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::PlaceOffer,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     None,
                     None,
                     None,
+                    config.offer_config.buyer.clone(),
+                    config.offer_config.seller.clone(),
                 )?,
             );
             mapping.insert(
@@ -89,10 +95,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::CancelOffer,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     None,
                     None,
                     None,
+                    config.offer_config.buyer.clone(),
+                    config.offer_config.seller.clone(),
                 )?,
             );
             mapping.insert(
@@ -101,10 +108,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::FillOffer,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     None,
                     None,
                     None,
+                    config.offer_config.buyer.clone(),
+                    config.offer_config.seller.clone(),
                 )?,
             );
             mapping.insert(
@@ -113,10 +121,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::PlaceCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     config.collection_offer_config.collection_name.clone(),
                     config.collection_offer_config.creator_address.clone(),
                     config.collection_offer_config.deadline.clone(),
+                    None,
+                    None,
                 )?,
             );
             mapping.insert(
@@ -125,10 +134,11 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::CancelCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
                     config.collection_offer_config.collection_name.clone(),
                     config.collection_offer_config.creator_address.clone(),
                     config.collection_offer_config.deadline.clone(),
+                    None,
+                    None,
                 )?,
             );
             mapping.insert(
@@ -137,16 +147,20 @@ impl NFTMarketplaceConfigs {
                     &config.event_config,
                     MarketplaceEventType::FillCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.contract_address.clone(),
-                    config.collection_offer_config.collection_name.clone(),
-                    config.collection_offer_config.creator_address.clone(),
+                    config.event_config.collection_name.clone(),
+                    config.event_config.creator_address.clone(),
                     config.collection_offer_config.deadline.clone(),
+                    None,
+                    None,
                 )?,
             );
-
-            marketplace_to_events_map.insert(config.contract_address.clone(), mapping);
+            for event in mapping.keys() {
+                contract_to_marketplace_map.insert(event.clone(), config.marketplace_name.clone());
+            }
+            marketplace_to_events_map.insert(config.marketplace_name.clone(), mapping.clone());
         }
-        Ok(marketplace_to_events_map)
+
+        Ok((marketplace_to_events_map, contract_to_marketplace_map))
     }
 }
 
@@ -154,7 +168,6 @@ impl NFTMarketplaceConfigs {
 pub struct MarketplaceEventConfig {
     pub event_type: MarketplaceEventType,
     pub marketplace: String,
-    pub contract_address: String,
     pub creator_address: HashableJsonPath,
     pub collection_id: HashableJsonPath,
     pub token_name: HashableJsonPath,
@@ -164,6 +177,8 @@ pub struct MarketplaceEventConfig {
     pub seller: HashableJsonPath,
     pub collection_name: HashableJsonPath,
     pub deadline: HashableJsonPath,
+    pub token_inner: HashableJsonPath,
+    pub collection_inner: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
@@ -171,20 +186,32 @@ impl MarketplaceEventConfig {
         event_config: &EventConfig,
         event_type: MarketplaceEventType,
         marketplace_name: String,
-        contract_address: String,
         collection_name: Option<String>,
         creator_address: Option<String>,
         deadline: Option<String>,
+        buyer: Option<String>,
+        seller: Option<String>,
     ) -> Result<Self> {
         Ok(Self {
             event_type,
             marketplace: marketplace_name,
-            contract_address,
             token_name: HashableJsonPath::new(event_config.token_name.clone())?,
             price: HashableJsonPath::new(event_config.price.clone())?,
             token_amount: HashableJsonPath::new(event_config.token_amount.clone())?,
-            seller: HashableJsonPath::new(event_config.seller.clone())?,
-            buyer: HashableJsonPath::new(event_config.buyer.clone())?,
+            seller: HashableJsonPath::new(
+                if seller.is_some() {
+                    seller
+                } else {
+                    event_config.seller.clone()
+                },
+            )?,
+            buyer: HashableJsonPath::new(
+                if buyer.is_some() {
+                    buyer
+                } else {
+                    event_config.buyer.clone()
+                },
+            )?,
             collection_name: HashableJsonPath::new(
                 if collection_name.is_some() {
                     collection_name
@@ -207,6 +234,8 @@ impl MarketplaceEventConfig {
                     event_config.deadline.clone()
                 },
             )?,
+            token_inner: HashableJsonPath::new(event_config.token_inner.clone())?,
+            collection_inner: HashableJsonPath::new(event_config.collection_inner.clone())?,
         })
     }
 }
@@ -218,6 +247,8 @@ pub struct ListingConfig {
     pub fill_event: String,
     pub place_event: String,
     pub collection_name: Option<String>,
+    pub buyer: Option<String>,
+    pub seller: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -226,10 +257,8 @@ pub struct OfferConfig {
     pub cancel_event: String,
     pub fill_event: String,
     pub place_event: String,
-    // pub buyer: String,
-    // pub seller: String,
-    // pub price: String,
-    // TODO: add more fields for struct
+    pub buyer: Option<String>,
+    pub seller: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -241,7 +270,6 @@ pub struct CollectionOfferConfig {
     pub collection_name: Option<String>,
     pub creator_address: Option<String>,
     pub deadline: Option<String>,
-    // TODO: add more fields for struct
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -257,6 +285,8 @@ pub struct EventConfig {
     pub seller: Option<String>,
     pub collection_name: Option<String>,
     pub deadline: Option<String>,
+    pub token_inner: Option<String>,
+    pub collection_inner: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

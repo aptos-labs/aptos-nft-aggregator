@@ -15,7 +15,6 @@ diesel::table! {
         #[max_length = 66]
         collection_id -> Nullable<Varchar>,
         marketplace -> Varchar,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         is_deleted -> Bool,
@@ -65,7 +64,6 @@ diesel::table! {
         token_standard -> Nullable<Varchar>,
         is_deleted -> Bool,
         marketplace -> Varchar,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         #[max_length = 66]
@@ -100,7 +98,6 @@ diesel::table! {
         seller -> Nullable<Varchar>,
         json_data -> Jsonb,
         marketplace -> Varchar,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         transaction_timestamp -> Timestamp,
@@ -124,7 +121,6 @@ diesel::table! {
         #[max_length = 66]
         collection_id -> Nullable<Varchar>,
         marketplace -> Varchar,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         event_type -> Varchar,
@@ -148,7 +144,6 @@ diesel::table! {
         #[max_length = 66]
         seller -> Nullable<Varchar>,
         marketplace -> Varchar,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         event_type -> Varchar,
@@ -174,7 +169,6 @@ diesel::table! {
         #[max_length = 66]
         token_standard -> Nullable<Varchar>,
         marketplace -> Varchar,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         #[max_length = 66]
