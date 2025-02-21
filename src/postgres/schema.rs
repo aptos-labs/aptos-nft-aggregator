@@ -36,7 +36,6 @@ diesel::table! {
         collection_name -> Nullable<Varchar>,
         marketplace -> Varchar,
         coin_type -> Nullable<Varchar>,
-        #[max_length = 66]
         contract_address -> Varchar,
         entry_function_id_str -> Varchar,
         expiration_time -> Nullable<Int8>,

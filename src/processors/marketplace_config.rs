@@ -116,39 +116,71 @@ impl NFTMarketplaceConfigs {
                 )?,
             );
             mapping.insert(
-                config.collection_offer_config.place_event.clone(),
+                config
+                    .collection_offer_config
+                    .place_event
+                    .event_type
+                    .clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.collection_offer_config.collection_name.clone(),
-                    config.collection_offer_config.creator_address.clone(),
+                    config
+                        .collection_offer_config
+                        .place_event
+                        .collection_name
+                        .clone(),
+                    config
+                        .collection_offer_config
+                        .place_event
+                        .creator_address
+                        .clone(),
                     config.collection_offer_config.deadline.clone(),
                     None,
                     None,
                 )?,
             );
             mapping.insert(
-                config.collection_offer_config.cancel_event.clone(),
+                config
+                    .collection_offer_config
+                    .cancel_event
+                    .event_type
+                    .clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::CancelCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.collection_offer_config.collection_name.clone(),
-                    config.collection_offer_config.creator_address.clone(),
+                    config
+                        .collection_offer_config
+                        .cancel_event
+                        .collection_name
+                        .clone(),
+                    config
+                        .collection_offer_config
+                        .cancel_event
+                        .creator_address
+                        .clone(),
                     config.collection_offer_config.deadline.clone(),
                     None,
                     None,
                 )?,
             );
             mapping.insert(
-                config.collection_offer_config.fill_event.clone(),
+                config.collection_offer_config.fill_event.event_type.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.event_config.collection_name.clone(),
-                    config.event_config.creator_address.clone(),
+                    config
+                        .collection_offer_config
+                        .fill_event
+                        .collection_name
+                        .clone(),
+                    config
+                        .collection_offer_config
+                        .fill_event
+                        .creator_address
+                        .clone(),
                     config.collection_offer_config.deadline.clone(),
                     None,
                     None,
@@ -264,12 +296,24 @@ pub struct OfferConfig {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct CollectionOfferConfig {
-    pub cancel_event: String,
-    pub fill_event: String,
-    pub place_event: String,
+    pub cancel_event: CollectionEventParams,
+    pub fill_event: CollectionEventParams,
+    pub place_event: CollectionEventParams,
+    pub deadline: Option<String>, // across all marketplaces, deadline is part of the event data for collection offer
+}
+
+/// This is to give us more flexibility to handle different event structures
+/// for collection offer events across different marketplaces
+/// Because even within the same marketplace, the event structure might be different for different type of events
+/// e.g. for tradeport, the collection name and creator address are part of the token data for Fill Event, while they are part of collection metadata for Place Event and Cancel Event
+/// but for topaz, the collection name and creator address are part of the top level event data for place event, but part of the token data for cancel and fill events
+/// So we need to handle it differently for different marketplaces
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CollectionEventParams {
+    pub event_type: String,
     pub collection_name: Option<String>,
     pub creator_address: Option<String>,
-    pub deadline: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

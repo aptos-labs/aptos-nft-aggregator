@@ -534,6 +534,14 @@ impl TokenDataIdType {
     }
 }
 
+// fn truncate_str(s: &str, max_len: usize) -> String {
+//     if s.len() > max_len {
+//         s[..max_len].to_string()
+//     } else {
+//         s.to_string()
+//     }
+// }
+
 struct CollectionDataIdType {
     creator: Option<String>,
     collection_name: Option<String>,

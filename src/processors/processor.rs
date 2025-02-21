@@ -300,53 +300,80 @@ impl Processable for ProcessStep {
             }
         }
 
+        // Sort vectors by primary key to avoid deadlocks
+        activities.sort_by(|a, b| {
+            a.txn_version
+                .cmp(&b.txn_version)
+                .then(a.event_index.cmp(&b.event_index))
+        });
+
+        current_listings.sort_by(|a, b| {
+            a.token_data_id
+                .cmp(&b.token_data_id)
+                .then(a.collection_id.cmp(&b.collection_id))
+        });
+
+        current_token_bids.sort_by(|a, b| {
+            a.token_data_id
+                .cmp(&b.token_data_id)
+                .then(a.buyer.cmp(&b.buyer))
+                .then(a.price.cmp(&b.price))
+        });
+
+        current_collection_bids.sort_by(|a, b| {
+            a.collection_id
+                .cmp(&b.collection_id)
+                .then(a.buyer.cmp(&b.buyer))
+                .then(a.price.cmp(&b.price))
+        });
+
         let nma = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_activities,
             &activities,
-            200,
+            2,
         );
 
         let nmb = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_bids,
             &token_bids,
-            200,
+            1,
         );
 
         let cnmb = execute_in_chunks(
             self.db_pool.clone(),
             insert_current_nft_marketplace_bids,
             &current_token_bids,
-            200,
+            1,
         );
 
         let nml = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_listings,
             &listings,
-            200,
+            1,
         );
 
         let cnml = execute_in_chunks(
             self.db_pool.clone(),
             insert_current_nft_marketplace_listings,
             &current_listings,
-            200,
+            1,
         );
 
         let nmcb = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_collection_bids,
             &collection_bids,
-            200,
+            1,
         );
 
         let cnmcb = execute_in_chunks(
             self.db_pool.clone(),
             insert_current_nft_marketplace_collection_bids,
             &current_collection_bids,
-            200,
+            1,
         );
 
         let (nma_res, nmb_res, cnmb_res, nml_res, cnml_res, nmcb_res, cnmcb_res) =
