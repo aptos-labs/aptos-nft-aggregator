@@ -9,6 +9,7 @@ use crate::schema::{
     current_nft_marketplace_listings, nft_marketplace_activities, nft_marketplace_bids,
     nft_marketplace_collection_bids, nft_marketplace_listings,
 };
+use anyhow::Context;
 use aptos_indexer_processor_sdk::utils::convert::standardize_address;
 use aptos_protos::transaction::v1::Event;
 use bigdecimal::BigDecimal;
@@ -25,17 +26,18 @@ use tracing::debug;
  *
 */
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(txn_version, event_index))]
+#[diesel(primary_key(txn_version, index))]
 #[diesel(table_name = nft_marketplace_activities)]
 pub struct NftMarketplaceActivity {
     pub txn_version: i64,
-    pub event_index: i64,
+    pub index: i64,
     pub raw_event_type: String,
     pub standard_event_type: String,
     pub creator_address: Option<String>,
     pub collection_id: Option<String>,
     pub collection_name: Option<String>,
-    pub token_data_id: Option<String>, // for v1, we don't use property version.
+    pub offer_or_listing_id: Option<String>,
+    pub token_data_id: Option<String>,
     pub token_name: Option<String>,
     pub token_standard: Option<String>,
     pub price: Option<BigDecimal>,
@@ -87,6 +89,14 @@ impl NftMarketplaceActivity {
                 let token_amount = extract_bigdecimal(&config.token_amount, &event_data);
                 let collection_name = extract_string(&config.collection_name, &event_data);
                 let token_name = extract_string(&config.token_name, &event_data);
+                let offer_id = extract_string(&config.offer_id, &event_data);
+                let listing_id = extract_string(&config.listing_id, &event_data);
+
+                let offer_or_listing_id = if offer_id.is_some() {
+                    offer_id
+                } else {
+                    listing_id
+                };
 
                 // Extract token data ID and collection ID.
                 let token_data_id = Self::extract_token_data_id(
@@ -107,7 +117,8 @@ impl NftMarketplaceActivity {
                 // Construct the `NftMarketplaceActivity` instance.
                 let activity = Self {
                     txn_version,
-                    event_index,
+                    index: event_index,
+                    offer_or_listing_id,
                     raw_event_type: event_type.clone(),
                     standard_event_type,
                     creator_address,
@@ -217,70 +228,78 @@ impl NftMarketplaceActivity {
 }
 
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(transaction_version,))]
+#[diesel(primary_key(txn_version, index))]
 #[diesel(table_name = nft_marketplace_listings)]
 pub struct NftMarketplaceListing {
-    pub transaction_version: i64,
+    pub listing_id: Option<String>,
+    pub txn_version: i64,
+    pub index: i64,
     pub creator_address: Option<String>,
+    pub standard_event_type: Option<String>,
     pub token_name: Option<String>,
     pub token_data_id: Option<String>,
     pub collection_name: Option<String>,
     pub collection_id: Option<String>,
     pub price: Option<BigDecimal>,
     pub token_amount: Option<BigDecimal>,
-    pub token_standard: Option<String>,
     pub seller: Option<String>,
-    // pub buyer: Option<String>,
+    pub token_standard: Option<String>,
     pub marketplace: String,
     pub contract_address: String,
-    pub entry_function_id_str: String,
+    pub entry_function_id_str: Option<String>,
     pub event_type: Option<String>,
     pub transaction_timestamp: NaiveDateTime,
+    pub inserted_at: NaiveDateTime,
 }
 
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(token_data_id))]
+#[diesel(primary_key(listing_id, token_data_id, index))]
 #[diesel(table_name = current_nft_marketplace_listings)]
 pub struct CurrentNftMarketplaceListing {
-    pub token_data_id: Option<String>,
+    pub listing_id: String,
+    pub token_data_id: String,
+    pub index: i64,
     pub creator_address: Option<String>,
     pub token_name: Option<String>,
     pub collection_name: Option<String>,
     pub collection_id: Option<String>,
     pub price: Option<BigDecimal>,
     pub token_amount: Option<BigDecimal>,
-    pub token_standard: Option<String>,
     pub seller: Option<String>,
+    pub token_standard: Option<String>,
     pub is_deleted: bool,
     pub marketplace: String,
     pub contract_address: String,
-    pub entry_function_id_str: String,
+    pub entry_function_id_str: Option<String>,
     pub event_type: Option<String>,
-    pub last_transaction_version: Option<i64>,
+    pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
+    pub inserted_at: NaiveDateTime,
 }
 
 impl NftMarketplaceListing {
     pub fn from_activity(activity: &NftMarketplaceActivity) -> Self {
         // Handle Option fields with defaults or error handling
-        let entry_function_id_str: String =
-            activity.entry_function_id_str.clone().unwrap_or_default();
         Self {
-            transaction_version: activity.txn_version,
+            listing_id: activity.offer_or_listing_id.clone(),
+            txn_version: activity.txn_version,
+            index: activity.index,
             creator_address: activity.creator_address.clone(),
+            standard_event_type: Some(activity.standard_event_type.clone()),
             token_name: activity.token_name.clone(),
             token_data_id: activity.token_data_id.clone(),
             collection_name: activity.collection_name.clone(),
             collection_id: activity.collection_id.clone(),
             price: activity.price.clone(),
             token_amount: activity.token_amount.clone(),
-            token_standard: activity.token_standard.clone(),
             seller: activity.seller.clone(),
+            token_standard: activity.token_standard.clone(),
             marketplace: activity.marketplace.clone(),
             contract_address: activity.contract_address.clone(),
-            entry_function_id_str,
-            event_type: Some(activity.standard_event_type.clone()),
+            entry_function_id_str: activity.entry_function_id_str.clone(),
+            event_type: Some(activity.raw_event_type.clone()),
             transaction_timestamp: activity.transaction_timestamp,
+            inserted_at: activity.transaction_timestamp,
         }
     }
 
@@ -291,22 +310,35 @@ impl NftMarketplaceListing {
         let listing = Self::from_activity(activity);
 
         let current_listing = CurrentNftMarketplaceListing {
-            token_data_id: listing.token_data_id.clone(),
+            listing_id: listing.listing_id.clone().unwrap_or_else(|| {
+                panic!(
+                    "Failed to get listing_id from activity: {:?}",
+                    activity.txn_version
+                )
+            }),
+            token_data_id: listing.token_data_id.clone().unwrap_or_else(|| {
+                panic!(
+                    "Failed to get token_data_id from activity: {:?}",
+                    activity.txn_version
+                )
+            }),
+            index: activity.index,
             creator_address: listing.creator_address.clone(),
             token_name: listing.token_name.clone(),
             collection_name: listing.collection_name.clone(),
             collection_id: listing.collection_id.clone(),
             price: listing.price.clone(),
             token_amount: listing.token_amount.clone(),
-            token_standard: listing.token_standard.clone(),
             seller: listing.seller.clone(),
+            token_standard: listing.token_standard.clone(),
             is_deleted,
             marketplace: listing.marketplace.clone(),
             contract_address: listing.contract_address.clone(),
             entry_function_id_str: listing.entry_function_id_str.clone(),
             event_type: listing.event_type.clone(),
-            last_transaction_version: Some(activity.txn_version),
+            last_transaction_version: listing.txn_version,
             last_transaction_timestamp: listing.transaction_timestamp,
+            inserted_at: listing.transaction_timestamp,
         };
 
         (listing, current_listing)
@@ -315,11 +347,12 @@ impl NftMarketplaceListing {
 
 // Non-current tables
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(transaction_version, event_index))]
+#[diesel(primary_key(txn_version, index))]
 #[diesel(table_name = nft_marketplace_bids)]
 pub struct NftMarketplaceBid {
-    pub transaction_version: i64,
-    pub event_index: i64,
+    pub txn_version: i64,
+    pub index: i64,
+    pub offer_id: Option<String>,
     pub token_data_id: String,
     pub buyer: String,
     pub price: BigDecimal,
@@ -338,8 +371,9 @@ pub struct NftMarketplaceBid {
 impl NftMarketplaceBid {
     pub fn from_activity(activity: &NftMarketplaceActivity) -> Self {
         Self {
-            transaction_version: activity.txn_version,
-            event_index: activity.event_index,
+            txn_version: activity.txn_version,
+            index: activity.index,
+            offer_id: activity.offer_or_listing_id.clone(),
             token_data_id: activity.token_data_id.clone().unwrap_or_default(),
             buyer: activity.buyer.clone().unwrap_or_default(),
             price: activity.price.clone().unwrap_or_default(),
@@ -367,14 +401,15 @@ impl NftMarketplaceBid {
 }
 
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(transaction_version))]
+#[diesel(primary_key(txn_version, index))]
 #[diesel(table_name = nft_marketplace_collection_bids)]
 pub struct NftMarketplaceCollectionBid {
-    pub transaction_version: i64,
-    pub event_index: Option<i64>,
+    pub offer_id: Option<String>,
+    pub collection_id: String,
+    pub txn_version: i64,
+    pub index: i64,
     pub creator_address: Option<String>,
     pub collection_name: Option<String>,
-    pub collection_id: Option<String>,
     pub price: BigDecimal,
     pub token_amount: Option<BigDecimal>,
     pub buyer: Option<String>,
@@ -389,11 +424,12 @@ pub struct NftMarketplaceCollectionBid {
 impl NftMarketplaceCollectionBid {
     pub fn from_activity(activity: &NftMarketplaceActivity) -> Self {
         Self {
-            transaction_version: activity.txn_version,
-            event_index: Some(activity.event_index),
+            offer_id: activity.offer_or_listing_id.clone(),
+            collection_id: activity.collection_id.clone().unwrap_or_default(),
+            txn_version: activity.txn_version,
+            index: activity.index,
             creator_address: activity.creator_address.clone(),
             collection_name: activity.collection_name.clone(),
-            collection_id: activity.collection_id.clone(),
             price: activity.price.clone().unwrap_or_default(),
             token_amount: activity.token_amount.clone(),
             buyer: activity.buyer.clone(),
@@ -417,10 +453,12 @@ impl NftMarketplaceCollectionBid {
 }
 
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(token_data_id, buyer, price))]
+#[diesel(primary_key(offer_id, token_data_id))]
 #[diesel(table_name = current_nft_marketplace_bids)]
 pub struct CurrentNftMarketplaceBid {
+    pub offer_id: String,
     pub token_data_id: String,
+    pub index: i64,
     pub buyer: String,
     pub price: BigDecimal,
     pub creator_address: Option<String>,
@@ -440,6 +478,12 @@ impl CurrentNftMarketplaceBid {
     pub fn from_activity(activity: &NftMarketplaceActivity, is_deleted: bool) -> Self {
         Self {
             token_data_id: activity.token_data_id.clone().unwrap_or_default(),
+            offer_id: activity
+                .offer_or_listing_id
+                .clone()
+                .context("Offer ID is required")
+                .unwrap(),
+            index: activity.index,
             buyer: activity.buyer.clone().unwrap_or_default(),
             price: activity.price.clone().unwrap_or_default(),
             creator_address: activity.creator_address.clone(),
@@ -458,10 +502,12 @@ impl CurrentNftMarketplaceBid {
 }
 
 #[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(collection_id, buyer, price))]
+#[diesel(primary_key(offer_id, collection_id))]
 #[diesel(table_name = current_nft_marketplace_collection_bids)]
 pub struct CurrentNftMarketplaceCollectionBid {
     pub collection_id: String,
+    pub index: i64,
+    pub offer_id: Option<String>,
     pub buyer: Option<String>,
     pub price: BigDecimal,
     pub creator_address: Option<String>,
@@ -480,7 +526,9 @@ pub struct CurrentNftMarketplaceCollectionBid {
 impl CurrentNftMarketplaceCollectionBid {
     pub fn from_activity(activity: &NftMarketplaceActivity, is_deleted: bool) -> Self {
         Self {
-            collection_id: activity.collection_id.clone().unwrap_or_default(),
+            collection_id: activity.collection_id.clone().unwrap(),
+            index: activity.index,
+            offer_id: activity.offer_or_listing_id.clone(),
             buyer: activity.buyer.clone(),
             price: activity.price.clone().unwrap_or_default(),
             creator_address: activity.creator_address.clone(),

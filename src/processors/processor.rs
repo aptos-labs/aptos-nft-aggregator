@@ -28,7 +28,7 @@ use diesel::{
     query_builder::QueryFragment,
     ExpressionMethods,
 };
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tonic::async_trait;
 use tracing::{debug, error, info};
 
@@ -218,6 +218,8 @@ impl Processable for ProcessStep {
                         &self.event_mappings,
                         &self.contract_to_marketplace_map,
                     ) {
+                        // println!("Activity: {:#?}", activity);
+
                         match activity.standard_event_type.as_str() {
                             "place_listing" => {
                                 let (listing, current_listing) =
@@ -300,80 +302,166 @@ impl Processable for ProcessStep {
             }
         }
 
+        // Deduplicate listings
+        let mut listings_map: HashMap<(Option<String>, Option<String>), NftMarketplaceListing> =
+            HashMap::new();
+        for listing in listings {
+            let key = (listing.listing_id.clone(), listing.token_data_id.clone());
+            listings_map.entry(key).or_insert(listing);
+        }
+        let mut deduped_listings: Vec<NftMarketplaceListing> = listings_map.into_values().collect();
+
+        // Deduplicate bids
+        let mut bids_map: HashMap<(Option<String>, String), NftMarketplaceBid> = HashMap::new();
+        for bid in token_bids {
+            let key = (bid.offer_id.clone(), bid.token_data_id.clone());
+            bids_map.entry(key).or_insert(bid);
+        }
+        let mut deduped_bids: Vec<NftMarketplaceBid> = bids_map.into_values().collect();
+
+        // Deduplicate activities
+        let mut activities_map: HashMap<(i64, i64), NftMarketplaceActivity> = HashMap::new();
+        for activity in activities {
+            let key = (activity.txn_version, activity.index);
+            activities_map.entry(key).or_insert(activity);
+        }
+        let mut deduped_activities: Vec<NftMarketplaceActivity> =
+            activities_map.into_values().collect();
+
+        // Deduplicate current listings
+        let mut current_listings_map: HashMap<(String, String), CurrentNftMarketplaceListing> =
+            HashMap::new();
+        for current_listing in current_listings {
+            let key: (String, String) = (
+                current_listing.listing_id.clone(),
+                current_listing.token_data_id.clone(),
+            );
+            current_listings_map
+                .entry(key)
+                .and_modify(|existing_listing| {
+                    if current_listing.last_transaction_version
+                        > existing_listing.last_transaction_version
+                    {
+                        *existing_listing = current_listing.clone();
+                    }
+                })
+                .or_insert_with(|| current_listing.clone());
+        }
+        let deduped_current_listings: Vec<CurrentNftMarketplaceListing> =
+            current_listings_map.into_values().collect();
+
+        // Deduplicate current token bids
+        let mut current_token_bids_map: HashMap<(String, String), CurrentNftMarketplaceBid> =
+            HashMap::new();
+        for current_bid in current_token_bids {
+            let key = (
+                current_bid.offer_id.clone(),
+                current_bid.token_data_id.clone(),
+            );
+            current_token_bids_map
+                .entry(key)
+                .and_modify(|existing_bid| {
+                    if current_bid.last_transaction_version > existing_bid.last_transaction_version
+                    {
+                        *existing_bid = current_bid.clone();
+                    }
+                })
+                .or_insert_with(|| current_bid.clone());
+        }
+        let deduped_current_token_bids: Vec<CurrentNftMarketplaceBid> =
+            current_token_bids_map.into_values().collect();
+
+        // Deduplicate current collection bids
+        let mut current_collection_bids_map: HashMap<
+            (String, String),
+            CurrentNftMarketplaceCollectionBid,
+        > = HashMap::new();
+        for current_collection_bid in current_collection_bids {
+            let key = (
+                current_collection_bid.collection_id.clone(),
+                current_collection_bid.offer_id.clone().unwrap(),
+            );
+            current_collection_bids_map
+                .entry(key)
+                .and_modify(|existing_bid| {
+                    if current_collection_bid.last_transaction_version
+                        > existing_bid.last_transaction_version
+                    {
+                        *existing_bid = current_collection_bid.clone();
+                    }
+                })
+                .or_insert_with(|| current_collection_bid.clone());
+        }
+
+        let deduped_current_collection_bids: Vec<CurrentNftMarketplaceCollectionBid> =
+            current_collection_bids_map.into_values().collect();
+
         // Sort vectors by primary key to avoid deadlocks
-        activities.sort_by(|a, b| {
+        deduped_activities.sort_by(|a, b| {
             a.txn_version
                 .cmp(&b.txn_version)
-                .then(a.event_index.cmp(&b.event_index))
+                .then(a.index.cmp(&b.index))
         });
 
-        current_listings.sort_by(|a, b| {
-            a.token_data_id
-                .cmp(&b.token_data_id)
-                .then(a.collection_id.cmp(&b.collection_id))
+        deduped_listings.sort_by(|a, b| {
+            a.txn_version
+                .cmp(&b.txn_version)
+                .then(a.index.cmp(&b.index))
         });
 
-        current_token_bids.sort_by(|a, b| {
-            a.token_data_id
-                .cmp(&b.token_data_id)
-                .then(a.buyer.cmp(&b.buyer))
-                .then(a.price.cmp(&b.price))
-        });
-
-        current_collection_bids.sort_by(|a, b| {
-            a.collection_id
-                .cmp(&b.collection_id)
-                .then(a.buyer.cmp(&b.buyer))
-                .then(a.price.cmp(&b.price))
+        deduped_bids.sort_by(|a, b| {
+            a.txn_version
+                .cmp(&b.txn_version)
+                .then(a.index.cmp(&b.index))
         });
 
         let nma = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_activities,
-            &activities,
-            2,
+            &deduped_activities,
+            200,
         );
 
         let nmb = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_bids,
-            &token_bids,
-            1,
+            &deduped_bids,
+            200,
         );
 
         let cnmb = execute_in_chunks(
             self.db_pool.clone(),
             insert_current_nft_marketplace_bids,
-            &current_token_bids,
-            1,
+            &deduped_current_token_bids,
+            200,
         );
 
         let nml = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_listings,
-            &listings,
-            1,
+            &deduped_listings,
+            200,
         );
 
         let cnml = execute_in_chunks(
             self.db_pool.clone(),
             insert_current_nft_marketplace_listings,
-            &current_listings,
-            1,
+            &deduped_current_listings,
+            200,
         );
 
         let nmcb = execute_in_chunks(
             self.db_pool.clone(),
             insert_nft_marketplace_collection_bids,
             &collection_bids,
-            1,
+            200,
         );
 
         let cnmcb = execute_in_chunks(
             self.db_pool.clone(),
             insert_current_nft_marketplace_collection_bids,
-            &current_collection_bids,
-            1,
+            &deduped_current_collection_bids,
+            200,
         );
 
         let (nma_res, nmb_res, cnmb_res, nml_res, cnml_res, nmcb_res, cnmcb_res) =
@@ -425,7 +513,7 @@ pub fn insert_nft_marketplace_activities(
     (
         diesel::insert_into(schema::nft_marketplace_activities::table)
             .values(items_to_insert)
-            .on_conflict((txn_version, event_index))
+            .on_conflict((txn_version, index))
             .do_nothing(),
         None,
     )
@@ -442,31 +530,17 @@ pub fn insert_current_nft_marketplace_bids(
     (
         diesel::insert_into(schema::current_nft_marketplace_bids::table)
             .values(items_to_insert)
-            .on_conflict((token_data_id, buyer, price))
+            .on_conflict((offer_id, token_data_id))
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
                 last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
                 token_amount.eq(excluded(token_amount)),
                 last_transaction_version.eq(excluded(last_transaction_version)),
+                price.eq(excluded(price)),
+                index.eq(excluded(index)),
             )),
-        Some(" WHERE current_nft_marketplace_bids.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
-    )
-}
-
-pub fn insert_nft_marketplace_bids(
-    items_to_insert: Vec<NftMarketplaceBid>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
-    use crate::schema::nft_marketplace_bids::dsl::*;
-    (
-        diesel::insert_into(schema::nft_marketplace_bids::table)
-            .values(items_to_insert)
-            .on_conflict((transaction_version, event_index))
-            .do_nothing(),
-        None,
+        Some(" WHERE current_nft_marketplace_bids.last_transaction_version < excluded.last_transaction_version "),
     )
 }
 
@@ -481,7 +555,7 @@ pub fn insert_current_nft_marketplace_collection_bids(
     (
         diesel::insert_into(schema::current_nft_marketplace_collection_bids::table)
             .values(items_to_insert)
-            .on_conflict((collection_id, buyer, price))
+            .on_conflict((offer_id, collection_id))
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
@@ -489,8 +563,26 @@ pub fn insert_current_nft_marketplace_collection_bids(
                 token_amount.eq(excluded(token_amount)),
                 last_transaction_version.eq(excluded(last_transaction_version)),
                 expiration_time.eq(excluded(expiration_time)),
+                price.eq(excluded(price)),
+                index.eq(excluded(index)),
             )),
-        Some(" WHERE current_nft_marketplace_collection_bids.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
+        Some(" WHERE current_nft_marketplace_collection_bids.last_transaction_version < excluded.last_transaction_version "),
+    )
+}
+
+pub fn insert_nft_marketplace_bids(
+    items_to_insert: Vec<NftMarketplaceBid>,
+) -> (
+    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
+    Option<&'static str>,
+) {
+    use crate::schema::nft_marketplace_bids::dsl::*;
+    (
+        diesel::insert_into(schema::nft_marketplace_bids::table)
+            .values(items_to_insert)
+            .on_conflict((txn_version, index))
+            .do_nothing(),
+        None,
     )
 }
 
@@ -505,7 +597,7 @@ pub fn insert_nft_marketplace_collection_bids(
     (
         diesel::insert_into(schema::nft_marketplace_collection_bids::table)
             .values(items_to_insert)
-            .on_conflict((transaction_version, event_index))
+            .on_conflict((txn_version, index))
             .do_nothing(),
         None,
     )
@@ -522,7 +614,7 @@ pub fn insert_nft_marketplace_listings(
     (
         diesel::insert_into(schema::nft_marketplace_listings::table)
             .values(items_to_insert)
-            .on_conflict(transaction_version)
+            .on_conflict((txn_version, index))
             .do_nothing(),
         None,
     )
@@ -539,14 +631,15 @@ pub fn insert_current_nft_marketplace_listings(
     (
         diesel::insert_into(schema::current_nft_marketplace_listings::table)
             .values(items_to_insert)
-            .on_conflict(token_data_id)
+            .on_conflict((listing_id, token_data_id))
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
                 last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
                 token_amount.eq(excluded(token_amount)),
                 last_transaction_version.eq(excluded(last_transaction_version)),
+                price.eq(excluded(price)),
             )),
-        Some(" WHERE current_nft_marketplace_listings.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
+        Some(" WHERE current_nft_marketplace_listings.last_transaction_version < excluded.last_transaction_version "),
     )
 }
