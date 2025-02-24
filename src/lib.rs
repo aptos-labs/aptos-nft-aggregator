@@ -5,3 +5,5 @@ extern crate diesel;
 pub mod schema;
 
 pub mod processors;
+
+pub mod postgres;

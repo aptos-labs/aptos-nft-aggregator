@@ -135,7 +135,7 @@ impl NFTMarketplaceConfigs {
                         .place_event
                         .creator_address
                         .clone(),
-                    config.collection_offer_config.deadline.clone(),
+                    config.event_config.deadline.clone(),
                     None,
                     None,
                 )?,
@@ -160,7 +160,7 @@ impl NFTMarketplaceConfigs {
                         .cancel_event
                         .creator_address
                         .clone(),
-                    config.collection_offer_config.deadline.clone(),
+                    config.event_config.deadline.clone(),
                     None,
                     None,
                 )?,
@@ -181,7 +181,7 @@ impl NFTMarketplaceConfigs {
                         .fill_event
                         .creator_address
                         .clone(),
-                    config.collection_offer_config.deadline.clone(),
+                    config.event_config.deadline.clone(),
                     None,
                     None,
                 )?,
@@ -200,22 +200,24 @@ impl NFTMarketplaceConfigs {
 pub struct MarketplaceEventConfig {
     pub event_type: MarketplaceEventType,
     pub marketplace: String,
-    pub creator_address: HashableJsonPath,
     pub collection_id: HashableJsonPath,
+    pub creator_address: HashableJsonPath,
     pub token_name: HashableJsonPath,
+    pub collection_name: HashableJsonPath,
     pub price: HashableJsonPath,
     pub token_amount: HashableJsonPath,
     pub buyer: HashableJsonPath,
     pub seller: HashableJsonPath,
-    pub collection_name: HashableJsonPath,
     pub deadline: HashableJsonPath,
     pub token_inner: HashableJsonPath,
     pub collection_inner: HashableJsonPath,
-    pub offer_id: HashableJsonPath,
-    pub listing_id: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
+    /**
+     * Some of fields are optional, it's due to the fact that the event config is shared across different event types
+     * and some of the fields are not applicable to all event types
+     */
     pub fn from_event_config(
         event_config: &EventConfig,
         event_type: MarketplaceEventType,
@@ -229,53 +231,32 @@ impl MarketplaceEventConfig {
         Ok(Self {
             event_type,
             marketplace: marketplace_name,
+            collection_id: HashableJsonPath::new(event_config.collection_id.clone())?,
+            creator_address: HashableJsonPath::new(
+                creator_address.or_else(|| event_config.creator_address.clone()),
+            )?,
             token_name: HashableJsonPath::new(event_config.token_name.clone())?,
+            collection_name: HashableJsonPath::new(
+                collection_name.or_else(|| event_config.collection_name.clone()),
+            )?,
             price: HashableJsonPath::new(event_config.price.clone())?,
             token_amount: HashableJsonPath::new(event_config.token_amount.clone())?,
-            seller: HashableJsonPath::new(
-                if seller.is_some() {
-                    seller
-                } else {
-                    event_config.seller.clone()
-                },
-            )?,
-            buyer: HashableJsonPath::new(
-                if buyer.is_some() {
-                    buyer
-                } else {
-                    event_config.buyer.clone()
-                },
-            )?,
-            collection_name: HashableJsonPath::new(
-                if collection_name.is_some() {
-                    collection_name
-                } else {
-                    event_config.collection_name.clone()
-                },
-            )?,
-            creator_address: HashableJsonPath::new(
-                if creator_address.is_some() {
-                    creator_address
-                } else {
-                    event_config.creator_address.clone()
-                },
-            )?,
-            collection_id: HashableJsonPath::new(event_config.collection_id.clone())?,
-            deadline: HashableJsonPath::new(
-                if deadline.is_some() {
-                    deadline
-                } else {
-                    event_config.deadline.clone()
-                },
-            )?,
+            buyer: HashableJsonPath::new(buyer.or_else(|| event_config.buyer.clone()))?,
+            seller: HashableJsonPath::new(seller.or_else(|| event_config.seller.clone()))?,
+            deadline: HashableJsonPath::new(deadline.or_else(|| event_config.deadline.clone()))?,
             token_inner: HashableJsonPath::new(event_config.token_inner.clone())?,
             collection_inner: HashableJsonPath::new(event_config.collection_inner.clone())?,
-            offer_id: HashableJsonPath::new(event_config.offer_id.clone())?,
-            listing_id: HashableJsonPath::new(event_config.listing_id.clone())?,
         })
     }
 }
 
+/**
+ *
+ * As you can see, some of the fields are optional and duplicated with the event config
+ * The reason for this is that each event type has different event structure and contains different data, which makes us
+ * need to handle it differently for different marketplaces and for different event types. This applies to other Event types as well such
+ * as offer(bid) and collection offer(bid).
+ */
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ListingConfig {
@@ -303,7 +284,6 @@ pub struct CollectionOfferConfig {
     pub cancel_event: CollectionEventParams,
     pub fill_event: CollectionEventParams,
     pub place_event: CollectionEventParams,
-    pub deadline: Option<String>, // across all marketplaces, deadline is part of the event data for collection offer
 }
 
 /// This is to give us more flexibility to handle different event structures
@@ -320,18 +300,23 @@ pub struct CollectionEventParams {
     pub creator_address: Option<String>,
 }
 
+/**
+ * This is the config for us to extract the data from the event for each marketplace
+ * Some of fields are optional, it's due to the fact that the event config is shared across different event types
+ * and some of the fields are not applicable to all event types
+ * For example, Only Topaz has deadline for collection offer event, So we need to use Optional.
+*/
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct EventConfig {
-    pub creator_address: Option<String>,
     pub collection_id: Option<String>,
-    pub token_data_id: Option<String>,
     pub token_name: Option<String>,
+    pub creator_address: Option<String>,
+    pub collection_name: Option<String>,
     pub price: Option<String>,
     pub token_amount: Option<String>,
     pub buyer: Option<String>,
     pub seller: Option<String>,
-    pub collection_name: Option<String>,
     pub deadline: Option<String>,
     pub token_inner: Option<String>,
     pub collection_inner: Option<String>,

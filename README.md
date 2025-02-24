@@ -8,3 +8,11 @@
 cargo run --release -- -c config.yaml
 ```
 
+
+
+### Explain what each field in the config.yaml is for
+
+
+
+
+
