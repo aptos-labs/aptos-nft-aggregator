@@ -116,40 +116,72 @@ impl NFTMarketplaceConfigs {
                 )?,
             );
             mapping.insert(
-                config.collection_offer_config.place_event.clone(),
+                config
+                    .collection_offer_config
+                    .place_event
+                    .event_type
+                    .clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.collection_offer_config.collection_name.clone(),
-                    config.collection_offer_config.creator_address.clone(),
-                    config.collection_offer_config.deadline.clone(),
+                    config
+                        .collection_offer_config
+                        .place_event
+                        .collection_name
+                        .clone(),
+                    config
+                        .collection_offer_config
+                        .place_event
+                        .creator_address
+                        .clone(),
+                    config.event_config.deadline.clone(),
                     None,
                     None,
                 )?,
             );
             mapping.insert(
-                config.collection_offer_config.cancel_event.clone(),
+                config
+                    .collection_offer_config
+                    .cancel_event
+                    .event_type
+                    .clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::CancelCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.collection_offer_config.collection_name.clone(),
-                    config.collection_offer_config.creator_address.clone(),
-                    config.collection_offer_config.deadline.clone(),
+                    config
+                        .collection_offer_config
+                        .cancel_event
+                        .collection_name
+                        .clone(),
+                    config
+                        .collection_offer_config
+                        .cancel_event
+                        .creator_address
+                        .clone(),
+                    config.event_config.deadline.clone(),
                     None,
                     None,
                 )?,
             );
             mapping.insert(
-                config.collection_offer_config.fill_event.clone(),
+                config.collection_offer_config.fill_event.event_type.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillCollectionOffer,
                     config.marketplace_name.clone(),
-                    config.event_config.collection_name.clone(),
-                    config.event_config.creator_address.clone(),
-                    config.collection_offer_config.deadline.clone(),
+                    config
+                        .collection_offer_config
+                        .fill_event
+                        .collection_name
+                        .clone(),
+                    config
+                        .collection_offer_config
+                        .fill_event
+                        .creator_address
+                        .clone(),
+                    config.event_config.deadline.clone(),
                     None,
                     None,
                 )?,
@@ -168,20 +200,24 @@ impl NFTMarketplaceConfigs {
 pub struct MarketplaceEventConfig {
     pub event_type: MarketplaceEventType,
     pub marketplace: String,
-    pub creator_address: HashableJsonPath,
     pub collection_id: HashableJsonPath,
+    pub creator_address: HashableJsonPath,
     pub token_name: HashableJsonPath,
+    pub collection_name: HashableJsonPath,
     pub price: HashableJsonPath,
     pub token_amount: HashableJsonPath,
     pub buyer: HashableJsonPath,
     pub seller: HashableJsonPath,
-    pub collection_name: HashableJsonPath,
     pub deadline: HashableJsonPath,
     pub token_inner: HashableJsonPath,
     pub collection_inner: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
+    /**
+     * Some of fields are optional, it's due to the fact that the event config is shared across different event types
+     * and some of the fields are not applicable to all event types
+     */
     pub fn from_event_config(
         event_config: &EventConfig,
         event_type: MarketplaceEventType,
@@ -195,51 +231,32 @@ impl MarketplaceEventConfig {
         Ok(Self {
             event_type,
             marketplace: marketplace_name,
+            collection_id: HashableJsonPath::new(event_config.collection_id.clone())?,
+            creator_address: HashableJsonPath::new(
+                creator_address.or_else(|| event_config.creator_address.clone()),
+            )?,
             token_name: HashableJsonPath::new(event_config.token_name.clone())?,
+            collection_name: HashableJsonPath::new(
+                collection_name.or_else(|| event_config.collection_name.clone()),
+            )?,
             price: HashableJsonPath::new(event_config.price.clone())?,
             token_amount: HashableJsonPath::new(event_config.token_amount.clone())?,
-            seller: HashableJsonPath::new(
-                if seller.is_some() {
-                    seller
-                } else {
-                    event_config.seller.clone()
-                },
-            )?,
-            buyer: HashableJsonPath::new(
-                if buyer.is_some() {
-                    buyer
-                } else {
-                    event_config.buyer.clone()
-                },
-            )?,
-            collection_name: HashableJsonPath::new(
-                if collection_name.is_some() {
-                    collection_name
-                } else {
-                    event_config.collection_name.clone()
-                },
-            )?,
-            creator_address: HashableJsonPath::new(
-                if creator_address.is_some() {
-                    creator_address
-                } else {
-                    event_config.creator_address.clone()
-                },
-            )?,
-            collection_id: HashableJsonPath::new(event_config.collection_id.clone())?,
-            deadline: HashableJsonPath::new(
-                if deadline.is_some() {
-                    deadline
-                } else {
-                    event_config.deadline.clone()
-                },
-            )?,
+            buyer: HashableJsonPath::new(buyer.or_else(|| event_config.buyer.clone()))?,
+            seller: HashableJsonPath::new(seller.or_else(|| event_config.seller.clone()))?,
+            deadline: HashableJsonPath::new(deadline.or_else(|| event_config.deadline.clone()))?,
             token_inner: HashableJsonPath::new(event_config.token_inner.clone())?,
             collection_inner: HashableJsonPath::new(event_config.collection_inner.clone())?,
         })
     }
 }
 
+/**
+ *
+ * As you can see, some of the fields are optional and duplicated with the event config
+ * The reason for this is that each event type has different event structure and contains different data, which makes us
+ * need to handle it differently for different marketplaces and for different event types. This applies to other Event types as well such
+ * as offer(bid) and collection offer(bid).
+ */
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ListingConfig {
@@ -264,29 +281,47 @@ pub struct OfferConfig {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct CollectionOfferConfig {
-    pub cancel_event: String,
-    pub fill_event: String,
-    pub place_event: String,
-    pub collection_name: Option<String>,
-    pub creator_address: Option<String>,
-    pub deadline: Option<String>,
+    pub cancel_event: CollectionEventParams,
+    pub fill_event: CollectionEventParams,
+    pub place_event: CollectionEventParams,
 }
 
+/// This is to give us more flexibility to handle different event structures
+/// for collection offer events across different marketplaces
+/// Because even within the same marketplace, the event structure might be different for different type of events
+/// e.g. for tradeport, the collection name and creator address are part of the token data for Fill Event, while they are part of collection metadata for Place Event and Cancel Event
+/// but for topaz, the collection name and creator address are part of the top level event data for place event, but part of the token data for cancel and fill events
+/// So we need to handle it differently for different marketplaces
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CollectionEventParams {
+    pub event_type: String,
+    pub collection_name: Option<String>,
+    pub creator_address: Option<String>,
+}
+
+/**
+ * This is the config for us to extract the data from the event for each marketplace
+ * Some of fields are optional, it's due to the fact that the event config is shared across different event types
+ * and some of the fields are not applicable to all event types
+ * For example, Only Topaz has deadline for collection offer event, So we need to use Optional.
+*/
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct EventConfig {
-    pub creator_address: Option<String>,
     pub collection_id: Option<String>,
-    pub token_data_id: Option<String>,
     pub token_name: Option<String>,
+    pub creator_address: Option<String>,
+    pub collection_name: Option<String>,
     pub price: Option<String>,
     pub token_amount: Option<String>,
     pub buyer: Option<String>,
     pub seller: Option<String>,
-    pub collection_name: Option<String>,
     pub deadline: Option<String>,
     pub token_inner: Option<String>,
     pub collection_inner: Option<String>,
+    pub offer_id: Option<String>,
+    pub listing_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
