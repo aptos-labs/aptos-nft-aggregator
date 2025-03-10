@@ -167,7 +167,6 @@ pub struct CollectionMetadata {
 
 pub fn get_object_core(resource_type: &str, data: &Value) -> Option<ObjectCore> {
     if resource_type.contains("0x1::object::ObjectCore") {
-        println!("Found ObjectCore at address: {}", resource_type);
         return Some(ObjectCore {
             owner: extract_field(data, "owner")?,
             allow_ungated_transfer: extract_field(data, "allow_ungated_transfer")?

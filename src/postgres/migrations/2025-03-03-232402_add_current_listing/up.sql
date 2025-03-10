@@ -76,5 +76,5 @@ CREATE TABLE IF NOT EXISTS current_nft_marketplace_collection_offers (
     last_transaction_timestamp TIMESTAMP NOT NULL
 );
 
--- Create index for common queries
--- CREATE INDEX idx_current_collection_offers_marketplace ON current_nft_marketplace_collection_offers(marketplace);
+Create index for common queries
+CREATE INDEX idx_current_collection_offers_marketplace ON current_nft_marketplace_collection_offers(marketplace);

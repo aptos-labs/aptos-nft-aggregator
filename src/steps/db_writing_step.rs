@@ -284,12 +284,19 @@ pub fn insert_nft_marketplace_activities(
     Option<&'static str>,
 ) {
     use crate::schema::nft_marketplace_activities::dsl::*;
-
     (
         diesel::insert_into(schema::nft_marketplace_activities::table)
             .values(items_to_insert)
             .on_conflict((txn_version, index))
-            .do_nothing(),
+            .do_update()
+            .set((
+                // When a conflict occurs on the primary key (txn_version, index),
+                // this updates the following fields with values from the excluded record:
+                listing_id.eq(excluded(listing_id)), // Updates the listing_id
+                offer_id.eq(excluded(offer_id)),     // Updates the offer_id
+                fee_schedule_id.eq(excluded(fee_schedule_id)), // Updates the fee_schedule_id
+                coin_type.eq(excluded(coin_type)),   // Updates the coin_type
+            )),
         None,
     )
 }

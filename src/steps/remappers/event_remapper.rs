@@ -23,6 +23,7 @@ use aptos_indexer_processor_sdk::utils::{
 };
 use aptos_protos::transaction::v1::{move_type as pb_move_type, transaction::TxnData, Transaction};
 use std::{collections::HashMap, str::FromStr, sync::Arc};
+use tracing::{debug, info, warn};
 
 pub struct EventRemapper {
     pub event_mappings: Arc<MarketplaceEventConfigMappings>,
@@ -87,16 +88,20 @@ impl EventRemapper {
                 if !clean_payload.type_arguments.is_empty() {
                     let extracted_move_type = Some(clean_payload.type_arguments[0].clone());
                     if let Some(move_type) = &extracted_move_type {
-                        match move_type.content.as_ref().unwrap() {
-                            pb_move_type::Content::Struct(struct_tag) => {
-                                coin_type = Some(format!(
-                                    "{}::{}::{}",
-                                    struct_tag.address, struct_tag.module, struct_tag.name
-                                ));
-                            },
-                            _ => {
-                                println!("Skipping non-struct type");
-                            },
+                        if let Some(content) = &move_type.content {
+                            match content {
+                                pb_move_type::Content::Struct(struct_tag) => {
+                                    coin_type = Some(format!(
+                                        "{}::{}::{}",
+                                        struct_tag.address, struct_tag.module, struct_tag.name
+                                    ));
+                                },
+                                _ => {
+                                    debug!("Skipping non-struct type");
+                                },
+                            }
+                        } else {
+                            warn!("Move type content is None for txn version {}", txn.version);
                         }
                     }
                 }
@@ -215,7 +220,7 @@ impl EventRemapper {
                             //     .to_string();
 
                             let offer_id = activity.offer_id.clone().unwrap_or_default();
-                            println!("collection offer filled metadata {:?}", offer_id);
+                            info!("collection offer filled metadata {:?}", offer_id);
                             collection_offer_filled_metadatas
                                 .insert(offer_id, collection_offer_filled_metadata);
                         },

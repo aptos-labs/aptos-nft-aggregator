@@ -23,3 +23,14 @@ ALTER TABLE nft_marketplace_activities
 DROP TABLE IF EXISTS current_nft_marketplace_listings;
 DROP TABLE IF EXISTS current_nft_marketplace_token_offers;
 DROP TABLE IF EXISTS current_nft_marketplace_collection_offers;
+
+-- Drop indexes for current_nft_marketplace_listings
+DROP INDEX IF EXISTS idx_current_listings_marketplace;
+DROP INDEX IF EXISTS idx_current_listings_token_data;
+
+-- Drop indexes for current_nft_marketplace_token_offers
+DROP INDEX IF EXISTS idx_current_token_offers_marketplace;
+DROP INDEX IF EXISTS idx_current_token_offers_token_data;
+
+-- Drop indexes for current_nft_marketplace_collection_offers
+DROP INDEX IF EXISTS idx_current_collection_offers_marketplace;

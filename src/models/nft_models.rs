@@ -22,7 +22,7 @@ use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::HashMap, str::FromStr};
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 /**
  * NftMarketplaceActivity is the main model for storing NFT marketplace activities.
@@ -615,7 +615,7 @@ impl CurrentNFTMarketplaceListing {
         // if collection_id is None  -> check if we have token_inner, populate the map with this inner. for now we just skip.
         // check if ti's a filled event -
         if activity.collection_id.is_none() || activity.token_data_id.is_none() {
-            println!("missing collection_id or token_data_id for txn_version = {:?}, collection_id = {:?}, token_data_id = {:?}", 
+            info!("missing collection_id or token_data_id for txn_version = {:?}, collection_id = {:?}, token_data_id = {:?}", 
                 activity.txn_version, activity.collection_id, activity.token_data_id
             );
             return None;
@@ -821,7 +821,7 @@ impl CurrentNFTMarketplaceTokenOffer {
         // if collection_id is None  -> check if we have token_inner, populate the map with this inner. for now we just skip.
         // check if ti's a filled event -
         if activity.collection_id.is_none() || activity.token_data_id.is_none() {
-            println!("missing collection_id or token_data_id for txn_version = {:?}, collection_id = {:?}, token_data_id = {:?}", 
+            info!("missing collection_id or token_data_id for txn_version = {:?}, collection_id = {:?}, token_data_id = {:?}", 
                 activity.txn_version, activity.collection_id, activity.token_data_id
             );
             return None;
@@ -1003,7 +1003,7 @@ impl CurrentNFTMarketplaceCollectionOffer {
         // if collection_id is None  -> check if we have token_inner, populate the map with this inner. for now we just skip.
         // check if ti's a filled event -
         if activity.collection_id.is_none() || activity.token_data_id.is_none() {
-            println!("missing collection_id or token_data_id for txn_version = {:?}, collection_id = {:?}, token_data_id = {:?}", 
+            info!("missing collection_id or token_data_id for txn_version = {:?}, collection_id = {:?}, token_data_id = {:?}", 
                 activity.txn_version, activity.collection_id, activity.token_data_id
             );
             return None;
