@@ -7,12 +7,10 @@ use std::{
     str::FromStr,
 };
 
-pub mod config_boilerplate;
-pub mod marketplace_config;
-pub mod models;
-pub mod postgres_utils;
-pub mod processor;
-pub mod processor_status_saver;
+pub mod db_writing_step;
+pub mod processor_status_saver_step;
+pub mod remapper_step;
+pub mod remappers;
 
 /// Extracts and converts a value from JSON based on a `HashableJsonPath`
 pub fn extract_value<T: FromStr>(path: &HashableJsonPath, from: &Value, default: T) -> T {

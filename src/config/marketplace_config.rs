@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use super::HashableJsonPath;
+use crate::steps::HashableJsonPath;
 use ahash::AHashMap;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -9,6 +9,8 @@ use std::{fmt, str::FromStr};
 
 pub type MarketplaceEventConfigMapping = AHashMap<String, MarketplaceEventConfig>;
 pub type MarketplaceEventConfigMappings = AHashMap<String, MarketplaceEventConfigMapping>;
+pub type MarketplaceResourceConfigMapping = AHashMap<String, MarketplaceResourceConfig>;
+pub type MarketplaceResourceConfigMappings = AHashMap<String, MarketplaceResourceConfigMapping>;
 pub type ContractToMarketplaceMap = AHashMap<String, String>;
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
@@ -24,21 +26,28 @@ pub struct NFTMarketplaceConfigs {
 pub struct MarketplaceConfig {
     pub marketplace_name: String,
     pub event_config: EventConfig,
-    pub listing_config: ListingConfig,
-    pub offer_config: OfferConfig,
-    pub collection_offer_config: CollectionOfferConfig,
+
+    // it's for v2 marketplace, so optional for v1 marketplace
+    #[serde(default)]
+    pub resource_config: ResourceConfig,
 }
 
 impl NFTMarketplaceConfigs {
-    pub fn get_event_mappings(
+    pub fn get_mappings(
         &self,
-    ) -> Result<(MarketplaceEventConfigMappings, ContractToMarketplaceMap)> {
+    ) -> Result<(
+        MarketplaceEventConfigMappings,
+        MarketplaceResourceConfigMappings,
+        ContractToMarketplaceMap,
+    )> {
         let mut marketplace_to_events_map = AHashMap::new();
+        let mut marketplace_to_resources_map = AHashMap::new();
         let mut contract_to_marketplace_map = AHashMap::new();
+
         for config in &self.marketplace_configs {
-            let mut mapping: AHashMap<String, MarketplaceEventConfig> = AHashMap::new();
-            mapping.insert(
-                config.listing_config.place_event.clone(),
+            let mut event_mapping: AHashMap<String, MarketplaceEventConfig> = AHashMap::new();
+            event_mapping.insert(
+                config.event_config.listing_config.place_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceListing,
@@ -46,12 +55,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.listing_config.buyer.clone(),
-                    config.listing_config.seller.clone(),
+                    config.event_config.listing_config.buyer.clone(),
+                    config.event_config.listing_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.listing_config.cancel_event.clone(),
+            event_mapping.insert(
+                config.event_config.listing_config.cancel_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::CancelListing,
@@ -59,12 +68,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.listing_config.buyer.clone(),
-                    config.listing_config.seller.clone(),
+                    config.event_config.listing_config.buyer.clone(),
+                    config.event_config.listing_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.listing_config.fill_event.clone(),
+            event_mapping.insert(
+                config.event_config.listing_config.fill_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillListing,
@@ -72,12 +81,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.listing_config.buyer.clone(),
-                    config.listing_config.seller.clone(),
+                    config.event_config.listing_config.buyer.clone(),
+                    config.event_config.listing_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.offer_config.place_event.clone(),
+            event_mapping.insert(
+                config.event_config.offer_config.place_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceOffer,
@@ -85,12 +94,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.offer_config.buyer.clone(),
-                    config.offer_config.seller.clone(),
+                    config.event_config.offer_config.buyer.clone(),
+                    config.event_config.offer_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.offer_config.cancel_event.clone(),
+            event_mapping.insert(
+                config.event_config.offer_config.cancel_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::CancelOffer,
@@ -98,12 +107,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.offer_config.buyer.clone(),
-                    config.offer_config.seller.clone(),
+                    config.event_config.offer_config.buyer.clone(),
+                    config.event_config.offer_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.offer_config.fill_event.clone(),
+            event_mapping.insert(
+                config.event_config.offer_config.fill_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillOffer,
@@ -111,12 +120,13 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.offer_config.buyer.clone(),
-                    config.offer_config.seller.clone(),
+                    config.event_config.offer_config.buyer.clone(),
+                    config.event_config.offer_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
+            event_mapping.insert(
                 config
+                    .event_config
                     .collection_offer_config
                     .place_event
                     .event_type
@@ -126,11 +136,13 @@ impl NFTMarketplaceConfigs {
                     MarketplaceEventType::PlaceCollectionOffer,
                     config.marketplace_name.clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .place_event
                         .collection_name
                         .clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .place_event
                         .creator_address
@@ -140,8 +152,9 @@ impl NFTMarketplaceConfigs {
                     None,
                 )?,
             );
-            mapping.insert(
+            event_mapping.insert(
                 config
+                    .event_config
                     .collection_offer_config
                     .cancel_event
                     .event_type
@@ -151,11 +164,13 @@ impl NFTMarketplaceConfigs {
                     MarketplaceEventType::CancelCollectionOffer,
                     config.marketplace_name.clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .cancel_event
                         .collection_name
                         .clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .cancel_event
                         .creator_address
@@ -165,18 +180,25 @@ impl NFTMarketplaceConfigs {
                     None,
                 )?,
             );
-            mapping.insert(
-                config.collection_offer_config.fill_event.event_type.clone(),
+            event_mapping.insert(
+                config
+                    .event_config
+                    .collection_offer_config
+                    .fill_event
+                    .event_type
+                    .clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillCollectionOffer,
                     config.marketplace_name.clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .fill_event
                         .collection_name
                         .clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .fill_event
                         .creator_address
@@ -186,13 +208,42 @@ impl NFTMarketplaceConfigs {
                     None,
                 )?,
             );
-            for event in mapping.keys() {
-                contract_to_marketplace_map.insert(event.clone(), config.marketplace_name.clone());
+
+            let mut resource_mapping: AHashMap<String, MarketplaceResourceConfig> = AHashMap::new();
+
+            for resource_type in &config.resource_config.resource_types {
+                resource_mapping.insert(
+                    resource_type.resource_type.clone(),
+                    MarketplaceResourceConfig::from_resource_config(
+                        &config.resource_config,
+                        config.marketplace_name.clone(),
+                        resource_type.resource_action.clone(),
+                    )?,
+                );
             }
-            marketplace_to_events_map.insert(config.marketplace_name.clone(), mapping.clone());
+
+            let marketplace_name = config.marketplace_name.clone();
+
+            for event in event_mapping.keys() {
+                contract_to_marketplace_map.insert(event.clone(), marketplace_name.clone());
+            }
+
+            // Process resources - just extract the contract address once
+            if let Some(first_resource) = config.resource_config.resource_types.first() {
+                if let Some(contract_address) = first_resource.resource_type.split("::").next() {
+                    contract_to_marketplace_map
+                        .insert(contract_address.to_string(), marketplace_name.clone());
+                }
+            }
+            marketplace_to_events_map.insert(marketplace_name.clone(), event_mapping);
+            marketplace_to_resources_map.insert(marketplace_name.clone(), resource_mapping);
         }
 
-        Ok((marketplace_to_events_map, contract_to_marketplace_map))
+        Ok((
+            marketplace_to_events_map,
+            marketplace_to_resources_map,
+            contract_to_marketplace_map,
+        ))
     }
 }
 
@@ -211,6 +262,8 @@ pub struct MarketplaceEventConfig {
     pub deadline: HashableJsonPath,
     pub token_inner: HashableJsonPath,
     pub collection_inner: HashableJsonPath,
+    pub listing_id: HashableJsonPath,
+    pub offer_id: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
@@ -246,6 +299,8 @@ impl MarketplaceEventConfig {
             deadline: HashableJsonPath::new(deadline.or_else(|| event_config.deadline.clone()))?,
             token_inner: HashableJsonPath::new(event_config.token_inner.clone())?,
             collection_inner: HashableJsonPath::new(event_config.collection_inner.clone())?,
+            listing_id: HashableJsonPath::new(event_config.listing_id.clone())?,
+            offer_id: HashableJsonPath::new(event_config.offer_id.clone())?,
         })
     }
 }
@@ -322,6 +377,11 @@ pub struct EventConfig {
     pub collection_inner: Option<String>,
     pub offer_id: Option<String>,
     pub listing_id: Option<String>,
+    pub collection_offer_id: Option<String>,
+    // Specific configs for different event types
+    pub listing_config: ListingConfig,
+    pub offer_config: OfferConfig,
+    pub collection_offer_config: CollectionOfferConfig,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -379,4 +439,138 @@ impl fmt::Display for MarketplaceEventType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
+}
+
+// New struct for resource configuration
+#[derive(Clone, Debug)]
+pub struct MarketplaceResourceConfig {
+    pub marketplace_name: String,
+    pub resource_action: ResourceType,
+    pub price: HashableJsonPath,
+    pub seller: HashableJsonPath,
+    pub fee_schedule_id: HashableJsonPath,
+    pub token_address: HashableJsonPath,
+    pub expiration_time: HashableJsonPath,
+    pub token_price: HashableJsonPath,
+    pub creator_address: HashableJsonPath,
+    pub collection_name: HashableJsonPath,
+    pub token_name: HashableJsonPath,
+    pub offer_token_address: HashableJsonPath,
+    pub remaining_token_amount: HashableJsonPath,
+    pub collection_address: HashableJsonPath,
+}
+
+impl MarketplaceResourceConfig {
+    pub fn from_resource_config(
+        resource_config: &ResourceConfig,
+        marketplace_name: String,
+        resource_action: ResourceType,
+    ) -> Result<Self> {
+        Ok(Self {
+            marketplace_name: marketplace_name.clone(),
+            resource_action,
+            price: HashableJsonPath::new(resource_config.price.clone())?,
+            seller: HashableJsonPath::new(resource_config.seller.clone())?,
+            fee_schedule_id: HashableJsonPath::new(resource_config.fee_schedule_id.clone())?,
+            token_address: HashableJsonPath::new(resource_config.token_address.clone())?,
+            expiration_time: HashableJsonPath::new(resource_config.expiration_time.clone())?,
+            token_price: HashableJsonPath::new(resource_config.token_price.clone())?,
+            creator_address: HashableJsonPath::new(resource_config.creator_address.clone())?,
+            collection_name: HashableJsonPath::new(resource_config.collection_name.clone())?,
+            token_name: HashableJsonPath::new(resource_config.token_name.clone())?,
+            offer_token_address: HashableJsonPath::new(
+                resource_config.offer_token_address.clone(),
+            )?,
+            remaining_token_amount: HashableJsonPath::new(
+                resource_config.remaining_token_amount.clone(),
+            )?,
+            collection_address: HashableJsonPath::new(
+                resource_config.v2_collection_address.clone(),
+            )?,
+        })
+    }
+}
+
+// New struct for resource configuration
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResourceConfig {
+    pub resource_types: Vec<ResourceTypeConfig>,
+
+    // Common extraction paths that apply to all resources
+    pub collection_id: Option<String>,
+    pub token_amount: Option<String>,
+    pub buyer: Option<String>,
+    pub seller: Option<String>,
+    pub deadline: Option<String>,
+    pub token_inner: Option<String>,
+    pub collection_inner: Option<String>,
+
+    // Fixed price listing
+    pub price: Option<String>,
+    pub fee_schedule_id: Option<String>,
+    pub token_address: Option<String>,
+
+    // Token offer metadata
+    pub expiration_time: Option<String>,
+    pub token_price: Option<String>,
+
+    // Token offer metadata v1
+    pub token_name: Option<String>,
+    pub creator_address: Option<String>,
+    pub collection_name: Option<String>,
+
+    // Token offer metadata v2
+    pub offer_token_address: Option<String>,
+
+    // Collection offer metadata
+    pub remaining_token_amount: Option<String>,
+
+    // Collection offer v2
+    pub v2_collection_address: Option<String>,
+    // // Specific configs for different resource types
+    // #[serde(default)]
+    // pub listing_resource_config: ResourceExtractionConfig,
+    // #[serde(default)]
+    // pub offer_resource_config: ResourceExtractionConfig,
+    // #[serde(default)]
+    // pub collection_offer_resource_config: ResourceExtractionConfig,
+}
+
+// TODO: this may not be needed or revisit to trim down the config
+// New struct for resource-specific extraction paths
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResourceExtractionConfig {
+    pub collection_id: Option<String>,
+    pub token_name: Option<String>,
+    pub creator_address: Option<String>,
+    pub collection_name: Option<String>,
+    pub price: Option<String>,
+    pub token_amount: Option<String>,
+    pub buyer: Option<String>,
+    pub seller: Option<String>,
+    pub deadline: Option<String>,
+    pub token_inner: Option<String>,
+    pub collection_inner: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResourceTypeConfig {
+    pub resource_type: String,
+    pub resource_action: ResourceType,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub enum ResourceType {
+    Listing,
+    FixedPriceListing,
+    OfferMetadata,
+    OfferMetadataV1,
+    OfferMetadataV2,
+    CollectionOfferMetadata,
+    CollectionOfferV1,
+    CollectionOfferV2,
 }

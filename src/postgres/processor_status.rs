@@ -3,7 +3,7 @@
 
 #![allow(clippy::extra_unused_lifetimes)]
 
-use crate::{processors::postgres_utils::DbPoolConnection, schema::processor_status};
+use crate::{postgres::postgres_utils::DbPoolConnection, schema::processor_status};
 use diesel::{AsChangeset, ExpressionMethods, Insertable, OptionalExtension, QueryDsl, Queryable};
 use diesel_async::RunQueryDsl;
 

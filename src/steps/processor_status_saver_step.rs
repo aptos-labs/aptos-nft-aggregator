@@ -1,13 +1,15 @@
 use crate::{
-    postgres::processor_status::ProcessorStatus,
-    processors::postgres_utils::{execute_with_better_error, ArcDbPool},
+    postgres::{
+        postgres_utils::{execute_with_better_error, ArcDbPool},
+        processor_status::ProcessorStatus,
+    },
     schema::processor_status,
 };
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
-    common_steps::ProcessorStatusSaver,
-    types::transaction_context::TransactionContext,
-    utils::{errors::ProcessorError, time::parse_timestamp},
+    aptos_indexer_transaction_stream::utils::time::parse_timestamp,
+    common_steps::ProcessorStatusSaver, types::transaction_context::TransactionContext,
+    utils::errors::ProcessorError,
 };
 use async_trait::async_trait;
 use diesel::{upsert::excluded, ExpressionMethods};

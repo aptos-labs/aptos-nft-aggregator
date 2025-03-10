@@ -41,24 +41,39 @@ The `config.yaml` file is used to configure the NFT aggregator. Below is an expl
       - **deadline**: JSON path to extract the deadline for offers (specific to some marketplaces).
       - **token_inner**: JSON path to extract inner token data (specific to V2 contracts).
       - **collection_inner**: JSON path to extract inner collection data (specific to V2 contracts).
-    - **listing_config**: Configuration for listing events:
-      - **cancel_event**: Event type for canceling a listing.
-      - **fill_event**: Event type for filling a listing.
-      - **place_event**: Event type for placing a listing.
-      - **collection_name**: (Optional) JSON path to extract the collection name.
-      - **buyer**: (Optional) JSON path to extract the buyer's address.
-      - **seller**: (Optional) JSON path to extract the seller's address.
-    - **offer_config**: Configuration for offer events:
-      - **cancel_event**: Event type for canceling an offer.
-      - **fill_event**: Event type for filling an offer.
-      - **place_event**: Event type for placing an offer.
-      - **buyer**: (Optional) JSON path to extract the buyer's address.
-      - **seller**: (Optional) JSON path to extract the seller's address.
-    - **collection_offer_config**: Configuration for collection offer events, we defined its own struct for better flexibility.
-      - **cancel_event**: Event type for canceling a collection offer.
-      - **fill_event**: Event type for filling a collection offer.
-      - **place_event**: Event type for placing a collection offer.
-        - find more details in the [`CollectionEventParams`](src/processors/marketplace_config.rs) struct.
+      - **listing_config**: Configuration for listing events:
+        - **cancel_event**: Event type for canceling a listing.
+        - **fill_event**: Event type for filling a listing.
+        - **place_event**: Event type for placing a listing.
+        - **collection_name**: (Optional) JSON path to extract the collection name.
+        - **buyer**: (Optional) JSON path to extract the buyer's address.
+        - **seller**: (Optional) JSON path to extract the seller's address.
+      - **offer_config**: Configuration for offer events:
+        - **cancel_event**: Event type for canceling an offer.
+        - **fill_event**: Event type for filling an offer.
+        - **place_event**: Event type for placing an offer.
+        - **buyer**: (Optional) JSON path to extract the buyer's address.
+        - **seller**: (Optional) JSON path to extract the seller's address.
+      - **collection_offer_config**: Configuration for collection offer events, we defined its own struct for better flexibility.
+        - **cancel_event**: Event type for canceling a collection offer.
+        - **fill_event**: Event type for filling a collection offer.
+        - **place_event**: Event type for placing a collection offer.
+          - find more details in the [`CollectionEventParams`](src/config/marketplace_config.rs) struct.
+    - **resource_config**: Configuration for resource events:
+      - **resource_types**: A list of resource types to process. 
+        - **resource_type**: The type of resource to process.
+        - **resource_action**: The action to perform on the resource.
+        - find more details in the [`ResourceTypeConfig`](src/config/marketplace_config.rs) struct.
+      - **collection_id**: JSON path to extract the collection ID.
+      - **token_name**: JSON path to extract the token name.
+      - **creator_address**: JSON path to extract the creator's address.
+      - **collection_name**: JSON path to extract the collection name.
+      - **price**: JSON path to extract the price of the NFT.
+      - **token_amount**: JSON path to extract the amount of tokens.
+      - **buyer**: JSON path to extract the buyer's address.
+      - **seller**: JSON path to extract the seller's address.
+      - **deadline**: JSON path to extract the deadline for offers.
+
       
 ### Running the Processor
 
