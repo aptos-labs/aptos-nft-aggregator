@@ -36,8 +36,6 @@ impl RunnableConfig for IndexerProcessorConfig {
     }
 }
 
-// TODO: Move DbConfig to the SDK
-
 /// This enum captures the configs for all the different db storages that are defined.
 /// The configs for each db storage should only contain configuration specific to that
 /// type.

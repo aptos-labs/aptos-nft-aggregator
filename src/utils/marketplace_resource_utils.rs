@@ -1,4 +1,3 @@
-use crate::{config::marketplace_config::MarketplaceResourceConfig, steps::extract_string};
 use aptos_indexer_processor_sdk::utils::convert::{sha3_256, standardize_address};
 use serde::{Deserialize, Serialize};
 #[allow(unused_imports)]
@@ -120,7 +119,6 @@ pub struct ObjectCore {
 #[derive(Debug, Clone)]
 pub struct ListingMetadata {
     pub seller: String,
-    pub fee_schedule_id: String,
     // Either the token v2 address or the token v1 container address
     pub token_address: String,
 }
@@ -145,7 +143,6 @@ pub struct TokenMetadata {
 pub struct TokenOfferMetadata {
     pub expiration_time: i64,
     pub price: i64,
-    pub fee_schedule_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -153,7 +150,6 @@ pub struct CollectionOfferMetadata {
     pub expiration_time: i64,
     pub price: i64,
     pub remaining_token_amount: i64,
-    pub fee_schedule_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -175,32 +171,6 @@ pub fn get_object_core(resource_type: &str, data: &Value) -> Option<ObjectCore> 
         });
     }
     None
-}
-
-pub fn get_listing_metadata(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<ListingMetadata> {
-    let seller = extract_string(&resource_config.seller, data)?;
-    let fee_schedule_id = extract_string(&resource_config.fee_schedule_id, data)?;
-    let token_address = extract_string(&resource_config.token_address, data)?;
-
-    Some(ListingMetadata {
-        seller: standardize_address(&seller),
-        fee_schedule_id: standardize_address(&fee_schedule_id),
-        token_address: standardize_address(&token_address),
-    })
-}
-
-// This is for ListingPlacedEvent
-pub fn get_fixed_priced_listing(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<FixedPriceListing> {
-    let price = extract_string(&resource_config.price, data)?;
-    Some(FixedPriceListing {
-        price: price.parse::<i64>().ok()?,
-    })
 }
 
 // TODO: Update when we have a txn that has a token v1 container
@@ -254,100 +224,6 @@ pub fn get_listing_token_v1_container(
             token_standard: TokenStandard::V1,
         },
         amount,
-    })
-}
-
-pub fn get_token_offer_metadata(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<TokenOfferMetadata> {
-    let expiration_time = extract_string(&resource_config.expiration_time, data)?;
-    let price = extract_string(&resource_config.token_price, data)?;
-    let fee_schedule_id = extract_string(&resource_config.fee_schedule_id, data)?;
-
-    Some(TokenOfferMetadata {
-        expiration_time: expiration_time.parse::<i64>().ok()?,
-        price: price.parse::<i64>().ok()?,
-        fee_schedule_id: standardize_address(&fee_schedule_id),
-    })
-}
-
-pub fn get_token_offer_v1(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<TokenOfferV1> {
-    let creator_address = extract_string(&resource_config.creator_address, data)?;
-    let collection_name = extract_string(&resource_config.collection_name, data)?;
-    let token_name = extract_string(&resource_config.token_name, data)?;
-
-    let token_data_id_type = TokenDataIdType::new(creator_address, collection_name, token_name);
-    Some(TokenOfferV1 {
-        token_metadata: TokenMetadata {
-            collection_id: token_data_id_type.get_collection_data_id_hash(),
-            token_data_id: token_data_id_type.to_hash(),
-            creator_address: token_data_id_type.get_creator(),
-            collection_name: token_data_id_type.get_collection_trunc(),
-            token_name: token_data_id_type.get_name_trunc(),
-            token_standard: TokenStandard::V1,
-        },
-    })
-}
-
-pub fn get_token_offer_v2(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<TokenOfferV2> {
-    let token_address = extract_string(&resource_config.offer_token_address, data)?;
-
-    Some(TokenOfferV2 {
-        token_address: standardize_address(&token_address),
-    })
-}
-
-pub fn get_collection_offer_metadata(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<CollectionOfferMetadata> {
-    let expiration_time = extract_string(&resource_config.expiration_time, data)?;
-    let price = extract_string(&resource_config.token_price, data)?;
-    let remaining_token_amount = extract_string(&resource_config.remaining_token_amount, data)?;
-    let fee_schedule_id = extract_string(&resource_config.fee_schedule_id, data)?;
-
-    Some(CollectionOfferMetadata {
-        expiration_time: expiration_time.parse::<i64>().ok()?,
-        price: price.parse::<i64>().ok()?,
-        remaining_token_amount: remaining_token_amount.parse::<i64>().ok()?,
-        fee_schedule_id: standardize_address(&fee_schedule_id),
-    })
-}
-
-pub fn get_collection_offer_v1(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<CollectionOfferV1> {
-    let creator_address = extract_string(&resource_config.creator_address, data)?;
-    let collection_name = extract_string(&resource_config.collection_name, data)?;
-
-    let collection_data_id_type = CollectionDataIdType::new(creator_address, collection_name);
-
-    Some(CollectionOfferV1 {
-        collection_metadata: CollectionMetadata {
-            collection_id: collection_data_id_type.to_hash(),
-            creator_address: collection_data_id_type.get_creator(),
-            collection_name: collection_data_id_type.get_collection_trunc(),
-            token_standard: TokenStandard::V1,
-        },
-    })
-}
-
-pub fn get_collection_offer_v2(
-    resource_config: &MarketplaceResourceConfig,
-    data: &Value,
-) -> Option<CollectionOfferV2> {
-    let collection_address = extract_string(&resource_config.collection_address, data)?;
-
-    Some(CollectionOfferV2 {
-        collection_address: standardize_address(&collection_address),
     })
 }
 
@@ -405,15 +281,6 @@ impl CollectionDataIdType {
         );
         let hash = sha3_256(input.as_bytes());
         standardize_address(&hex::encode(hash))
-    }
-
-    fn get_creator(&self) -> String {
-        self.creator.clone()
-    }
-
-    // todo: truncate the collection name?
-    fn get_collection_trunc(&self) -> String {
-        truncate_str(&self.collection_name, MAX_NAME_LENGTH)
     }
 }
 
@@ -482,7 +349,6 @@ pub struct TokenOfferEventMetadata {
     pub token_offer_id: String,
     pub token_metadata: TokenMetadata,
     pub price: i64,
-    // pub fee_schedule_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -490,7 +356,6 @@ pub struct ListingEventMetadata {
     pub listing_id: String,
     pub listing_metadata: ListingMetadata,
     pub price: i64,
-    pub fee_schedule_id: String,
 }
 
 // Helper structs to organize related data

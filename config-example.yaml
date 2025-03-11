@@ -130,7 +130,6 @@ server_config:
           seller: "$.seller"
           token_inner: "$.token_metadata.token.vec[0].inner" 
           collection_inner: "$.token_metadata.collection.vec[0].inner"
-          # TODO: Revisit
           listing_id: "$.listing"
           offer_id: "$.token_offer"
           collection_offer_id: "$.collection_offer"

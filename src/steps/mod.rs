@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use bigdecimal::BigDecimal;
 use jsonpath_rust::JsonPath;
 use serde_json::Value;
 use std::{
@@ -11,19 +10,6 @@ pub mod db_writing_step;
 pub mod processor_status_saver_step;
 pub mod remapper_step;
 pub mod remappers;
-
-/// Extracts and converts a value from JSON based on a `HashableJsonPath`
-pub fn extract_value<T: FromStr>(path: &HashableJsonPath, from: &Value, default: T) -> T {
-    if path.raw.is_none() {
-        return default;
-    }
-    if let Ok(value) = path.extract_from(from) {
-        if let Some(str_val) = value.as_str() {
-            return str_val.parse().unwrap_or(default);
-        }
-    }
-    default
-}
 
 /// Extracts a string, ensuring proper handling of missing values
 pub fn extract_string(path: &HashableJsonPath, from: &Value) -> Option<String> {
@@ -40,14 +26,6 @@ pub fn extract_vec_inner(path: &HashableJsonPath, from: &Value) -> Option<Vec<Va
         .ok()
         .and_then(|v| v.as_array().cloned())
         .map(|v| v.to_vec())
-}
-
-/// Extracts a `BigDecimal` with a default value of `0`
-pub fn extract_bigdecimal(path: &HashableJsonPath, from: &Value) -> BigDecimal {
-    if path.raw.is_none() {
-        return BigDecimal::from(0);
-    }
-    extract_value(path, from, BigDecimal::from(0))
 }
 
 /// A wrapper around JsonPath so that it can be hashed
