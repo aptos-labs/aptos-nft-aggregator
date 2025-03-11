@@ -2,10 +2,8 @@ use crate::{
     config::{DbConfig, IndexerProcessorConfig},
     postgres::postgres_utils::{new_db_pool, run_migrations, ArcDbPool},
     steps::{
-        db_writing_step::DBWritingStep,
-        processor_status_saver_step::get_processor_status_saver,
-        remapper_step::ProcessStep,
-        remappers::{event_remapper::EventRemapper, resource_remapper::ResourceMapper},
+        db_writing_step::DBWritingStep, processor_status_saver_step::get_processor_status_saver,
+        remapper_step::ProcessStep, remappers::event_remapper::EventRemapper,
     },
 };
 use anyhow::Result;
@@ -90,7 +88,7 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let (event_mappings, resource_mappings, contract_to_marketplace_map) = self
+        let (event_mappings, _resource_mappings, contract_to_marketplace_map) = self
             .config
             .nft_marketplace_configs
             .get_mappings()
@@ -103,10 +101,10 @@ impl ProcessorTrait for Processor {
                 Arc::new(event_mappings.clone()),
                 Arc::new(contract_to_marketplace_map.clone()),
             )),
-            Arc::new(ResourceMapper::new(
-                Arc::new(resource_mappings.clone()),
-                Arc::new(contract_to_marketplace_map.clone()),
-            )),
+            // Arc::new(ResourceMapper::new(
+            //     Arc::new(resource_mappings.clone()),
+            //     Arc::new(contract_to_marketplace_map.clone()),
+            // )),
         );
         let db_writing = DBWritingStep::new(self.db_pool.clone());
         let version_tracker = VersionTrackerStep::new(

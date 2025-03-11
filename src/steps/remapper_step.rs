@@ -3,7 +3,7 @@ use crate::{
         CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
         CurrentNFTMarketplaceTokenOffer, NftMarketplaceActivity,
     },
-    steps::remappers::{event_remapper::EventRemapper, resource_remapper::ResourceMapper},
+    steps::remappers::event_remapper::EventRemapper,
     utils::marketplace_resource_utils::{
         CollectionOfferEventMetadata, ListingEventMetadata, TokenMetadata, TokenOfferEventMetadata,
     },
@@ -26,16 +26,12 @@ pub struct RemapResult {
 // impl EventRemapper {
 pub struct ProcessStep {
     pub event_remapper: Arc<EventRemapper>,
-    pub resource_mapper: Arc<ResourceMapper>,
-    // pub conn_pool: ArcDbPool,
+    // pub resource_mapper: Arc<ResourceMapper>,
 }
 
 impl ProcessStep {
-    pub fn new(event_remapper: Arc<EventRemapper>, resource_mapper: Arc<ResourceMapper>) -> Self {
-        Self {
-            event_remapper,
-            resource_mapper,
-        }
+    pub fn new(event_remapper: Arc<EventRemapper>) -> Self {
+        Self { event_remapper }
     }
 }
 
