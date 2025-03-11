@@ -15,20 +15,13 @@ use crate::{
     },
 };
 use anyhow::Result;
-use aptos_indexer_processor_sdk::utils::{
-    errors::ProcessorError,
-    extract::{
-        get_clean_entry_function_payload_from_user_request, get_entry_function_from_user_request,
-    },
-};
-use aptos_protos::transaction::v1::{move_type as pb_move_type, transaction::TxnData, Transaction};
+use aptos_indexer_processor_sdk::utils::errors::ProcessorError;
+use aptos_protos::transaction::v1::{transaction::TxnData, Transaction};
 use std::{collections::HashMap, str::FromStr, sync::Arc};
-use tracing::{debug, info, warn};
 
 pub struct EventRemapper {
     pub event_mappings: Arc<MarketplaceEventConfigMappings>,
     pub contract_to_marketplace_map: Arc<ContractToMarketplaceMap>,
-    // pub conn_pool: ArcDbPool,
 }
 
 impl EventRemapper {
@@ -52,8 +45,6 @@ impl EventRemapper {
         collection_offer_filled_metadatas: &mut HashMap<String, CollectionOfferEventMetadata>,
         _token_offer_filled_metadatas: &mut HashMap<String, TokenOfferEventMetadata>,
         _listing_filled_metadatas: &mut HashMap<String, ListingEventMetadata>,
-        batch_listing_map: &mut HashMap<String, String>,
-        // conn: &mut DbPoolConnection<'_>,
     ) -> Result<
         (
             Vec<NftMarketplaceActivity>,
@@ -70,42 +61,9 @@ impl EventRemapper {
         let txn_data = txn.txn_data.as_ref().unwrap();
 
         if let TxnData::User(tx_inner) = txn_data {
-            let req = tx_inner
-                .request
-                .as_ref()
-                .expect("Sends is not present in user txn");
-
-            let entry_function_id = get_entry_function_from_user_request(req);
-
             let events = tx_inner.events.clone();
             let txn_timestamp =
                 parse_timestamp(txn.timestamp.as_ref().unwrap(), txn.version as i64);
-
-            let mut coin_type = None;
-            if let Some(clean_payload) =
-                get_clean_entry_function_payload_from_user_request(req, txn.version as i64)
-            {
-                if !clean_payload.type_arguments.is_empty() {
-                    let extracted_move_type = Some(clean_payload.type_arguments[0].clone());
-                    if let Some(move_type) = &extracted_move_type {
-                        if let Some(content) = &move_type.content {
-                            match content {
-                                pb_move_type::Content::Struct(struct_tag) => {
-                                    coin_type = Some(format!(
-                                        "{}::{}::{}",
-                                        struct_tag.address, struct_tag.module, struct_tag.name
-                                    ));
-                                },
-                                _ => {
-                                    debug!("Skipping non-struct type");
-                                },
-                            }
-                        } else {
-                            warn!("Move type content is None for txn version {}", txn.version);
-                        }
-                    }
-                }
-            }
 
             for (event_index, event) in events.iter().enumerate() {
                 if let Some(activity) = NftMarketplaceActivity::from_event(
@@ -113,23 +71,21 @@ impl EventRemapper {
                     txn.version as i64,
                     event_index as i64,
                     txn_timestamp,
-                    &entry_function_id,
                     &self.event_mappings,
                     &self.contract_to_marketplace_map,
                     token_metadatas,
-                    coin_type.clone(),
                 ) {
                     // populate map with any new listing_id generated from Place eevnts within the same batch
                     // for any subsequent cancel or fill events within the same batch, lookup this map before hitting the database.
                     // only fallback to a db lookup if the listing wasn't found in-memory (indicating the listing was placed in an earlier batch)
-                    if let Some(token_data_id) = &activity.token_data_id {
-                        if activity.listing_id.is_some() {
-                            batch_listing_map.insert(
-                                token_data_id.clone(),
-                                activity.listing_id.clone().unwrap(),
-                            );
-                        }
-                    }
+                    // if let Some(token_data_id) = &activity.token_data_id {
+                    //     if activity.listing_id.is_some() {
+                    //         batch_listing_map.insert(
+                    //             token_data_id.clone(),
+                    //             activity.listing_id.clone().unwrap(),
+                    //         );
+                    //     }
+                    // }
 
                     // Handle current state updates based on activity type
                     match MarketplaceEventType::from_str(activity.standard_event_type.as_str())
@@ -137,18 +93,13 @@ impl EventRemapper {
                     {
                         MarketplaceEventType::PlaceListing => {
                             let current_listing =
-                                CurrentNFTMarketplaceListing::build_listing_plaes_events(&activity);
+                                CurrentNFTMarketplaceListing::from_activity(&activity);
                             current_listings.push(current_listing);
                         },
                         MarketplaceEventType::CancelListing | MarketplaceEventType::FillListing => {
-                            if let Some(current_listing) =
-                                CurrentNFTMarketplaceListing::build_cancel_or_fill_listing(
-                                    &activity,
-                                    batch_listing_map,
-                                )
-                            {
-                                current_listings.push(current_listing);
-                            }
+                            let current_listing =
+                                CurrentNFTMarketplaceListing::from_activity(&activity);
+                            current_listings.push(current_listing);
                         },
                         MarketplaceEventType::PlaceOffer => {
                             let current_token_offer =
@@ -156,14 +107,9 @@ impl EventRemapper {
                             current_token_offers.push(current_token_offer);
                         },
                         MarketplaceEventType::CancelOffer | MarketplaceEventType::FillOffer => {
-                            if let Some(current_token_offer) =
-                                CurrentNFTMarketplaceTokenOffer::build_cancel_or_fill_offer(
-                                    &activity,
-                                    batch_listing_map,
-                                )
-                            {
-                                current_token_offers.push(current_token_offer);
-                            }
+                            let current_token_offer =
+                                CurrentNFTMarketplaceTokenOffer::build_cancelled_or_filled_token_offer_from_activity(&activity);
+                            current_token_offers.push(current_token_offer);
                         },
                         MarketplaceEventType::PlaceCollectionOffer => {
                             let current_collection_offer =
@@ -173,14 +119,11 @@ impl EventRemapper {
                             current_collection_offers.push(current_collection_offer);
                         },
                         MarketplaceEventType::CancelCollectionOffer => {
-                            if let Some(current_collection_offer) =
-                                CurrentNFTMarketplaceCollectionOffer::build_cancel_or_fill_offer(
-                                    &activity,
-                                    batch_listing_map,
-                                )
-                            {
-                                current_collection_offers.push(current_collection_offer);
-                            }
+                            let current_collection_offer =
+                                CurrentNFTMarketplaceCollectionOffer::from_activity(
+                                    &activity, true,
+                                );
+                            current_collection_offers.push(current_collection_offer);
                         },
                         MarketplaceEventType::FillCollectionOffer => {
                             let collection_metadata = CollectionMetadata {
@@ -202,27 +145,22 @@ impl EventRemapper {
                             let collection_offer_filled_metadata = CollectionOfferEventMetadata {
                                 collection_offer_id: activity.offer_id.clone().unwrap_or_default(),
                                 collection_metadata,
-                                price: activity.price.unwrap_or_default(),
+                                price: activity.price,
                                 buyer: activity.buyer.clone().unwrap_or_default(),
-                                fee_schedule_id: activity
-                                    .fee_schedule_id
-                                    .clone()
-                                    .unwrap_or_default(),
                                 marketplace_name: activity.marketplace.clone(),
                                 marketplace_contract_address: activity.contract_address.clone(),
                             };
 
-                            // // TODO: we need to decide what to use as the key for the collection offer filled metadata
-                            // let collection_offer_id = activity.json_data
-                            //     .get("collection_offer")
-                            //     .and_then(|v| v.as_str())
-                            //     .unwrap_or_default()
-                            //     .to_string();
-
                             let offer_id = activity.offer_id.clone().unwrap_or_default();
-                            info!("collection offer filled metadata {:?}", offer_id);
+                            // info!("collection offer filled metadata {:?}", offer_id);
                             collection_offer_filled_metadatas
                                 .insert(offer_id, collection_offer_filled_metadata);
+
+                            let current_collection_offer =
+                                CurrentNFTMarketplaceCollectionOffer::from_activity(
+                                    &activity, true,
+                                );
+                            current_collection_offers.push(current_collection_offer);
                         },
                     }
                     activities.push(activity);

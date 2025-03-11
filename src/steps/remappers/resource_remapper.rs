@@ -12,24 +12,17 @@ use crate::{
             get_collection_offer_metadata, get_collection_offer_v1, get_collection_offer_v2,
             get_fixed_priced_listing, get_listing_metadata, get_listing_token_v1_container,
             get_object_core, get_token_offer_metadata, get_token_offer_v1, get_token_offer_v2,
-            standardize_address, CollectionOfferEventMetadata, CollectionOfferMetadata,
-            CollectionOfferV1, CollectionOfferV2, FixedPriceListing, ListingEventMetadata,
-            ListingMetadata, ListingTokenV1Container, ObjectCore, TokenMetadata,
-            TokenOfferEventMetadata, TokenOfferMetadata, TokenOfferV1, TokenOfferV2,
+            CollectionOfferEventMetadata, CollectionOfferMetadata, CollectionOfferV1,
+            CollectionOfferV2, FixedPriceListing, ListingEventMetadata, ListingMetadata,
+            ListingTokenV1Container, ObjectCore, TokenMetadata, TokenOfferEventMetadata,
+            TokenOfferMetadata, TokenOfferV1, TokenOfferV2,
         },
         parse_timestamp,
     },
 };
 use anyhow::{Context, Result};
-use aptos_indexer_processor_sdk::utils::{
-    errors::ProcessorError,
-    extract::{
-        get_clean_entry_function_payload_from_user_request, get_entry_function_from_user_request,
-    },
-};
-use aptos_protos::transaction::v1::{
-    move_type as pb_move_type, transaction::TxnData, write_set_change, Transaction,
-};
+use aptos_indexer_processor_sdk::utils::{convert::standardize_address, errors::ProcessorError};
+use aptos_protos::transaction::v1::{transaction::TxnData, write_set_change, Transaction};
 use std::{collections::HashMap, sync::Arc};
 use tracing::{debug, error, info, warn};
 
@@ -73,11 +66,8 @@ impl ResourceMapper {
             }
         })?;
 
-        if let TxnData::User(tx_inner) = txn_data {
-            // Extract transaction metadata
+        if let TxnData::User(_) = txn_data {
             let txn_version = txn.version as i64;
-            // println!("Processing user transaction version: {}", txn_version);
-
             let transaction_info = match txn.info.as_ref() {
                 Some(info) => info,
                 None => {
@@ -88,40 +78,6 @@ impl ResourceMapper {
                 },
             };
             let txn_timestamp = parse_timestamp(txn.timestamp.as_ref().unwrap(), txn_version);
-
-            // Get entry function ID
-            let req = tx_inner.request.as_ref().ok_or_else(|| {
-                error!("ERROR: Transaction request is missing");
-                ProcessorError::ProcessError {
-                    message: "Transaction request is missing".to_string(),
-                }
-            })?;
-            let entry_function_id_str =
-                get_entry_function_from_user_request(req).unwrap_or_default();
-
-            // Get coin type from clean payload
-            let mut coin_type = None;
-            if let Some(clean_payload) =
-                get_clean_entry_function_payload_from_user_request(req, txn.version as i64)
-            {
-                if !clean_payload.type_arguments.is_empty() {
-                    let extracted_move_type = Some(clean_payload.type_arguments[0].clone());
-                    if let Some(move_type) = &extracted_move_type {
-                        match move_type.content.as_ref().unwrap() {
-                            pb_move_type::Content::Struct(struct_tag) => {
-                                coin_type = Some(format!(
-                                    "{}::{}::{}",
-                                    struct_tag.address, struct_tag.module, struct_tag.name
-                                ));
-                                // println!("Coin type: {}", coin_type.unwrap());
-                            },
-                            _ => {
-                                warn!("Skipping non-struct type");
-                            },
-                        }
-                    }
-                }
-            }
 
             let mut current_nft_marketplace_listings: Vec<CurrentNFTMarketplaceListing> =
                 Vec::new();
@@ -145,9 +101,10 @@ impl ResourceMapper {
             let mut collection_offer_v1s: HashMap<String, CollectionOfferV1> = HashMap::new();
             let mut collection_offer_v2s: HashMap<String, CollectionOfferV2> = HashMap::new();
 
+            // First pass: collect all resource data that might be useful later
+            // This includes property tables, object properties, etc.
             // we should get the marketplace name from the contract_to_marketplace_map
             // I should get the contract address from the resource type
-            // // Loop 2: build models from metadata
             for wsc in transaction_info.changes.iter() {
                 if let Some(change) = wsc.change.as_ref() {
                     if let write_set_change::Change::WriteResource(write_resource) = change {
@@ -439,8 +396,6 @@ impl ResourceMapper {
                                                     &move_resource_type_address,
                                                     txn_version,
                                                     txn_timestamp,
-                                                    &entry_function_id_str,
-                                                    coin_type.clone(),
                                                 );
 
                                             current_nft_marketplace_listings.push(current_listing);
@@ -468,8 +423,6 @@ impl ResourceMapper {
                                                     &move_resource_type_address,
                                                     txn_version,
                                                     txn_timestamp,
-                                                    &entry_function_id_str,
-                                                    coin_type.clone(),
                                                 );
                                             current_nft_marketplace_listings.push(current_listing);
                                         }
@@ -512,8 +465,6 @@ impl ResourceMapper {
                                                 &move_resource_type_address,
                                                 txn_version,
                                                 txn_timestamp,
-                                                &entry_function_id_str,
-                                                coin_type.clone(),
                                             );
                                         current_nft_marketplace_token_offers
                                             .push(current_token_offer);
@@ -547,8 +498,6 @@ impl ResourceMapper {
                                                 &move_resource_type_address,
                                                 txn_version,
                                                 txn_timestamp,
-                                                &entry_function_id_str,
-                                                coin_type.clone(),
                                             );
                                         current_nft_marketplace_token_offers
                                             .push(current_token_offer);
@@ -587,8 +536,6 @@ impl ResourceMapper {
                                             &move_resource_type_address,
                                             txn_version,
                                             txn_timestamp,
-                                            &entry_function_id_str,
-                                            coin_type.clone(),
                                         );
                                         current_nft_marketplace_collection_offers
                                             .push(current_collection_offer);
@@ -611,8 +558,6 @@ impl ResourceMapper {
                                             &move_resource_type_address,
                                             txn_version,
                                             txn_timestamp,
-                                            &entry_function_id_str,
-                                            coin_type.clone(),
                                         );
                                         current_nft_marketplace_collection_offers
                                             .push(current_collection_offer);
@@ -638,8 +583,6 @@ impl ResourceMapper {
                                     collection_offer_filled_metadata,
                                     txn_version,
                                     txn_timestamp,
-                                    &entry_function_id_str,
-                                    coin_type.clone(),
                                 );
                             current_nft_marketplace_collection_offers
                                 .push(current_collection_offer);

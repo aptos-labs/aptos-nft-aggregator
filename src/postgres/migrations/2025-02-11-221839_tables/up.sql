@@ -7,24 +7,22 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_activities (
   creator_address VARCHAR(66),
   collection_id VARCHAR(66),
   collection_name VARCHAR,
-  token_data_id VARCHAR(66),
+  token_data_id VARCHAR(66) NOT NULL,
   token_name VARCHAR,
   token_standard VARCHAR(66),
-  price NUMERIC,
-  token_amount NUMERIC,
+  price BIGINT NOT NULL,
+  token_amount BIGINT,
   buyer VARCHAR(66),
   seller VARCHAR(66),
-  deadline VARCHAR,
+  expiration_time VARCHAR,
+  listing_id VARCHAR(128),
+  offer_id VARCHAR(128),
   json_data JSONB NOT NULL,
   marketplace VARCHAR NOT NULL,
   contract_address VARCHAR NOT NULL,
-  entry_function_id_str VARCHAR,  -- we removed the limit on the length of the entry function id string. 
   block_timestamp TIMESTAMP NOT NULL,
   PRIMARY KEY (txn_version, index)
 );
-
--- Uncomment this and run separately to create the index
--- CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_nft_marketplace_activities ON nft_marketplace_activities USING btree (txn_version, index);
 
 -- Processor status table
 CREATE TABLE processor_status (

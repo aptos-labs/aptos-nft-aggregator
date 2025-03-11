@@ -1,10 +1,9 @@
 use crate::{config::marketplace_config::MarketplaceResourceConfig, steps::extract_string};
-use log::debug;
+use aptos_indexer_processor_sdk::utils::convert::{sha3_256, standardize_address};
 use serde::{Deserialize, Serialize};
 #[allow(unused_imports)]
 #[allow(unused_variables)]
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use std::fmt::{self, Display};
 
 pub const MAX_NAME_LENGTH: usize = 128;
@@ -240,9 +239,9 @@ pub fn get_listing_token_v1_container(
         .unwrap_or_default();
 
     let token_data_id_type = TokenDataIdType::new(
-        Some(creator.to_string()),
-        Some(collection.to_string()),
-        Some(name.to_string()),
+        creator.to_string(),
+        collection.to_string(),
+        name.to_string(),
     );
 
     Some(ListingTokenV1Container {
@@ -281,11 +280,7 @@ pub fn get_token_offer_v1(
     let collection_name = extract_string(&resource_config.collection_name, data)?;
     let token_name = extract_string(&resource_config.token_name, data)?;
 
-    let token_data_id_type = TokenDataIdType::new(
-        Some(creator_address),
-        Some(collection_name),
-        Some(token_name),
-    );
+    let token_data_id_type = TokenDataIdType::new(creator_address, collection_name, token_name);
     Some(TokenOfferV1 {
         token_metadata: TokenMetadata {
             collection_id: token_data_id_type.get_collection_data_id_hash(),
@@ -333,8 +328,7 @@ pub fn get_collection_offer_v1(
     let creator_address = extract_string(&resource_config.creator_address, data)?;
     let collection_name = extract_string(&resource_config.collection_name, data)?;
 
-    let collection_data_id_type =
-        CollectionDataIdType::new(Some(creator_address), Some(collection_name));
+    let collection_data_id_type = CollectionDataIdType::new(creator_address, collection_name);
 
     Some(CollectionOfferV1 {
         collection_metadata: CollectionMetadata {
@@ -389,24 +383,14 @@ pub fn extract_field(data: &Value, path: &str) -> Option<String> {
     }
 }
 
-// Helper function to standardize addresses
-pub fn standardize_address(address: &str) -> String {
-    if let Some(stripped) = address.strip_prefix("0x") {
-        format!("0x{}", &stripped.to_lowercase())
-    } else {
-        format!("0x{}", address.to_lowercase())
-    }
-}
-
-// TODO: Convert Option<String> to String?
 #[derive(Debug, Clone)]
 pub struct CollectionDataIdType {
-    pub creator: Option<String>,
-    pub collection_name: Option<String>,
+    pub creator: String,
+    pub collection_name: String,
 }
 
 impl CollectionDataIdType {
-    pub fn new(creator: Option<String>, collection_name: Option<String>) -> Self {
+    pub fn new(creator: String, collection_name: String) -> Self {
         Self {
             creator,
             collection_name,
@@ -414,41 +398,34 @@ impl CollectionDataIdType {
     }
 
     pub fn to_hash(&self) -> String {
-        let mut hasher = Sha256::new();
-
-        hasher.update(format!(
+        let input: String = format!(
             "{}::{}",
-            {
-                let creator_address = self.creator.clone().unwrap_or_default();
-                debug!("Standardizing creator address: {}", creator_address);
-                standardize_address(&creator_address)
-            },
-            self.collection_name.clone().unwrap_or_default()
-        ));
-
-        let result = hasher.finalize();
-        format!("{:x}", result)
+            standardize_address(&self.creator),
+            self.collection_name
+        );
+        let hash = sha3_256(input.as_bytes());
+        standardize_address(&hex::encode(hash))
     }
 
     fn get_creator(&self) -> String {
-        self.creator.clone().unwrap_or_default()
+        self.creator.clone()
     }
 
-    // todo: truncate the collection name
+    // todo: truncate the collection name?
     fn get_collection_trunc(&self) -> String {
-        self.collection_name.clone().unwrap_or_default()
+        truncate_str(&self.collection_name, MAX_NAME_LENGTH)
     }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TokenDataIdType {
-    creator: Option<String>,
-    collection: Option<String>,
-    name: Option<String>,
+    creator: String,
+    collection: String,
+    name: String,
 }
 
 impl TokenDataIdType {
-    pub fn new(creator: Option<String>, collection: Option<String>, name: Option<String>) -> Self {
+    pub fn new(creator: String, collection: String, name: String) -> Self {
         Self {
             creator,
             collection,
@@ -457,33 +434,22 @@ impl TokenDataIdType {
     }
 
     pub fn to_hash(&self) -> String {
-        let mut hasher = Sha256::new();
-
-        hasher.update(format!(
+        let input: String = format!(
             "{}::{}::{}",
-            {
-                let creator_address = self.creator.clone().unwrap_or_default();
-                debug!("Standardizing creator address: {}", creator_address);
-                standardize_address(&creator_address)
-            },
-            self.collection.clone().unwrap_or_default(),
-            self.name.clone().unwrap_or_default()
-        ));
-
-        let result = hasher.finalize();
-
-        format!("{:x}", result)
+            standardize_address(&self.creator),
+            self.collection,
+            self.name
+        );
+        let hash = sha3_256(input.as_bytes());
+        standardize_address(&hex::encode(hash))
     }
 
     fn get_collection_trunc(&self) -> String {
-        truncate_str(
-            &self.collection.clone().unwrap_or_default(),
-            MAX_NAME_LENGTH,
-        )
+        truncate_str(&self.collection.clone(), MAX_NAME_LENGTH)
     }
 
     fn get_name_trunc(&self) -> String {
-        truncate_str(&self.name.clone().unwrap_or_default(), MAX_NAME_LENGTH)
+        truncate_str(&self.name.clone(), MAX_NAME_LENGTH)
     }
 
     fn get_collection_data_id_hash(&self) -> String {
@@ -491,7 +457,7 @@ impl TokenDataIdType {
     }
 
     fn get_creator(&self) -> String {
-        standardize_address(&self.creator.clone().unwrap_or_default())
+        standardize_address(&self.creator.clone())
     }
 }
 
@@ -507,7 +473,6 @@ pub struct CollectionOfferEventMetadata {
     pub collection_metadata: CollectionMetadata,
     pub price: i64,
     pub buyer: String,
-    pub fee_schedule_id: String,
     pub marketplace_name: String,
     pub marketplace_contract_address: String,
 }
@@ -551,97 +516,3 @@ pub struct ParticipantInfo {
     pub buyer: Option<String>,
     pub seller: Option<String>,
 }
-
-// pub struct MarketplaceId {
-//     pub marketplace: String,
-//     pub id_type: MarketplaceIdType,
-//     pub raw_id: Option<String>,
-//     pub token_data_id: Option<String>,
-//     pub txn_version: i64,
-// }
-
-// impl MarketplaceId {
-//     pub fn generate(&self) -> String {
-//         let id_value = match (&self.raw_id, &self.token_data_id) {
-//             (Some(id), _) => id.clone(),
-//             (None, Some(token_id)) => format!("{}_{}", token_id, self.txn_version),
-//             (None, None) => self.txn_version.to_string(),
-//         };
-
-//         format!("{}_{}:{}",
-//             self.marketplace,
-//             self.id_type.as_str(),
-//             id_value
-//         )
-//     }
-// }
-
-// // Helper function to extract IDs from event data
-// pub fn extract_marketplace_id(
-//     event_data: &Value,
-//     config: &MarketplaceEventConfig,
-//     marketplace: &str,
-//     id_type: MarketplaceIdType,
-//     txn_version: i64,
-// ) -> String {
-//     let id_config = config.id_config.as_ref();
-
-//     let raw_id = match id_type {
-//         MarketplaceIdType::Listing => {
-//             extract_string(&config.listing_id, event_data)
-//         },
-//         MarketplaceIdType::Offer => {
-//             extract_string(&config.offer_id, event_data)
-//         },
-//         MarketplaceIdType::CollectionOffer => {
-//             extract_string(&config.offer_id, event_data)
-//         },
-//     };
-
-//     let token_data_id = if id_config.map(|c| c.use_token_data_id).unwrap_or(false) {
-//         Some(TokenDataIdType::new(
-//             extract_string(&config.creator_address, event_data),
-//             extract_string(&config.collection_name, event_data),
-//             extract_string(&config.token_name, event_data),
-//         ).to_hash())
-//     } else {
-//         None
-//     };
-
-//     MarketplaceId {
-//         marketplace: marketplace.to_string(),
-//         id_type,
-//         raw_id,
-//         token_data_id,
-//         txn_version,
-//     }.generate()
-// }
-
-// pub fn generate_marketplace_id(
-//     marketplace: &str,
-//     id_type: MarketplaceIdType,
-//     event_data: &Value,
-//     config: &MarketplaceEventConfig,
-//     txn_version: i64,
-// ) -> String {
-//     let raw_id = match id_type {
-//         MarketplaceIdType::Listing => extract_string(&config.listing_id, event_data),
-//         MarketplaceIdType::Offer => extract_string(&config.offer_id, event_data),
-//         MarketplaceIdType::CollectionOffer => extract_string(&config.collection_offer_id, event_data),
-//     };
-
-//     match raw_id {
-//         Some(id) => format!("{}_{}_id:{}", marketplace, id_type.as_str(), id),
-//         None => {
-//             // Fallback to token_data_id + txn_version if configured
-//             if config.id_config.as_ref().map(|c| c.use_token_data_id).unwrap_or(false) {
-//                 let token_id = TokenDataIdType::from_event_data(event_data, config)
-//                     .map(|t| t.to_hash())
-//                     .unwrap_or_default();
-//                 format!("{}_{}_id:{}_{}", marketplace, id_type.as_str(), token_id, txn_version)
-//             } else {
-//                 format!("{}_{}_id:{}", marketplace, id_type.as_str(), txn_version)
-//             }
-//         }
-//     }
-// }

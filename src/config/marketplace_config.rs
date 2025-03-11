@@ -264,6 +264,7 @@ pub struct MarketplaceEventConfig {
     pub collection_inner: HashableJsonPath,
     pub listing_id: HashableJsonPath,
     pub offer_id: HashableJsonPath,
+    pub collection_offer_id: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
@@ -301,6 +302,7 @@ impl MarketplaceEventConfig {
             collection_inner: HashableJsonPath::new(event_config.collection_inner.clone())?,
             listing_id: HashableJsonPath::new(event_config.listing_id.clone())?,
             offer_id: HashableJsonPath::new(event_config.offer_id.clone())?,
+            collection_offer_id: HashableJsonPath::new(event_config.collection_offer_id.clone())?,
         })
     }
 }

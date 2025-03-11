@@ -7,74 +7,59 @@ diesel::table! {
         #[max_length = 66]
         collection_id -> Nullable<Varchar>,
         #[max_length = 66]
-        fee_schedule_id -> Nullable<Varchar>,
-        #[max_length = 66]
-        buyer -> Nullable<Varchar>,
-        price -> Nullable<Int8>,
+        buyer -> Varchar,
+        price -> Int8,
         remaining_token_amount -> Nullable<Int8>,
         is_deleted -> Bool,
         #[max_length = 66]
         token_standard -> Nullable<Varchar>,
-        #[max_length = 66]
-        coin_type -> Nullable<Varchar>,
         marketplace -> Varchar,
         contract_address -> Varchar,
-        entry_function_id_str -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
     }
 }
 
 diesel::table! {
-    current_nft_marketplace_listings (listing_id) {
-        #[max_length = 128]
-        listing_id -> Varchar,
+    current_nft_marketplace_listings (token_data_id) {
         #[max_length = 66]
         token_data_id -> Varchar,
+        #[max_length = 128]
+        listing_id -> Nullable<Varchar>,
         #[max_length = 66]
         collection_id -> Nullable<Varchar>,
         #[max_length = 66]
-        fee_schedule_id -> Nullable<Varchar>,
-        #[max_length = 66]
         seller -> Nullable<Varchar>,
-        price -> Nullable<Int8>,
+        price -> Int8,
         token_amount -> Nullable<Int8>,
         #[max_length = 66]
         token_standard -> Nullable<Varchar>,
         is_deleted -> Bool,
-        #[max_length = 66]
-        coin_type -> Nullable<Varchar>,
         marketplace -> Varchar,
         contract_address -> Varchar,
-        entry_function_id_str -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
     }
 }
 
 diesel::table! {
-    current_nft_marketplace_token_offers (offer_id) {
-        #[max_length = 128]
-        offer_id -> Varchar,
+    current_nft_marketplace_token_offers (token_data_id, buyer) {
         #[max_length = 66]
         token_data_id -> Varchar,
+        #[max_length = 128]
+        offer_id -> Nullable<Varchar>,
+        marketplace -> Varchar,
         #[max_length = 66]
         collection_id -> Nullable<Varchar>,
         #[max_length = 66]
-        fee_schedule_id -> Nullable<Varchar>,
-        #[max_length = 66]
-        buyer -> Nullable<Varchar>,
-        price -> Nullable<Int8>,
+        buyer -> Varchar,
+        price -> Int8,
         token_amount -> Nullable<Int8>,
         token_name -> Nullable<Varchar>,
         is_deleted -> Bool,
         #[max_length = 66]
         token_standard -> Nullable<Varchar>,
-        #[max_length = 66]
-        coin_type -> Nullable<Varchar>,
-        marketplace -> Varchar,
         contract_address -> Varchar,
-        entry_function_id_str -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
     }
@@ -92,30 +77,25 @@ diesel::table! {
         collection_id -> Nullable<Varchar>,
         collection_name -> Nullable<Varchar>,
         #[max_length = 66]
-        token_data_id -> Nullable<Varchar>,
+        token_data_id -> Varchar,
         token_name -> Nullable<Varchar>,
         #[max_length = 66]
         token_standard -> Nullable<Varchar>,
-        price -> Nullable<Int8>,
+        price -> Int8,
         token_amount -> Nullable<Int8>,
         #[max_length = 66]
         buyer -> Nullable<Varchar>,
         #[max_length = 66]
         seller -> Nullable<Varchar>,
-        deadline -> Nullable<Varchar>,
-        json_data -> Jsonb,
-        marketplace -> Varchar,
-        contract_address -> Varchar,
-        entry_function_id_str -> Nullable<Varchar>,
-        block_timestamp -> Timestamp,
-        #[max_length = 66]
-        fee_schedule_id -> Nullable<Varchar>,
-        #[max_length = 66]
-        coin_type -> Nullable<Varchar>,
+        expiration_time -> Nullable<Varchar>,
         #[max_length = 128]
         listing_id -> Nullable<Varchar>,
         #[max_length = 128]
         offer_id -> Nullable<Varchar>,
+        json_data -> Jsonb,
+        marketplace -> Varchar,
+        contract_address -> Varchar,
+        block_timestamp -> Timestamp,
     }
 }
 
