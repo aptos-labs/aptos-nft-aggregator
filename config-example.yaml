@@ -25,28 +25,30 @@ server_config:
           deadline: "$.deadline"
           token_inner: "$.token_inner" # V2 field
           collection_inner: "$.collection_inner" # V2 field
-        listing_config:
-          cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
-          fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent" 
-          place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
-          collection_name: "$.collection_metadata.collection_name"
-        offer_config:
-          cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelBidEvent"
-          fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BidEvent"
-          place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::SellEvent"
-        collection_offer_config:
-          cancel_event:
-            event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
-            collection_name: "$.collection_name"
-            creator_address: "$.creator"
-          fill_event:
-            event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::FillCollectionBidEvent"
-            collection_name: "$.token_id.token_data_id.collection"
-            creator_address: "$.token_id.token_data_id.creator"
-          place_event:
-            event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionBidEvent"
-            collection_name: "$.collection_name"
-            creator_address: "$.creator"
+          listing_id: "$.listing_id"
+          offer_id: "$.bid_id"
+          listing_config:
+            cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
+            fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent" 
+            place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+            collection_name: "$.collection_metadata.collection_name"
+          offer_config:
+            cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelBidEvent"
+            fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BidEvent"
+            place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::SellEvent"
+          collection_offer_config:
+            cancel_event:
+              event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
+              collection_name: "$.collection_name"
+              creator_address: "$.creator"
+            fill_event:
+              event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::FillCollectionBidEvent"
+              collection_name: "$.token_id.token_data_id.collection"
+              creator_address: "$.token_id.token_data_id.creator"
+            place_event:
+              event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionBidEvent"
+              collection_name: "$.collection_name"
+              creator_address: "$.creator"
       - marketplace_name: "tradeport"
         event_config:
           collection_id: "$.collection_id"
@@ -59,29 +61,30 @@ server_config:
           seller: "$.bid_seller"
           token_inner: "$.token_inner"  # V2 field
           collection_inner: "$.collection_inner" # V2 field
-        listing_config:
-          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::DeleteListingEvent"
-          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::BuyEvent" 
-          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::InsertListingEvent"
-          buyer: "$.buyer"
-          seller: "$.owner"
-        offer_config:
-          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteTokenBidEvent"
-          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptTokenBidEvent"
-          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertTokenBidEvent"
-        collection_offer_config:
-          cancel_event:
-            event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteCollectionBidEvent"
-            collection_name: "$.collection_id.collection_name"
-            creator_address: "$.collection_id.collection_creator"
-          fill_event:
-            event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptCollectionBidEvent"
-            collection_name: "$.token_id.token_data_id.collection"
-            creator_address: "$.token_id.token_data_id.creator"
-          place_event:
-            event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertCollectionBidEvent"
-            collection_name: "$.collection_id.collection_name"
-            creator_address: "$.collection_id.collection_creator"
+          collection_offer_id: "$.bid.inner"
+          listing_config:
+            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::DeleteListingEvent"
+            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::BuyEvent" 
+            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::InsertListingEvent"
+            buyer: "$.buyer"
+            seller: "$.owner"
+          offer_config:
+            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteTokenBidEvent"
+            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptTokenBidEvent"
+            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertTokenBidEvent"
+          collection_offer_config:
+            cancel_event:
+              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteCollectionBidEvent"
+              collection_name: "$.collection_id.collection_name"
+              creator_address: "$.collection_id.collection_creator"
+            fill_event:
+              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptCollectionBidEvent"
+              collection_name: "$.token_id.token_data_id.collection"
+              creator_address: "$.token_id.token_data_id.creator"
+            place_event:
+              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertCollectionBidEvent"
+              collection_name: "$.collection_id.collection_name"
+              creator_address: "$.collection_id.collection_creator"
       - marketplace_name: "tradeport_v2"
         event_config:
           collection_id: "$.collection_id"
@@ -93,26 +96,28 @@ server_config:
           buyer: "$.bid_buyer"
           seller: "$.bid_seller"
           token_inner: "$.token.inner" 
-          collection_inner: "$.collection.inner" 
-        listing_config:
-          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent"
-          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent"
-          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent"
-          buyer: "$.buyer" 
-          seller: "$.seller" 
-        offer_config:
-          cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent"
-          fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent"
-          place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent"
-          buyer: "$.bid_buyer"
-          seller: "$.bid_seller"
-        collection_offer_config:
-          cancel_event:
-            event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent"
-          fill_event:
-            event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent"
-          place_event:
-            event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertCollectionBidEvent"
+          collection_inner: "$.collection.inner"
+          listing_id: "$.listing.inner"
+          offer_id: "$.bid.inner"
+          listing_config:
+            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent"
+            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent"
+            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent"
+            buyer: "$.buyer" 
+            seller: "$.seller" 
+          offer_config:
+            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent"
+            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent"
+            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent"
+            buyer: "$.bid_buyer"
+            seller: "$.bid_seller"
+          collection_offer_config:
+            cancel_event:
+              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent"
+            fill_event:
+              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent"
+            place_event:
+              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertCollectionBidEvent"
       - marketplace_name: "wapal"
         event_config:
           collection_id: "$.collection_id"
@@ -123,26 +128,30 @@ server_config:
           token_amount: "$.token_amount"
           buyer: "$.purchaser"
           seller: "$.seller"
-          token_inner: "$.token_metadata.collection.vec[0].inner" 
+          token_inner: "$.token_metadata.token.vec[0].inner" 
           collection_inner: "$.token_metadata.collection.vec[0].inner"
-        listing_config:
-          cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent"
-          fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent"
-          place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent"
-        offer_config:
-          cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent"
-          fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent"
-          place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent"
-        collection_offer_config:
-          cancel_event:
-            event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent"
-            collection_name: "$.collection_metadata.collection_name"
-            creator_address: "$.collection_metadata.creator_address"
-          fill_event:
-            event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent"
-            collection_name: "$.token_metadata.collection_name"
-            creator_address: "$.token_metadata.creator_address"
-          place_event:
-            event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent"
-            collection_name: "$.collection_metadata.collection_name"
-            creator_address: "$.collection_metadata.creator_address"
+          # TODO: Revisit
+          listing_id: "$.listing"
+          offer_id: "$.token_offer"
+          collection_offer_id: "$.collection_offer"
+          listing_config:
+            cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent"
+            fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent"
+            place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent"
+          offer_config:
+            cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent"
+            fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent"
+            place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent"
+          collection_offer_config:
+            cancel_event:
+              event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent"
+              collection_name: "$.collection_metadata.collection_name"
+              creator_address: "$.collection_metadata.creator_address"
+            fill_event:
+              event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent"
+              collection_name: "$.token_metadata.collection_name"
+              creator_address: "$.token_metadata.creator_address"
+            place_event:
+              event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent"
+              collection_name: "$.collection_metadata.collection_name"
+              creator_address: "$.collection_metadata.creator_address"

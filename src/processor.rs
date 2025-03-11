@@ -68,11 +68,6 @@ impl ProcessorTrait for Processor {
         // Merge the starting version from config and the latest processed version from the DB
         // let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
         let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
-        // let starting_version = self
-        //     .config
-        //     .transaction_stream_config
-        //     .starting_version
-        //     .unwrap_or(0);
 
         // Check and update the ledger chain id to ensure we're indexing the correct chain
         let _grpc_chain_id = TransactionStream::new(self.config.transaction_stream_config.clone())
@@ -90,7 +85,7 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let (event_mappings, _resource_mappings, contract_to_marketplace_map) = self
+        let (event_mappings, contract_to_marketplace_map) = self
             .config
             .nft_marketplace_configs
             .get_mappings()
@@ -98,17 +93,10 @@ impl ProcessorTrait for Processor {
                 error!("Failed to get event mapping: {:?}", e);
                 panic!("Failed to get event mapping: {:?}", e);
             });
-        let process = ProcessStep::new(
-            Arc::new(EventRemapper::new(
-                Arc::new(event_mappings.clone()),
-                Arc::new(contract_to_marketplace_map.clone()),
-            )),
-            // Commented out for now as we don't need resource mappings
-            // Arc::new(ResourceMapper::new(
-            //     Arc::new(resource_mappings.clone()),
-            //     Arc::new(contract_to_marketplace_map.clone()),
-            // )),
-        );
+        let process = ProcessStep::new(Arc::new(EventRemapper::new(
+            Arc::new(event_mappings.clone()),
+            Arc::new(contract_to_marketplace_map.clone()),
+        )));
         let db_writing = DBWritingStep::new(self.db_pool.clone());
         let version_tracker = VersionTrackerStep::new(
             get_processor_status_saver(self.db_pool.clone()),

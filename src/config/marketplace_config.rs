@@ -9,9 +9,8 @@ use std::{fmt, str::FromStr};
 
 pub type MarketplaceEventConfigMapping = AHashMap<String, MarketplaceEventConfig>;
 pub type MarketplaceEventConfigMappings = AHashMap<String, MarketplaceEventConfigMapping>;
-pub type MarketplaceResourceConfigMapping = AHashMap<String, MarketplaceResourceConfig>;
-pub type MarketplaceResourceConfigMappings = AHashMap<String, MarketplaceResourceConfigMapping>;
 pub type ContractToMarketplaceMap = AHashMap<String, String>;
+
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
 
@@ -26,22 +25,13 @@ pub struct NFTMarketplaceConfigs {
 pub struct MarketplaceConfig {
     pub marketplace_name: String,
     pub event_config: EventConfig,
-
-    // it's for v2 marketplace, so optional for v1 marketplace
-    #[serde(default)]
-    pub resource_config: ResourceConfig,
 }
 
 impl NFTMarketplaceConfigs {
     pub fn get_mappings(
         &self,
-    ) -> Result<(
-        MarketplaceEventConfigMappings,
-        MarketplaceResourceConfigMappings,
-        ContractToMarketplaceMap,
-    )> {
+    ) -> Result<(MarketplaceEventConfigMappings, ContractToMarketplaceMap)> {
         let mut marketplace_to_events_map = AHashMap::new();
-        let mut marketplace_to_resources_map = AHashMap::new();
         let mut contract_to_marketplace_map = AHashMap::new();
 
         for config in &self.marketplace_configs {
@@ -209,41 +199,16 @@ impl NFTMarketplaceConfigs {
                 )?,
             );
 
-            let mut resource_mapping: AHashMap<String, MarketplaceResourceConfig> = AHashMap::new();
-
-            for resource_type in &config.resource_config.resource_types {
-                resource_mapping.insert(
-                    resource_type.resource_type.clone(),
-                    MarketplaceResourceConfig::from_resource_config(
-                        &config.resource_config,
-                        config.marketplace_name.clone(),
-                        resource_type.resource_action.clone(),
-                    )?,
-                );
-            }
-
             let marketplace_name = config.marketplace_name.clone();
 
             for event in event_mapping.keys() {
                 contract_to_marketplace_map.insert(event.clone(), marketplace_name.clone());
             }
 
-            // Process resources - just extract the contract address once
-            if let Some(first_resource) = config.resource_config.resource_types.first() {
-                if let Some(contract_address) = first_resource.resource_type.split("::").next() {
-                    contract_to_marketplace_map
-                        .insert(contract_address.to_string(), marketplace_name.clone());
-                }
-            }
             marketplace_to_events_map.insert(marketplace_name.clone(), event_mapping);
-            marketplace_to_resources_map.insert(marketplace_name.clone(), resource_mapping);
         }
 
-        Ok((
-            marketplace_to_events_map,
-            marketplace_to_resources_map,
-            contract_to_marketplace_map,
-        ))
+        Ok((marketplace_to_events_map, contract_to_marketplace_map))
     }
 }
 

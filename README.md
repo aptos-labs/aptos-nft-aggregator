@@ -59,20 +59,6 @@ The `config.yaml` file is used to configure the NFT aggregator. Below is an expl
         - **fill_event**: Event type for filling a collection offer.
         - **place_event**: Event type for placing a collection offer.
           - find more details in the [`CollectionEventParams`](src/config/marketplace_config.rs) struct.
-    - **resource_config**: Configuration for resource events:
-      - **resource_types**: A list of resource types to process. 
-        - **resource_type**: The type of resource to process.
-        - **resource_action**: The action to perform on the resource.
-        - find more details in the [`ResourceTypeConfig`](src/config/marketplace_config.rs) struct.
-      - **collection_id**: JSON path to extract the collection ID.
-      - **token_name**: JSON path to extract the token name.
-      - **creator_address**: JSON path to extract the creator's address.
-      - **collection_name**: JSON path to extract the collection name.
-      - **price**: JSON path to extract the price of the NFT.
-      - **token_amount**: JSON path to extract the amount of tokens.
-      - **buyer**: JSON path to extract the buyer's address.
-      - **seller**: JSON path to extract the seller's address.
-      - **deadline**: JSON path to extract the deadline for offers.
 
       
 ### Running the Processor
