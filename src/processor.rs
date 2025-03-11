@@ -5,6 +5,7 @@ use crate::{
         db_writing_step::DBWritingStep, processor_status_saver_step::get_processor_status_saver,
         remapper_step::ProcessStep, remappers::event_remapper::EventRemapper,
     },
+    utils::starting_version::get_starting_version,
 };
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
@@ -64,13 +65,14 @@ impl ProcessorTrait for Processor {
         )
         .await;
 
-        //  Merge the starting version from config and the latest processed version from the DB
+        // Merge the starting version from config and the latest processed version from the DB
         // let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
-        let starting_version = self
-            .config
-            .transaction_stream_config
-            .starting_version
-            .unwrap_or(0);
+        let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
+        // let starting_version = self
+        //     .config
+        //     .transaction_stream_config
+        //     .starting_version
+        //     .unwrap_or(0);
 
         // Check and update the ledger chain id to ensure we're indexing the correct chain
         let _grpc_chain_id = TransactionStream::new(self.config.transaction_stream_config.clone())
@@ -101,6 +103,7 @@ impl ProcessorTrait for Processor {
                 Arc::new(event_mappings.clone()),
                 Arc::new(contract_to_marketplace_map.clone()),
             )),
+            // Commented out for now as we don't need resource mappings
             // Arc::new(ResourceMapper::new(
             //     Arc::new(resource_mappings.clone()),
             //     Arc::new(contract_to_marketplace_map.clone()),
