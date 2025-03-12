@@ -11,7 +11,7 @@ use crate::{
 use anyhow::Result;
 use aptos_indexer_processor_sdk::utils::errors::ProcessorError;
 use aptos_protos::transaction::v1::{transaction::TxnData, Transaction};
-use std::{str::FromStr, sync::Arc};
+use std::{collections::HashMap, str::FromStr, sync::Arc};
 
 pub struct EventRemapper {
     pub event_mappings: Arc<MarketplaceEventConfigMappings>,
@@ -35,6 +35,12 @@ impl EventRemapper {
     pub fn remap_events(
         &self,
         txn: Transaction,
+        filled_collection_offers_from_events: &mut HashMap<
+            String,
+            CurrentNFTMarketplaceCollectionOffer,
+        >,
+        filled_token_offers_from_events: &mut HashMap<String, CurrentNFTMarketplaceTokenOffer>,
+        filled_listings_from_events: &mut HashMap<String, CurrentNFTMarketplaceListing>,
     ) -> Result<
         (
             Vec<NftMarketplaceActivity>,
@@ -72,9 +78,18 @@ impl EventRemapper {
                                 CurrentNFTMarketplaceListing::from_activity(&activity, false);
                             current_listings.push(current_listing);
                         },
-                        MarketplaceEventType::CancelListing | MarketplaceEventType::FillListing => {
+                        MarketplaceEventType::CancelListing => {
+                            let current_listing: CurrentNFTMarketplaceListing =
+                                CurrentNFTMarketplaceListing::from_activity(&activity, true);
+                            current_listings.push(current_listing);
+                        },
+                        MarketplaceEventType::FillListing => {
                             let current_listing =
                                 CurrentNFTMarketplaceListing::from_activity(&activity, true);
+                            filled_listings_from_events.insert(
+                                current_listing.token_data_id.clone(),
+                                current_listing.clone(),
+                            );
                             current_listings.push(current_listing);
                         },
                         MarketplaceEventType::PlaceOffer => {
@@ -82,9 +97,18 @@ impl EventRemapper {
                                 CurrentNFTMarketplaceTokenOffer::from_activity(&activity, false);
                             current_token_offers.push(current_token_offer);
                         },
-                        MarketplaceEventType::CancelOffer | MarketplaceEventType::FillOffer => {
+                        MarketplaceEventType::CancelOffer => {
                             let current_token_offer =
                                 CurrentNFTMarketplaceTokenOffer::from_activity(&activity, true);
+                            current_token_offers.push(current_token_offer);
+                        },
+                        MarketplaceEventType::FillOffer => {
+                            let current_token_offer =
+                                CurrentNFTMarketplaceTokenOffer::from_activity(&activity, true);
+                            filled_token_offers_from_events.insert(
+                                current_token_offer.token_data_id.clone(),
+                                current_token_offer.clone(),
+                            );
                             current_token_offers.push(current_token_offer);
                         },
                         MarketplaceEventType::PlaceCollectionOffer => {
@@ -106,6 +130,11 @@ impl EventRemapper {
                                 CurrentNFTMarketplaceCollectionOffer::from_activity(
                                     &activity, true,
                                 );
+
+                            let token_data_id = activity.token_data_id.clone();
+                            filled_collection_offers_from_events
+                                .insert(token_data_id, current_collection_offer.clone());
+
                             current_collection_offers.push(current_collection_offer);
                         },
                     }

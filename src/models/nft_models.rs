@@ -245,8 +245,7 @@ impl NftMarketplaceActivity {
         // if any of fields are None, we should return None and probably lean into resource handling
         if creator_address.is_none() || collection_name.is_none() {
             // check if resource address exists for token inner (e.g. 2386809975)
-            // if let Some(token_inner) = extract_string(&config.token_inner, event_data) {
-            // we will handle this in resource
+            // we will handle this in resource remapper if missing
             debug!(
                 "Missing fields for collection ID extraction {:?}",
                 txn_version
@@ -288,7 +287,7 @@ pub struct CurrentNFTMarketplaceListing {
     pub collection_id: Option<String>,
     pub seller: String,
     pub price: i64,
-    pub token_amount: i64,
+    pub token_amount: i64, // todo: make it optional since it 's missing for tradport v2
     pub token_standard: String,
     pub is_deleted: bool,
     pub marketplace: String,
@@ -298,7 +297,7 @@ pub struct CurrentNFTMarketplaceListing {
 }
 
 impl CurrentNFTMarketplaceListing {
-    pub fn from_activity(activity: &NftMarketplaceActivity, is_filled_or_cancelled: bool) -> Self {
+    pub fn from_activity(activity: &NftMarketplaceActivity, is_deleted: bool) -> Self {
         Self {
             token_data_id: activity.token_data_id.clone(),
             marketplace: activity.marketplace.clone(),
@@ -311,7 +310,7 @@ impl CurrentNFTMarketplaceListing {
                 )
             }),
             price: activity.price,
-            token_amount: if is_filled_or_cancelled {
+            token_amount: if is_deleted {
                 0
             } else {
                 activity.token_amount.unwrap_or_else(|| {
@@ -323,7 +322,7 @@ impl CurrentNFTMarketplaceListing {
                 })
             },
             token_standard: activity.token_standard.clone().unwrap_or_default(),
-            is_deleted: is_filled_or_cancelled,
+            is_deleted,
             contract_address: activity.contract_address.clone(),
             last_transaction_version: activity.txn_version,
             last_transaction_timestamp: activity.block_timestamp,
@@ -358,11 +357,7 @@ impl CurrentNFTMarketplaceTokenOffer {
             buyer: activity.buyer.clone().unwrap_or_default(),
             collection_id: activity.collection_id.clone().unwrap_or_default(),
             price: activity.price,
-            token_amount: if is_deleted {
-                Some(0)
-            } else {
-                activity.token_amount
-            },
+            token_amount: activity.token_amount,
             token_name: activity.token_name.clone(),
             is_deleted,
             marketplace: activity.marketplace.clone(),
@@ -392,11 +387,8 @@ pub struct CurrentNFTMarketplaceCollectionOffer {
 }
 
 impl CurrentNFTMarketplaceCollectionOffer {
-    // In this case, we use the offer_id as PK
-    // If the offer_id is not provided, we use the collection_id + buyer as PK
-    // For collection offers, we can place multiple offers for the same collection from the same buyer
-    // Whenever there is conflict, we override the existing one
     pub fn from_activity(activity: &NftMarketplaceActivity, is_deleted: bool) -> Self {
+        // if not collection offer id, then we need to build it using buyer, collection_id, or something
         let collection_offer_id = if activity.offer_id.is_none() {
             // use collection_id + buyer as PK if not provided
             let input = format!(

@@ -1,14 +1,16 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::steps::HashableJsonPath;
-use ahash::AHashMap;
+use crate::steps::{extract_string, HashableJsonPath};
+use ahash::{AHashMap, HashMap, HashMapExt};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
 
 pub type MarketplaceEventConfigMapping = AHashMap<String, MarketplaceEventConfig>;
 pub type MarketplaceEventConfigMappings = AHashMap<String, MarketplaceEventConfigMapping>;
+pub type MarketplaceResourceConfigMapping = AHashMap<String, MarketplaceResourceConfig>;
+pub type MarketplaceResourceConfigMappings = AHashMap<String, MarketplaceResourceConfigMapping>;
 pub type ContractToMarketplaceMap = AHashMap<String, String>;
 
 /// Maximum length of a token name in characters
@@ -25,13 +27,20 @@ pub struct NFTMarketplaceConfigs {
 pub struct MarketplaceConfig {
     pub marketplace_name: String,
     pub event_config: EventConfig,
+    #[serde(default)]
+    pub resource_config: ResourceConfig,
 }
 
 impl NFTMarketplaceConfigs {
     pub fn get_mappings(
         &self,
-    ) -> Result<(MarketplaceEventConfigMappings, ContractToMarketplaceMap)> {
+    ) -> Result<(
+        MarketplaceEventConfigMappings,
+        MarketplaceResourceConfigMappings,
+        ContractToMarketplaceMap,
+    )> {
         let mut marketplace_to_events_map = AHashMap::new();
+        let mut marketplace_to_resources_map = AHashMap::new();
         let mut contract_to_marketplace_map = AHashMap::new();
 
         for config in &self.marketplace_configs {
@@ -199,16 +208,37 @@ impl NFTMarketplaceConfigs {
                 )?,
             );
 
+            let mut resource_mapping: AHashMap<String, MarketplaceResourceConfig> = AHashMap::new();
+
+            for resource_type in &config.resource_config.resource_types {
+                resource_mapping.insert(
+                    resource_type.resource_type.clone(),
+                    MarketplaceResourceConfig::from_resource_config(&config.resource_config)?,
+                );
+            }
+
             let marketplace_name = config.marketplace_name.clone();
 
             for event in event_mapping.keys() {
                 contract_to_marketplace_map.insert(event.clone(), marketplace_name.clone());
             }
 
+            // Process resources - just extract the contract address once
+            if let Some(first_resource) = config.resource_config.resource_types.first() {
+                if let Some(contract_address) = first_resource.resource_type.split("::").next() {
+                    contract_to_marketplace_map
+                        .insert(contract_address.to_string(), marketplace_name.clone());
+                }
+            }
             marketplace_to_events_map.insert(marketplace_name.clone(), event_mapping);
+            marketplace_to_resources_map.insert(marketplace_name.clone(), resource_mapping);
         }
 
-        Ok((marketplace_to_events_map, contract_to_marketplace_map))
+        Ok((
+            marketplace_to_events_map,
+            marketplace_to_resources_map,
+            contract_to_marketplace_map,
+        ))
     }
 }
 
@@ -406,4 +436,92 @@ impl fmt::Display for MarketplaceEventType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct MarketplaceResourceConfig {
+    pub fields: Vec<(String, HashableJsonPath, bool)>, // (field_name, json_path, required)
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResourceConfig {
+    pub resource_types: Vec<ResourceTypeConfig>,
+    pub fields: Vec<ResourceFieldConfig>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResourceFieldConfig {
+    pub field_name: String, // Name of the field (e.g., "collection_id", "token_name", etc.)
+    pub primary_path: Option<String>, // Primary JSON path
+    #[serde(default)]
+    pub required: bool, // Whether this field is required
+}
+
+// Dynamic result structure using HashMap
+pub struct ExtractedResourceData {
+    // Map of field names to their extracted values
+    pub fields: HashMap<String, Option<String>>,
+}
+
+impl ExtractedResourceData {
+    // Convenience methods to get common fields
+    pub fn get_field(&self, field_name: &str) -> Option<&String> {
+        self.fields.get(field_name).and_then(|opt| opt.as_ref())
+    }
+
+    pub fn collection_id(&self) -> Option<&String> {
+        self.get_field("collection_id")
+    }
+
+    pub fn token_name(&self) -> Option<&String> {
+        self.get_field("token_name")
+    }
+}
+
+impl MarketplaceResourceConfig {
+    pub fn from_resource_config(resource_config: &ResourceConfig) -> Result<Self> {
+        let mut fields = Vec::new();
+
+        // Process all fields from config
+        for field_config in &resource_config.fields {
+            let json_path = HashableJsonPath::new(field_config.primary_path.clone())?;
+
+            // Add field to the list
+            fields.push((
+                field_config.field_name.clone(),
+                json_path,
+                field_config.required,
+            ));
+        }
+
+        Ok(Self { fields })
+    }
+
+    pub fn extract_resource_data(&self, data: &serde_json::Value) -> Result<ExtractedResourceData> {
+        let mut result = ExtractedResourceData {
+            fields: HashMap::new(),
+        };
+
+        // Extract all configured fields
+        for (field_name, json_path, required) in &self.fields {
+            let value = extract_string(json_path, data);
+            // If field is required but missing, return error
+            if *required && value.is_none() {
+                return Err(anyhow::anyhow!("Required field '{}' not found", field_name));
+            }
+
+            result.fields.insert(field_name.clone(), value);
+        }
+
+        Ok(result)
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResourceTypeConfig {
+    pub resource_type: String,
+    // pub resource_action: ResourceType,
 }

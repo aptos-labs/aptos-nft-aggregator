@@ -1,3 +1,4 @@
+use super::remappers::resource_remapper::ResourceMapper;
 use crate::{
     models::nft_models::{
         CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
@@ -12,7 +13,7 @@ use aptos_indexer_processor_sdk::{
     utils::errors::ProcessorError,
 };
 use aptos_protos::transaction::v1::Transaction;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tonic::async_trait;
 
 pub struct RemapResult {
@@ -20,13 +21,18 @@ pub struct RemapResult {
     pub errors: Vec<String>,
 }
 
+// impl EventRemapper {
 pub struct ProcessStep {
     pub event_remapper: Arc<EventRemapper>,
+    pub resource_mapper: Arc<ResourceMapper>,
 }
 
 impl ProcessStep {
-    pub fn new(event_remapper: Arc<EventRemapper>) -> Self {
-        Self { event_remapper }
+    pub fn new(event_remapper: Arc<EventRemapper>, resource_mapper: Arc<ResourceMapper>) -> Self {
+        Self {
+            event_remapper,
+            resource_mapper,
+        }
     }
 }
 
@@ -64,17 +70,51 @@ impl Processable for ProcessStep {
             .data
             .iter()
             .map(|txn| {
+                // Clone remappers to bump Arc reference count
                 let event_remapper = self.event_remapper.clone();
-                match event_remapper.remap_events(txn.clone()) {
-                    Ok((activities, listings, token_offers, collection_offers)) => {
-                        Ok((activities, listings, token_offers, collection_offers))
-                    },
-                    Err(e) => Err(ProcessorError::ProcessError {
-                        message: format!("Error remapping events: {:#}", e),
-                    }),
+                let resource_mapper = self.resource_mapper.clone();
+
+                let mut filled_collection_offers_from_events: HashMap<
+                    String,
+                    CurrentNFTMarketplaceCollectionOffer,
+                > = HashMap::new();
+                let mut filled_token_offers_from_events: HashMap<
+                    String,
+                    CurrentNFTMarketplaceTokenOffer,
+                > = HashMap::new();
+                let mut filled_listings_from_events: HashMap<String, CurrentNFTMarketplaceListing> =
+                    HashMap::new();
+
+                let (activities, mut listings, mut token_offers, mut collection_offers) =
+                    match event_remapper.remap_events(
+                        txn.clone(),
+                        &mut filled_collection_offers_from_events,
+                        &mut filled_token_offers_from_events,
+                        &mut filled_listings_from_events,
+                    ) {
+                        Ok((event_activities, listings, token_offers, collection_offers)) => {
+                            (event_activities, listings, token_offers, collection_offers)
+                        },
+                        Err(e) => {
+                            // Log error and continue with empty vector
+                            eprintln!("Error remapping events: {:#}", e);
+                            (vec![], vec![], vec![], vec![])
+                        },
+                    };
+
+                if let Ok(resource_result) = resource_mapper.remap_resources(
+                    txn.clone(),
+                    &mut filled_collection_offers_from_events,
+                    &mut filled_token_offers_from_events,
+                    &mut filled_listings_from_events,
+                ) {
+                    listings.extend(resource_result.listings);
+                    token_offers.extend(resource_result.token_offers);
+                    collection_offers.extend(resource_result.collection_offers);
                 }
+                (activities, listings, token_offers, collection_offers)
             })
-            .collect::<Result<Vec<_>, ProcessorError>>()?;
+            .collect();
 
         // Combine all activities and listings
         let mut all_activities: Vec<NftMarketplaceActivity> = Vec::new();

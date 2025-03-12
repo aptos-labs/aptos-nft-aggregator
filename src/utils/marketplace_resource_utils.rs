@@ -119,6 +119,7 @@ pub struct ObjectCore {
 #[derive(Debug, Clone)]
 pub struct ListingMetadata {
     pub seller: String,
+    pub fee_schedule_id: String,
     // Either the token v2 address or the token v1 container address
     pub token_address: String,
 }
@@ -143,6 +144,7 @@ pub struct TokenMetadata {
 pub struct TokenOfferMetadata {
     pub expiration_time: i64,
     pub price: i64,
+    pub fee_schedule_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -150,6 +152,7 @@ pub struct CollectionOfferMetadata {
     pub expiration_time: i64,
     pub price: i64,
     pub remaining_token_amount: i64,
+    pub fee_schedule_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -160,74 +163,6 @@ pub struct CollectionMetadata {
     pub token_standard: TokenStandard,
 }
 
-pub fn get_object_core(resource_type: &str, data: &Value) -> Option<ObjectCore> {
-    if resource_type.contains("0x1::object::ObjectCore") {
-        return Some(ObjectCore {
-            owner: extract_field(data, "owner")?,
-            allow_ungated_transfer: extract_field(data, "allow_ungated_transfer")?
-                .parse::<bool>()
-                .ok()?,
-            guid_creation_num: extract_field(data, "guid_creation_num")?,
-        });
-    }
-    None
-}
-
-// TODO: Update when we have a txn that has a token v1 container
-pub fn get_listing_token_v1_container(
-    resource_type: &str,
-    data: &Value,
-    marketplace_contract_address: &str,
-) -> Option<ListingTokenV1Container> {
-    if resource_type
-        != format!(
-            "{}::listing::TokenV1Container",
-            marketplace_contract_address
-        )
-    {
-        return None;
-    }
-    let token = data.get("token").unwrap_or(&Value::Null);
-    let amount = token.get("amount").and_then(|v| v.as_i64()).unwrap_or(0);
-
-    let token_data_id_struct = token
-        .get("id")
-        .and_then(|id| id.get("token_data_id"))
-        .unwrap_or(&Value::Null);
-
-    let creator = token_data_id_struct
-        .get("creator")
-        .and_then(|v| v.as_str())
-        .unwrap_or_default();
-    let collection = token_data_id_struct
-        .get("collection")
-        .and_then(|v| v.as_str())
-        .unwrap_or_default();
-    let name = token_data_id_struct
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or_default();
-
-    let token_data_id_type = TokenDataIdType::new(
-        creator.to_string(),
-        collection.to_string(),
-        name.to_string(),
-    );
-
-    Some(ListingTokenV1Container {
-        token_metadata: TokenMetadata {
-            collection_id: token_data_id_type.get_collection_data_id_hash(),
-            token_data_id: token_data_id_type.to_hash(),
-            creator_address: token_data_id_type.get_creator(),
-            collection_name: token_data_id_type.get_collection_trunc(),
-            token_name: token_data_id_type.get_name_trunc(),
-            token_standard: TokenStandard::V1,
-        },
-        amount,
-    })
-}
-
-// Helper function to extract fields from JSON
 pub fn extract_field(data: &Value, path: &str) -> Option<String> {
     let parts: Vec<&str> = path.split('.').collect();
     let mut current = data;
@@ -310,22 +245,6 @@ impl TokenDataIdType {
         let hash = sha3_256(input.as_bytes());
         standardize_address(&hex::encode(hash))
     }
-
-    fn get_collection_trunc(&self) -> String {
-        truncate_str(&self.collection.clone(), MAX_NAME_LENGTH)
-    }
-
-    fn get_name_trunc(&self) -> String {
-        truncate_str(&self.name.clone(), MAX_NAME_LENGTH)
-    }
-
-    fn get_collection_data_id_hash(&self) -> String {
-        CollectionDataIdType::new(self.creator.clone(), self.collection.clone()).to_hash()
-    }
-
-    fn get_creator(&self) -> String {
-        standardize_address(&self.creator.clone())
-    }
 }
 
 pub fn truncate_str(val: &str, max_chars: usize) -> String {
@@ -349,6 +268,7 @@ pub struct TokenOfferEventMetadata {
     pub token_offer_id: String,
     pub token_metadata: TokenMetadata,
     pub price: i64,
+    // pub fee_schedule_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -356,6 +276,7 @@ pub struct ListingEventMetadata {
     pub listing_id: String,
     pub listing_metadata: ListingMetadata,
     pub price: i64,
+    pub fee_schedule_id: String,
 }
 
 // Helper structs to organize related data
