@@ -86,7 +86,7 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let (event_mappings, resource_mappings, contract_to_marketplace_map) = self
+        let (event_mappings, table_mappings) = self
             .config
             .nft_marketplace_configs
             .get_mappings()
@@ -97,12 +97,9 @@ impl ProcessorTrait for Processor {
         let process = ProcessStep::new(
             Arc::new(EventRemapper::new(
                 Arc::new(event_mappings.clone()),
-                Arc::new(contract_to_marketplace_map.clone()),
+                Arc::new(table_mappings.clone()),
             )),
-            Arc::new(ResourceMapper::new(
-                Arc::new(resource_mappings.clone()),
-                Arc::new(contract_to_marketplace_map.clone()),
-            )),
+            Arc::new(ResourceMapper::new(Arc::new(table_mappings.clone()))),
         );
         let db_writing = DBWritingStep::new(self.db_pool.clone());
         let version_tracker = VersionTrackerStep::new(

@@ -11,146 +11,193 @@ server_config:
     auth_token: <auth_token>
     request_name_header: "nft_marketplace_processor"
   nft_marketplace_configs:
-    marketplace_configs:
-      - marketplace_name: "topaz"
-        event_config:
-          collection_id: "$.collection_id"
-          token_name: "$.token_id.token_data_id.name"
-          creator_address: "$.token_id.token_data_id.creator"
-          collection_name: "$.token_id.token_data_id.collection"
-          price: "$.price"
-          token_amount: "$.amount"
-          buyer: "$.buyer"
-          seller: "$.seller"
-          deadline: "$.deadline"
-          token_inner: "$.token_inner" # V2 field
-          collection_inner: "$.collection_inner" # V2 field
-          listing_id: "$.listing_id"
-          offer_id: "$.bid_id"
-          listing_config:
-            cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
-            fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent" 
-            place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
-            collection_name: "$.collection_metadata.collection_name"
-          offer_config:
-            cancel_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelBidEvent"
-            fill_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BidEvent"
-            place_event: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::SellEvent"
-          collection_offer_config:
-            cancel_event:
-              event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
-              collection_name: "$.collection_name"
-              creator_address: "$.creator"
-            fill_event:
-              event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::FillCollectionBidEvent"
-              collection_name: "$.token_id.token_data_id.collection"
-              creator_address: "$.token_id.token_data_id.creator"
-            place_event:
-              event_type: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionBidEvent"
-              collection_name: "$.collection_name"
-              creator_address: "$.creator"
-      - marketplace_name: "tradeport"
-        event_config:
-          collection_id: "$.collection_id"
-          token_name: "$.token_id.token_data_id.name"
-          creator_address: "$.token_id.token_data_id.creator"
-          collection_name: "$.token_id.token_data_id.collection"
-          price: "$.price"
-          token_amount: "$.amount"
-          buyer: "$.bid_buyer"
-          seller: "$.bid_seller"
-          token_inner: "$.token_inner"  # V2 field
-          collection_inner: "$.collection_inner" # V2 field
-          collection_offer_id: "$.bid.inner"
-          listing_config:
-            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::DeleteListingEvent"
-            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::BuyEvent" 
-            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::InsertListingEvent"
-            buyer: "$.buyer"
-            seller: "$.owner"
-          offer_config:
-            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteTokenBidEvent"
-            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptTokenBidEvent"
-            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertTokenBidEvent"
-          collection_offer_config:
-            cancel_event:
-              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteCollectionBidEvent"
-              collection_name: "$.collection_id.collection_name"
-              creator_address: "$.collection_id.collection_creator"
-            fill_event:
-              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptCollectionBidEvent"
-              collection_name: "$.token_id.token_data_id.collection"
-              creator_address: "$.token_id.token_data_id.creator"
-            place_event:
-              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertCollectionBidEvent"
-              collection_name: "$.collection_id.collection_name"
-              creator_address: "$.collection_id.collection_creator"
-      - marketplace_name: "tradeport_v2"
-        event_config:
-          collection_id: "$.collection_id"
-          token_name: "$.token_metadata.token_name"
-          creator_address: "$.token_metadata.creator_address"
-          collection_name: "$.token_metadata.collection_name"
-          price: "$.price"
-          token_amount: "$.token_amount"
-          buyer: "$.bid_buyer"
-          seller: "$.bid_seller"
-          token_inner: "$.token.inner" 
-          collection_inner: "$.collection.inner"
-          listing_id: "$.listing.inner"
-          offer_id: "$.bid.inner"
-          listing_config:
-            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent"
-            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent"
-            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent"
-            buyer: "$.buyer" 
-            seller: "$.seller" 
-          offer_config:
-            cancel_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent"
-            fill_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent"
-            place_event: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent"
-            buyer: "$.bid_buyer"
-            seller: "$.bid_seller"
-          collection_offer_config:
-            cancel_event:
-              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent"
-            fill_event:
-              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent"
-            place_event:
-              event_type: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertCollectionBidEvent"
-      - marketplace_name: "wapal"
-        event_config:
-          collection_id: "$.collection_id"
-          token_name: "$.token_metadata.token_name"
-          creator_address: "$.token_metadata.creator_address"
-          collection_name: "$.token_metadata.collection_name"
-          price: "$.price"
-          token_amount: "$.token_amount"
-          buyer: "$.purchaser"
-          seller: "$.seller"
-          token_inner: "$.token_metadata.token.vec[0].inner" 
-          collection_inner: "$.token_metadata.collection.vec[0].inner"
-          listing_id: "$.listing"
-          offer_id: "$.token_offer"
-          collection_offer_id: "$.collection_offer"
-          listing_config:
-            cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent"
-            fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent"
-            place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent"
-          offer_config:
-            cancel_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent"
-            fill_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent"
-            place_event: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent"
-          collection_offer_config:
-            cancel_event:
-              event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent"
-              collection_name: "$.collection_metadata.collection_name"
-              creator_address: "$.collection_metadata.creator_address"
-            fill_event:
-              event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent"
-              collection_name: "$.token_metadata.collection_name"
-              creator_address: "$.token_metadata.creator_address"
-            place_event:
-              event_type: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent"
-              collection_name: "$.collection_metadata.collection_name"
-              creator_address: "$.collection_metadata.creator_address"
+    marketplaces:
+      - name: "topaz"
+        event_types:
+          - type: "listing"
+            cancel: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::DelistEvent"
+            fill: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BuyEvent"
+            place: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::ListEvent"
+          - type: "token_offer"
+            cancel: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelBidEvent"
+            fill: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::BidEvent"
+            place: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::SellEvent"
+          - type: "collection_offer"
+            cancel: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CancelCollectionBidEvent"
+            fill: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::FillCollectionBidEvent"
+            place: "0x2c7bccf7b31baf770fdbcc768d9e9cb3d87805e255355df5db32ac9a669010a2::events::CollectionBidEvent"
+        tables:
+          nft_marketplace_activities:
+            columns:
+              collection_id:
+                path: ["$.collection_id", "$.collection_inner"]
+              token_data_id:
+                path: ["$.token_inner"]
+              token_name:
+                path: ["$.token_id.token_data_id.name"]
+              creator_address:
+                path: ["$.token_id.token_data_id.creator", "$.creator"]
+              collection_name:
+                path: ["$.token_id.token_data_id.collection", "$.collection_metadata.collection_name", "$.collection_name"]
+              price:
+                path: ["$.price"]
+              buyer:
+                path: ["$.buyer"]
+              seller:
+                path: ["$.seller"]
+              token_amount:
+                path: ["$.amount"]
+              listing_id:
+                path: ["$.listing_id"]
+              offer_id:
+                path: ["$.bid_id"]
+              expiration_time:
+                path: ["$.deadline"]
+      - name: "tradeport"
+        event_types:
+          - type: "listing"
+            cancel: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::DeleteListingEvent"
+            fill: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::BuyEvent"
+            place: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings::InsertListingEvent"
+          - type: "token_offer"
+            cancel: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteTokenBidEvent"
+            fill: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptTokenBidEvent"
+            place: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertTokenBidEvent"  
+          - type: "collection_offer"
+            cancel: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::DeleteCollectionBidEvent"
+            fill: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::AcceptCollectionBidEvent"
+            place: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings::InsertCollectionBidEvent"
+        tables:
+          nft_marketplace_activities:
+            columns:
+              collection_id:
+                path: ["$.collection_id", "$.collection_inner"]
+              token_data_id:
+                path: ["$.token_inner"]
+              token_name:
+                path: ["$.token_id.token_data_id.name"]
+              creator_address:
+                path: ["$.token_id.token_data_id.creator", "$.collection_id.collection_creator"]
+              collection_name:
+                path: ["$.token_id.token_data_id.collection", "$.collection_id.collection_name"]
+              price:
+                path: ["$.price"]
+              buyer:
+                path: ["$.bid_buyer"]
+              seller:
+                path: ["$.bid_seller", "$.owner"]
+              token_amount:
+                path: ["$.amount"]
+              listing_id:
+                path: []
+              offer_id:
+                path: []
+              expiration_time:
+                path: ["$.deadline"]
+  
+      - name: "tradeport_v2"
+        event_types:
+          - type: "listing"
+            cancel: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent"
+            fill: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent"
+            place: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent"
+          - type: "token_offer"
+            cancel: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent"
+            fill: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent"
+            place: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent"
+          - type: "collection_offer"
+            cancel: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent"
+            fill: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent"
+            place: "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertCollectionBidEvent"
+        tables:
+          nft_marketplace_activities:
+            columns:
+              collection_id:
+                path: ["$.collection_id", "$.collection.inner"]
+              token_data_id:
+                path: ["$.token.inner"]
+              token_name:
+                path: ["$.token_metadata.token_name"]
+              creator_address:
+                path: ["$.token_metadata.creator_address"]
+              collection_name:
+                path: ["$.token_metadata.collection_name"]
+              price:
+                path: ["$.price"]
+              buyer:
+                path: ["$.bid_buyer", "$.buyer"]
+              seller:
+                path: ["$.bid_seller", "$.seller"]
+              token_amount:
+                path: ["$.token_amount"]
+              listing_id:
+                path: ["$.listing.inner"]
+              offer_id:
+                path: ["$.bid.inner"]
+              expiration_time:
+                path: []
+
+          current_nft_marketplace_listings:
+            columns:
+              collection_id:
+                source: "write_set_changes" # by default we look at events if not provided
+                resource_type: "0x4::token::Token"
+                path: ["$.collection.inner"]
+            
+          current_nft_marketplace_token_offers:
+            columns:
+              token_name:
+                source: "write_set_changes"
+                resource_type: "0x4::token::TokenIdentifiers"
+                path: ["$.name.value"]
+                event_type: "fill_token_offer"
+
+          current_nft_marketplace_collection_offers:
+            columns:
+              collection_id:
+                source: "write_set_changes"
+                resource_type: "0x4::token::Token"
+                path: ["$.collection.inner"]
+                event_type: "fill_collection_offer"
+
+      - name: "wapal"
+        event_types:
+          - type: "listing"
+            cancel: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent"
+            fill: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent"
+            place: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent"
+          - type: "token_offer"
+            cancel: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent"
+            fill: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent"
+            place: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent"
+          - type: "collection_offer"
+            cancel: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent"
+            fill: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent"
+            place: "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent"
+        tables:
+          nft_marketplace_activities:
+            columns:
+              collection_id:
+                path: ["$.collection_id", "$.collection_metadata.collection.vec[0].inner", "$.token_metadata.collection.vec[0].inner"]
+              token_data_id:
+                path: ["$.token_metadata.token.vec[0].inner"]
+              token_name:
+                path: ["$.token_metadata.token_name"]
+              creator_address:
+                path: ["$.token_metadata.creator_address", "$.collection_metadata.creator_address"]
+              collection_name:
+                path: ["$.token_metadata.collection_name", "$.collection_metadata.collection_name"]
+              price:
+                path: ["$.price"]
+              buyer:
+                path: ["$.purchaser"]
+              seller:
+                path: ["$.seller"]
+              token_amount:
+                path: ["$.token_amount"]
+              listing_id:
+                path: ["$.listing"]
+              offer_id:
+                path: ["$.token_offer", "$.collection_offer"]
+              expiration_time:
+                path: []
