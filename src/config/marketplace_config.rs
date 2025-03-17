@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use super::HashableJsonPath;
+use crate::steps::HashableJsonPath;
 use ahash::AHashMap;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -10,6 +10,7 @@ use std::{fmt, str::FromStr};
 pub type MarketplaceEventConfigMapping = AHashMap<String, MarketplaceEventConfig>;
 pub type MarketplaceEventConfigMappings = AHashMap<String, MarketplaceEventConfigMapping>;
 pub type ContractToMarketplaceMap = AHashMap<String, String>;
+
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
 
@@ -24,21 +25,19 @@ pub struct NFTMarketplaceConfigs {
 pub struct MarketplaceConfig {
     pub marketplace_name: String,
     pub event_config: EventConfig,
-    pub listing_config: ListingConfig,
-    pub offer_config: OfferConfig,
-    pub collection_offer_config: CollectionOfferConfig,
 }
 
 impl NFTMarketplaceConfigs {
-    pub fn get_event_mappings(
+    pub fn get_mappings(
         &self,
     ) -> Result<(MarketplaceEventConfigMappings, ContractToMarketplaceMap)> {
         let mut marketplace_to_events_map = AHashMap::new();
         let mut contract_to_marketplace_map = AHashMap::new();
+
         for config in &self.marketplace_configs {
-            let mut mapping: AHashMap<String, MarketplaceEventConfig> = AHashMap::new();
-            mapping.insert(
-                config.listing_config.place_event.clone(),
+            let mut event_mapping: AHashMap<String, MarketplaceEventConfig> = AHashMap::new();
+            event_mapping.insert(
+                config.event_config.listing_config.place_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceListing,
@@ -46,12 +45,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.listing_config.buyer.clone(),
-                    config.listing_config.seller.clone(),
+                    config.event_config.listing_config.buyer.clone(),
+                    config.event_config.listing_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.listing_config.cancel_event.clone(),
+            event_mapping.insert(
+                config.event_config.listing_config.cancel_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::CancelListing,
@@ -59,12 +58,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.listing_config.buyer.clone(),
-                    config.listing_config.seller.clone(),
+                    config.event_config.listing_config.buyer.clone(),
+                    config.event_config.listing_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.listing_config.fill_event.clone(),
+            event_mapping.insert(
+                config.event_config.listing_config.fill_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillListing,
@@ -72,12 +71,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.listing_config.buyer.clone(),
-                    config.listing_config.seller.clone(),
+                    config.event_config.listing_config.buyer.clone(),
+                    config.event_config.listing_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.offer_config.place_event.clone(),
+            event_mapping.insert(
+                config.event_config.offer_config.place_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::PlaceOffer,
@@ -85,12 +84,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.offer_config.buyer.clone(),
-                    config.offer_config.seller.clone(),
+                    config.event_config.offer_config.buyer.clone(),
+                    config.event_config.offer_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.offer_config.cancel_event.clone(),
+            event_mapping.insert(
+                config.event_config.offer_config.cancel_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::CancelOffer,
@@ -98,12 +97,12 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.offer_config.buyer.clone(),
-                    config.offer_config.seller.clone(),
+                    config.event_config.offer_config.buyer.clone(),
+                    config.event_config.offer_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
-                config.offer_config.fill_event.clone(),
+            event_mapping.insert(
+                config.event_config.offer_config.fill_event.clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillOffer,
@@ -111,12 +110,13 @@ impl NFTMarketplaceConfigs {
                     None,
                     None,
                     None,
-                    config.offer_config.buyer.clone(),
-                    config.offer_config.seller.clone(),
+                    config.event_config.offer_config.buyer.clone(),
+                    config.event_config.offer_config.seller.clone(),
                 )?,
             );
-            mapping.insert(
+            event_mapping.insert(
                 config
+                    .event_config
                     .collection_offer_config
                     .place_event
                     .event_type
@@ -126,11 +126,13 @@ impl NFTMarketplaceConfigs {
                     MarketplaceEventType::PlaceCollectionOffer,
                     config.marketplace_name.clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .place_event
                         .collection_name
                         .clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .place_event
                         .creator_address
@@ -140,8 +142,9 @@ impl NFTMarketplaceConfigs {
                     None,
                 )?,
             );
-            mapping.insert(
+            event_mapping.insert(
                 config
+                    .event_config
                     .collection_offer_config
                     .cancel_event
                     .event_type
@@ -151,11 +154,13 @@ impl NFTMarketplaceConfigs {
                     MarketplaceEventType::CancelCollectionOffer,
                     config.marketplace_name.clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .cancel_event
                         .collection_name
                         .clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .cancel_event
                         .creator_address
@@ -165,18 +170,25 @@ impl NFTMarketplaceConfigs {
                     None,
                 )?,
             );
-            mapping.insert(
-                config.collection_offer_config.fill_event.event_type.clone(),
+            event_mapping.insert(
+                config
+                    .event_config
+                    .collection_offer_config
+                    .fill_event
+                    .event_type
+                    .clone(),
                 MarketplaceEventConfig::from_event_config(
                     &config.event_config,
                     MarketplaceEventType::FillCollectionOffer,
                     config.marketplace_name.clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .fill_event
                         .collection_name
                         .clone(),
                     config
+                        .event_config
                         .collection_offer_config
                         .fill_event
                         .creator_address
@@ -186,10 +198,14 @@ impl NFTMarketplaceConfigs {
                     None,
                 )?,
             );
-            for event in mapping.keys() {
-                contract_to_marketplace_map.insert(event.clone(), config.marketplace_name.clone());
+
+            let marketplace_name = config.marketplace_name.clone();
+
+            for event in event_mapping.keys() {
+                contract_to_marketplace_map.insert(event.clone(), marketplace_name.clone());
             }
-            marketplace_to_events_map.insert(config.marketplace_name.clone(), mapping.clone());
+
+            marketplace_to_events_map.insert(marketplace_name.clone(), event_mapping);
         }
 
         Ok((marketplace_to_events_map, contract_to_marketplace_map))
@@ -211,6 +227,9 @@ pub struct MarketplaceEventConfig {
     pub deadline: HashableJsonPath,
     pub token_inner: HashableJsonPath,
     pub collection_inner: HashableJsonPath,
+    pub listing_id: HashableJsonPath,
+    pub offer_id: HashableJsonPath,
+    pub collection_offer_id: HashableJsonPath,
 }
 
 impl MarketplaceEventConfig {
@@ -246,6 +265,9 @@ impl MarketplaceEventConfig {
             deadline: HashableJsonPath::new(deadline.or_else(|| event_config.deadline.clone()))?,
             token_inner: HashableJsonPath::new(event_config.token_inner.clone())?,
             collection_inner: HashableJsonPath::new(event_config.collection_inner.clone())?,
+            listing_id: HashableJsonPath::new(event_config.listing_id.clone())?,
+            offer_id: HashableJsonPath::new(event_config.offer_id.clone())?,
+            collection_offer_id: HashableJsonPath::new(event_config.collection_offer_id.clone())?,
         })
     }
 }
@@ -322,6 +344,11 @@ pub struct EventConfig {
     pub collection_inner: Option<String>,
     pub offer_id: Option<String>,
     pub listing_id: Option<String>,
+    pub collection_offer_id: Option<String>,
+    // Specific configs for different event types
+    pub listing_config: ListingConfig,
+    pub offer_config: OfferConfig,
+    pub collection_offer_config: CollectionOfferConfig,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

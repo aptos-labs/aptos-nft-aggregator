@@ -1,8 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use super::marketplace_config::NFTMarketplaceConfigs;
-use crate::processors::processor::Processor;
+use crate::{config::marketplace_config::NFTMarketplaceConfigs, processor::Processor};
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_indexer_transaction_stream::TransactionStreamConfig,
@@ -10,6 +9,8 @@ use aptos_indexer_processor_sdk::{
 };
 use aptos_indexer_processor_sdk_server_framework::RunnableConfig;
 use serde::{Deserialize, Serialize};
+
+pub mod marketplace_config;
 
 pub const QUERY_DEFAULT_RETRIES: u32 = 5;
 pub const QUERY_DEFAULT_RETRY_DELAY_MS: u64 = 500;
@@ -34,8 +35,6 @@ impl RunnableConfig for IndexerProcessorConfig {
         "nft_marketplace_processor".to_string()
     }
 }
-
-// TODO: Move DbConfig to the SDK
 
 /// This enum captures the configs for all the different db storages that are defined.
 /// The configs for each db storage should only contain configuration specific to that

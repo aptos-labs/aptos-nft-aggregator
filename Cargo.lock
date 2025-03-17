@@ -120,7 +120,7 @@ checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 [[package]]
 name = "aptos-indexer-processor-sdk"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=b79ed8b5864b2a12a1f9c5fd01579462e029b2ae#b79ed8b5864b2a12a1f9c5fd01579462e029b2ae"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=707b8bf33cad1a8143b9e81762d644f1be0451bb#707b8bf33cad1a8143b9e81762d644f1be0451bb"
 dependencies = [
  "ahash",
  "anyhow",
@@ -153,7 +153,7 @@ dependencies = [
 [[package]]
 name = "aptos-indexer-processor-sdk-server-framework"
 version = "1.0.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=b79ed8b5864b2a12a1f9c5fd01579462e029b2ae#b79ed8b5864b2a12a1f9c5fd01579462e029b2ae"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=707b8bf33cad1a8143b9e81762d644f1be0451bb#707b8bf33cad1a8143b9e81762d644f1be0451bb"
 dependencies = [
  "anyhow",
  "aptos-indexer-processor-sdk",
@@ -177,7 +177,7 @@ dependencies = [
 [[package]]
 name = "aptos-indexer-transaction-stream"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=b79ed8b5864b2a12a1f9c5fd01579462e029b2ae#b79ed8b5864b2a12a1f9c5fd01579462e029b2ae"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=707b8bf33cad1a8143b9e81762d644f1be0451bb#707b8bf33cad1a8143b9e81762d644f1be0451bb"
 dependencies = [
  "anyhow",
  "aptos-moving-average",
@@ -198,7 +198,7 @@ dependencies = [
 [[package]]
 name = "aptos-moving-average"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=b79ed8b5864b2a12a1f9c5fd01579462e029b2ae#b79ed8b5864b2a12a1f9c5fd01579462e029b2ae"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=707b8bf33cad1a8143b9e81762d644f1be0451bb#707b8bf33cad1a8143b9e81762d644f1be0451bb"
 dependencies = [
  "chrono",
 ]
@@ -652,6 +652,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "crossbeam-deque"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
+dependencies = [
+ "crossbeam-epoch",
+ "crossbeam-utils",
 ]
 
 [[package]]
@@ -1692,7 +1702,7 @@ dependencies = [
 [[package]]
 name = "instrumented-channel"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=b79ed8b5864b2a12a1f9c5fd01579462e029b2ae#b79ed8b5864b2a12a1f9c5fd01579462e029b2ae"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=707b8bf33cad1a8143b9e81762d644f1be0451bb#707b8bf33cad1a8143b9e81762d644f1be0451bb"
 dependencies = [
  "delegate",
  "derive_builder",
@@ -2128,6 +2138,7 @@ dependencies = [
  "native-tls",
  "num_cpus",
  "postgres-native-tls",
+ "rayon",
  "serde",
  "serde_json",
  "sha2",
@@ -2799,6 +2810,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "rayon"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b418a60154510ca1a002a752ca9714984e21e4241e804d32555251faf8b78ffa"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3001,7 +3032,7 @@ checksum = "6ea1a2d0a644769cc99faa24c3ad26b379b786fe7c36fd3c546254801650e6dd"
 [[package]]
 name = "sample"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=b79ed8b5864b2a12a1f9c5fd01579462e029b2ae#b79ed8b5864b2a12a1f9c5fd01579462e029b2ae"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=707b8bf33cad1a8143b9e81762d644f1be0451bb#707b8bf33cad1a8143b9e81762d644f1be0451bb"
 dependencies = [
  "tracing",
 ]
