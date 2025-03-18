@@ -10,6 +10,10 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
+use tracing::warn;
+
+pub const DEFAULT_SELLER: &str = "unknown";
+pub const DEFAULT_BUYER: &str = "unknown";
 /**
  * NftMarketplaceActivity is the main model for storing NFT marketplace activities.
 */
@@ -98,10 +102,11 @@ impl CurrentNFTMarketplaceListing {
             listing_id: activity.listing_id.clone(),
             collection_id: activity.collection_id.clone(),
             seller: activity.seller.clone().unwrap_or_else(|| {
-                panic!(
-                    "seller is required for listing for txn_version = {:?}",
+                warn!(
+                    "seller is not found for listing for txn_version = {:?}",
                     activity.txn_version
-                )
+                );
+                DEFAULT_SELLER.to_string()
             }),
             price: activity.price,
             token_amount: if is_deleted {
@@ -156,7 +161,13 @@ impl CurrentNFTMarketplaceTokenOffer {
                 )
             }),
             offer_id: activity.offer_id.clone(),
-            buyer: activity.buyer.clone().unwrap_or_default(),
+            buyer: activity.buyer.clone().unwrap_or_else(|| {
+                warn!(
+                    "buyer is not found for token offer for txn_version = {:?}",
+                    activity.txn_version
+                );
+                DEFAULT_BUYER.to_string()
+            }),
             collection_id: activity.collection_id.clone().unwrap_or_default(),
             price: activity.price,
             token_amount: if is_deleted {

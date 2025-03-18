@@ -201,3 +201,45 @@ server_config:
                 path: ["$.token_offer", "$.collection_offer"]
               expiration_time:
                 path: []
+      - name: "bluemove"
+        event_types:
+          - type: "listing"
+            cancel: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::marketplaceV2::DelistEvent"
+            fill: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::marketplaceV2::BuyEvent"
+            place: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::marketplaceV2::ListEvent"
+          - type: "token_offer"
+            cancel: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::offer_lib::CancelOfferEvent"
+            fill: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::offer_lib::AcceptOfferEvent"
+            place: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::offer_lib::OfferEvent"
+          - type: "collection_offer"
+            cancel: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::offer_lib::CancelOfferCollectionEvent" 
+            fill: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::offer_lib::AcceptOfferCollectionEvent" 
+            place: "0xd1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e::offer_lib::OfferCollectionEvent"
+        tables:
+          nft_marketplace_activities:
+            columns:
+              collection_id:
+                path: ["$.collection_id", "$.collection.inner"]
+              token_data_id:
+                path: ["$.token.inner"]
+              token_name:
+                path: ["$.token_id.token_data_id.name", "$.id.token_data_id.name"]
+              creator_address:
+                path: ["$.token_id.token_data_id.creator", "$.offer_collection_item.creator_address", "$.id.token_data_id.creator"]
+              collection_name:
+                path: ["$.token_id.token_data_id.collection", "$.offer_collection_item.collection_name", "$.id.token_data_id.collection"]
+              price:
+                path: ["$.amount", "$.offer_collection_item.amount_per_item"]
+              buyer:
+                path: ["$.offerer", "$.offer_collection_item.offerer", "$.buyer_address"]
+              seller:
+                path: ["$.seller_address"]
+              token_amount:
+                path: ["$.offer_collection_item.quantity_offer_items"]
+              listing_id:
+                path: ["$.listing.inner"]
+              offer_id:
+                path: ["$.offer_id", "$.offer_collection_id"]
+              expiration_time:
+                path: []
+                

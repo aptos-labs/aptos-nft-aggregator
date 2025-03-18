@@ -138,7 +138,6 @@ impl EventRemapper {
                             },
                         };
                     }
-
                     if let Some(ref token_data_id) = activity.token_data_id {
                         activity_map
                             .entry(token_data_id.clone())
