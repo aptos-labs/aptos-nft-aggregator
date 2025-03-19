@@ -64,51 +64,52 @@ impl ResourceMapper {
                 },
             };
             for wsc in transaction_info.changes.iter() {
-                if let Some(write_set_change::Change::WriteResource(write_resource)) =
-                    wsc.change.as_ref()
-                {
-                    let resource_address = standardize_address(&write_resource.address);
-                    let resource_type = &write_resource.type_str;
+                let write_resource = match wsc.change.as_ref() {
+                    Some(write_set_change::Change::WriteResource(wr)) => wr,
+                    _ => continue,
+                };
 
-                    // Check if this resource address maps to any token_data_id
-                    if let Some(activities) = activity_map.get_mut(&resource_address) {
-                        let data: Value =
-                            serde_json::from_str(&write_resource.data).unwrap_or(Value::Null);
+                let resource_address = standardize_address(&write_resource.address);
+                let resource_type = &write_resource.type_str;
 
-                        // Update each activity that needs data from this resource
-                        for (event_type, activity) in activities.iter_mut() {
-                            if let Some(table_mappings) =
-                                self.table_mappings.get(&activity.marketplace)
-                            {
-                                // Determine correct table based on event type
-                                let table_name = determine_table_from_event_type(event_type);
+                // Check if this resource address maps to any token_data_id
+                if let Some(activities) = activity_map.get_mut(&resource_address) {
+                    let data: Value =
+                        serde_json::from_str(&write_resource.data).unwrap_or(Value::Null);
 
-                                if let Some(column_configs) = table_mappings.get(table_name) {
-                                    for (
-                                        column_name,
-                                        source,
-                                        expected_resource_type,
-                                        paths,
-                                        required_event_type,
-                                    ) in column_configs
+                    // Update each activity that needs data from this resource
+                    for (event_type, activity) in activities.iter_mut() {
+                        if let Some(table_mappings) =
+                            self.table_mappings.get(&activity.marketplace)
+                        {
+                            // Determine correct table based on event type
+                            let table_name = determine_table_from_event_type(event_type);
+
+                            if let Some(column_configs) = table_mappings.get(table_name) {
+                                for (
+                                    column_name,
+                                    source,
+                                    expected_resource_type,
+                                    paths,
+                                    required_event_type,
+                                ) in column_configs
+                                {
+                                    if source == WRITE_SET_CHANGES
+                                        && expected_resource_type.as_ref().map(String::as_str)
+                                            == Some(resource_type)
                                     {
-                                        if source == WRITE_SET_CHANGES
-                                            && expected_resource_type.as_ref().map(String::as_str)
-                                                == Some(resource_type)
+                                        // Check if this field is needed for this event type
+                                        if required_event_type == ALL_EVENTS
+                                            || required_event_type == &event_type.to_string()
                                         {
-                                            // Check if this field is needed for this event type
-                                            if required_event_type == ALL_EVENTS
-                                                || required_event_type == &event_type.to_string()
-                                            {
-                                                if let Some(value) = extract_string(paths, &data) {
-                                                    activity.set_field(column_name, value);
-                                                }
+                                            if let Some(value) = extract_string(paths, &data) {
+                                                activity.set_field(column_name, value);
+                                            }
 
-                                                // check if the token_standard is set only at the first time
-                                                if activity.token_standard.is_none() {
-                                                    activity.token_standard =
-                                                        Some("v2".to_string());
-                                                }
+                                            // check if the token_standard is set only at the first time
+                                            if activity.token_standard.is_none() {
+                                                activity.token_standard =
+                                                    Some("v2".to_string());
                                             }
                                         }
                                     }

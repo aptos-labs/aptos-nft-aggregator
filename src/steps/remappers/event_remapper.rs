@@ -56,100 +56,102 @@ impl EventRemapper {
                 let event_type_str = event.type_str.clone();
                 let event_data = serde_json::from_str(event.data.as_str()).unwrap();
 
-                // find the marketplace for this event
-                if let Some((marketplace_name, standard_event_type)) =
-                    self.event_mappings.get(&event_type_str)
-                {
-                    let mut activity = NftMarketplaceActivity {
-                        txn_version: txn.version as i64,
-                        index: event_index as i64,
-                        marketplace: marketplace_name.clone(),
-                        contract_address: event_type_str.clone(),
-                        block_timestamp: txn_timestamp,
-                        raw_event_type: event_type_str.clone(),
-                        standard_event_type: standard_event_type.clone(),
-                        json_data: serde_json::to_value(event).unwrap(),
-                        ..Default::default()
-                    };
+                // find the marketplace for this event, if not found, skip
+                let (marketplace_name, standard_event_type) = match self.event_mappings.get(&event_type_str) {
+                    Some((marketplace_name, standard_event_type)) => (marketplace_name.clone(), standard_event_type.clone()),
+                    None => continue,
+                };
+            
+                let mut activity = NftMarketplaceActivity {
+                    txn_version: txn.version as i64,
+                    index: event_index as i64,
+                    marketplace: marketplace_name.clone(),
+                    contract_address: event_type_str.clone(),
+                    block_timestamp: txn_timestamp,
+                    raw_event_type: event_type_str.clone(),
+                    standard_event_type: standard_event_type.clone(),
+                    json_data: serde_json::to_value(event).unwrap(),
+                    ..Default::default()
+                };
 
-                    // Get table mappings for this marketplace
-                    if let Some(table_mappings) = self.table_mappings.get(marketplace_name) {
-                        // Find which tables this event will populate
+                // Get table mappings for this marketplace
+                if let Some(table_mappings) = self.table_mappings.get(&marketplace_name) {
+                    // Find which tables this event will populate
 
-                        for (_table_name, column_configs) in table_mappings {
-                            for (column_name, source, _resource_type, paths, event_type) in
-                                column_configs
+                    for (_table_name, column_configs) in table_mappings {
+                        for (column_name, source, _resource_type, paths, event_type) in
+                            column_configs
+                        {
+                            if source == "events"
+                                && (event_type == ALL_EVENTS
+                                    || event_type == &standard_event_type.to_string())
                             {
-                                if source == "events"
-                                    && (event_type == ALL_EVENTS
-                                        || event_type == &standard_event_type.to_string())
-                                {
-                                    if let Some(value) = extract_string(paths, &event_data) {
-                                        activity.set_field(column_name, value);
-                                    }
+                                if let Some(value) = extract_string(paths, &event_data) {
+                                    activity.set_field(column_name, value);
                                 }
                             }
                         }
                     }
+                }
 
-                    // if either token_data_id is some or collection_id is some, it means it's v2
-                    if activity.token_data_id.is_some() || activity.collection_id.is_some() {
-                        activity.token_standard = Some("v2".to_string());
-                    } else {
-                        activity.token_standard = Some("v1".to_string());
-                    }
+                // if either token_data_id is some or collection_id is some, it means it's v2
+                if activity.token_data_id.is_some() || activity.collection_id.is_some() {
+                    activity.token_standard = Some("v2".to_string());
+                } else {
+                    activity.token_standard = Some("v1".to_string());
+                }
 
-                    // Store activity in the map only if it has a token_data_id
-                    // This ensures we can later match resources to activities
-                    // if it's empty it means it's v1
-                    if activity.token_data_id.is_none() {
-                        activity.token_data_id = match generate_token_data_id(
-                            activity.creator_address.clone(),
-                            activity.collection_name.clone(),
-                            activity.token_name.clone(),
-                        ) {
-                            Some(token_data_id) => Some(token_data_id),
-                            None => {
-                                debug!(
-                                    "Failed to generate token data id for activity: {:#?}",
-                                    activity
-                                );
-                                None
-                            },
-                        }
-                    }
-
-                    // Store activity in the map only if it has a collection_id
-                    // This ensures we can later match resources to activities
-                    if activity.collection_id.is_none() {
-                        // only if we can generate a collection id
-                        activity.collection_id = match generate_collection_id(
-                            activity.creator_address.clone(),
-                            activity.collection_name.clone(),
-                        ) {
-                            Some(collection_id) => Some(collection_id),
-                            None => {
-                                // V2 events may be missing data to generate collection id
-                                debug!(
-                                    "Failed to generate collection id for activity: {:#?}",
-                                    activity
-                                );
-                                None
-                            },
-                        };
-                    }
-                    if let Some(ref token_data_id) = activity.token_data_id {
-                        activity_map
-                            .entry(token_data_id.clone())
-                            .or_default()
-                            .insert(standard_event_type.clone(), activity.clone());
-                    } else if let Some(ref collection_id) = activity.collection_id {
-                        activity_map
-                            .entry(collection_id.clone())
-                            .or_default()
-                            .insert(standard_event_type.clone(), activity.clone());
+                // Store activity in the map only if it has a token_data_id
+                // This ensures we can later match resources to activities
+                // if it's empty it means it's v1
+                if activity.token_data_id.is_none() {
+                    activity.token_data_id = match generate_token_data_id(
+                        activity.creator_address.clone(),
+                        activity.collection_name.clone(),
+                        activity.token_name.clone(),
+                    ) {
+                        Some(token_data_id) => Some(token_data_id),
+                        None => {
+                            debug!(
+                                "Failed to generate token data id for activity: {:#?}",
+                                activity
+                            );
+                            None
+                        },
                     }
                 }
+
+                // Store activity in the map only if it has a collection_id
+                // This ensures we can later match resources to activities
+                if activity.collection_id.is_none() {
+                    // only if we can generate a collection id
+                    activity.collection_id = match generate_collection_id(
+                        activity.creator_address.clone(),
+                        activity.collection_name.clone(),
+                    ) {
+                        Some(collection_id) => Some(collection_id),
+                        None => {
+                            // V2 events may be missing data to generate collection id
+                            debug!(
+                                "Failed to generate collection id for activity: {:#?}",
+                                activity
+                            );
+                            None
+                        },
+                    };
+                }
+                if let Some(ref token_data_id) = activity.token_data_id {
+                    activity_map
+                        .entry(token_data_id.clone())
+                        .or_default()
+                        .insert(standard_event_type.clone(), activity.clone());
+                } else if let Some(ref collection_id) = activity.collection_id {
+                    activity_map
+                        .entry(collection_id.clone())
+                        .or_default()
+                        .insert(standard_event_type.clone(), activity.clone());
+                }
+            
             }
         }
 
