@@ -14,6 +14,7 @@ use aptos_indexer_processor_sdk::{
     utils::errors::ProcessorError,
 };
 use aptos_protos::transaction::v1::Transaction;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::{collections::HashMap, sync::Arc};
 use tonic::async_trait;
 
@@ -139,7 +140,7 @@ impl Processable for ProcessStep {
     > {
         let results: Result<Vec<_>, ProcessorError> = transactions
             .data
-            .iter()
+            .par_iter()
             .map(|txn| self.process_single_transaction(txn.clone()))
             .collect();
 

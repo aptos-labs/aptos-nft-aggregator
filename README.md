@@ -13,53 +13,78 @@ cargo run --release -- -c config.yaml
 
 The `config.yaml` file is used to configure the NFT aggregator. Below is an explanation of each field:
 
+- **health_check_port**: Port number for health check endpoint (e.g., 8080)
+
+
+!Note that the config will be updated with the latest SDK version soon.
+
 - **server_config**:
-  - **channel_size**: The size of the channel buffer used for processing events. This affects how many events can be queued for processing at any given time. we use Default value of around 100-200, recommend to keep it as is.
+  - **channel_size**: The size of the channel buffer used for processing transactions (default: 100)
   - **db_config**:
-    - **type**: The type of database configuration. Currently set to "postgres_config" for PostgreSQL.
-    - **connection_string**: The connection string used to connect to the PostgreSQL database. **Replace the values with your own.**
+    - **type**: The type of database configuration (currently "postgres_config")
+    - **connection_string**: PostgreSQL connection string. **Replace with your own.**
   - **transaction_stream_config**:
-    - **starting_version**: The starting version of the transaction stream to process.
-    - **request_ending_version**: The ending version of the transaction stream to process.
-    - **indexer_grpc_data_service_address**: The gRPC address of the indexer data service. 
-    - **auth_token**: The authentication token used to access the gRPC service. **Replace the value with your own.**
-      You can get the auth token from https://developers.aptoslabs.com/
-    - **request_name_header**: The name header used in requests to the gRPC service.
+    - **starting_version**: The starting version of the transaction stream
+    - **indexer_grpc_data_service_address**: The gRPC address (e.g., "https://grpc.mainnet.aptoslabs.com:443")
+    - **auth_token**: The authentication token. **Replace with your own.**
+      Get your token from https://developers.aptoslabs.com/
+    - **request_name_header**: The name header for gRPC requests
 
 - **nft_marketplace_configs**:
-  - **marketplace_configs**: A list of configurations for each marketplace. Each marketplace configuration includes:
-    - **marketplace_name**: The name of the marketplace (e.g., "topaz", "tradeport").
-    - **event_config**: Configuration for extracting data from events using Json Path.
-      - **collection_id**: JSON path to extract the collection ID.
-      - **token_name**: JSON path to extract the token name.
-      - **creator_address**: JSON path to extract the creator's address.
-      - **collection_name**: JSON path to extract the collection name.
-      - **price**: JSON path to extract the price of the NFT.
-      - **token_amount**: JSON path to extract the amount of tokens.
-      - **buyer**: JSON path to extract the buyer's address.
-      - **seller**: JSON path to extract the seller's address.
-      - **deadline**: JSON path to extract the deadline for offers (specific to some marketplaces).
-      - **token_inner**: JSON path to extract inner token data (specific to V2 contracts).
-      - **collection_inner**: JSON path to extract inner collection data (specific to V2 contracts).
-      - **listing_config**: Configuration for listing events:
-        - **cancel_event**: Event type for canceling a listing.
-        - **fill_event**: Event type for filling a listing.
-        - **place_event**: Event type for placing a listing.
-        - **collection_name**: (Optional) JSON path to extract the collection name.
-        - **buyer**: (Optional) JSON path to extract the buyer's address.
-        - **seller**: (Optional) JSON path to extract the seller's address.
-      - **offer_config**: Configuration for offer events:
-        - **cancel_event**: Event type for canceling an offer.
-        - **fill_event**: Event type for filling an offer.
-        - **place_event**: Event type for placing an offer.
-        - **buyer**: (Optional) JSON path to extract the buyer's address.
-        - **seller**: (Optional) JSON path to extract the seller's address.
-      - **collection_offer_config**: Configuration for collection offer events, we defined its own struct for better flexibility.
-        - **cancel_event**: Event type for canceling a collection offer.
-        - **fill_event**: Event type for filling a collection offer.
-        - **place_event**: Event type for placing a collection offer.
-          - find more details in the [`CollectionEventParams`](src/config/marketplace_config.rs) struct.
+  - **marketplaces**: A list of marketplace configurations, each containing:
+    - **name**: Marketplace identifier (e.g., "topaz", "tradeport", "bluemove")
+    - **event_types**: List of event type configurations:
+      - **type**: Event category ("listing", "token_offer", or "collection_offer"), these are the standard types that are supported by the processor.
+      - **cancel**: Event type for cancellation events
+      - **fill**: Event type for fill/buy events
+      - **place**: Event type for place/list events
+    - **tables**: Configuration for database tables and their columns:
+      - **nft_marketplace_activities**: Main activity table configuration
+        - **columns**: Column mappings for extracting data:
+          - **collection_id**: Collection identifier
+          - **token_data_id**: Token data identifier
+          - **token_name**: Name of the token
+          - **creator_address**: Creator's address
+          - **collection_name**: Name of the collection
+          - **price**: Price of the NFT
+          - **buyer**: Buyer's address
+          - **seller**: Seller's address
+          - **token_amount**: Amount of tokens
+          - **listing_id**: Listing identifier
+          - **offer_id**: Offer identifier
+          - **expiration_time**: Offer/listing expiration time
+      - **current_nft_marketplace_listings**: Current listings table (optional)
+      - **current_nft_marketplace_token_offers**: Current token offers table (optional)
+      - **current_nft_marketplace_collection_offers**: Current collection offers table (optional)
 
+Note: The current tables (`current_nft_marketplace_listings`, `current_nft_marketplace_token_offers`, 
+`current_nft_marketplace_collection_offers`) will automatically inherit columns from the 
+`nft_marketplace_activities` table by default. You only need to specify columns in these tables if you 
+want to override or add additional data extraction specific to those tables. This is particularly 
+useful when you need to extract additional data from `write_set_changes` for specific event types.
+
+
+Each column configuration can include:
+- **path**: JSON path array for extracting values from event data
+- **source**: Data source ("events" by default, or "write_set_changes")
+- **resource_type**: Required for `write_set_changes`, specifies the resource type (e.g., "0x4::token::Token")
+- **event_type**: Optional, specifies which event type requires this field
+
+### Data Processing
+
+The processor handles two types of data:
+
+1. **Events**: Processed by the EventRemapper, which:
+   - Matches events to marketplace configurations
+   - Extracts data using configured JSON paths
+   - Creates NFT marketplace activities
+   - Sets token standard (v1 or v2)
+   - Generates token_data_id and collection_id if needed
+
+2. **WriteSetChanges**: Processed by the ResourceMapper, which:
+   - Matches token_data_id or collection_id to existing activities based on the `resource_type` field of the write_set_changes
+   - Updates activities with additional data from resources
+   - Handles V2 token standard specific data
       
 ### Running the Processor
 

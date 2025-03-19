@@ -242,4 +242,45 @@ server_config:
                 path: ["$.offer_id", "$.offer_collection_id"]
               expiration_time:
                 path: []
-                
+
+      - name: "rarible"
+        event_types:
+          - type: "listing"
+            cancel: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::ListingCanceled"
+            fill: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::ListingFilled"
+            place: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::ListingPlaced"
+          - type: "token_offer" 
+            cancel: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::TokenOfferCanceled"
+            fill: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::TokenOfferFilled"
+            place: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::TokenOfferPlaced"
+          - type: "collection_offer"
+            cancel: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::CollectionOfferCanceled"
+            fill: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::CollectionOfferFilled"
+            place: "0x465a0051e8535859d4794f0af24dbf35c5349bedadab26404b20b825035ee790::events::CollectionOfferPlaced"
+        tables:
+          nft_marketplace_activities:
+            columns:
+              collection_id:
+                path: ["$.collection_metadata.collection.vec[0].inner"]
+              token_data_id:
+                path: ["$.token_metadata.token.vec[0].inner"]
+              token_name:
+                path: ["$.token_metadata.token_name"]
+              creator_address:
+                path: ["$.token_metadata.creator_address", "$.collection_metadata.creator_address"]
+              collection_name:
+                path: ["$.token_metadata.collection_name", "$.collection_metadata.collection_name"]
+              price:
+                path: ["$.price"]
+              buyer:
+                path: ["$.purchaser"]
+              seller:
+                path: ["$.seller"]
+              token_amount:
+                path: ["$.token_amount"]
+              listing_id:
+                path: ["$.listing"]
+              offer_id:
+                path: ["$.token_offer", "$.collection_offer"]
+              expiration_time:
+                path: ["$.expiration_time"]
