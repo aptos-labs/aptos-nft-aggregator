@@ -1,0 +1,223 @@
+nft_marketplace_config:
+  - name: "wapal"
+    events:
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent":
+        "$.listing":
+          table: activities
+          column: listing_id
+        "$.seller":
+          table: activities
+          column: seller
+        "$.price":
+          table: activities
+          column: price
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent":
+        "$.collection.vec[0].inner":
+          table: activities
+          column: collection_id
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+        "$.price":
+          table: activities
+          column: price
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.seller":
+          table: activities
+          column: seller
+        "$.token_amount":
+          table: activities
+          column: token_amount
+        "$.listing":
+          table: activities
+          column: listing_id
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent":
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+        "$.price":
+          table: activities
+          column: price
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.seller":
+          table: activities
+          column: seller
+        "$.token_amount":
+          table: activities
+          column: token_amount
+        "$.listing":
+          table: activities
+          column: listing_id
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent":
+        "$.token_offer":
+          table: activities
+          column: offer_id
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.price":
+          table: activities
+          column: price
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent":
+        "$.token_offer":
+          table: activities
+          column: offer_id
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.price":
+          table: activities
+          column: price
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent":
+        "$.token_offer":
+          table: activities
+          column: offer_id
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.seller":
+          table: activities
+          column: seller
+        "$.price":
+          table: activities
+          column: price
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+      # Collection
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent":
+        "$.collection_offer":
+          table: activities
+          column: collection_offer_id
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.price":
+          table: activities
+          column: price
+        "$.remaining_token_amount":
+          table: activities
+          column: token_amount
+        "$.collection_metadata.collection.vec[0].inner":
+          table: activities
+          column: collection_id
+        "$.collection_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.collection_metadata.collection_name":
+          table: activities
+          column: collection_name
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent":
+        "$.collection_offer":
+          table: activities
+          column: collection_offer_id
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.seller":
+          table: activities
+          column: seller
+        "$.price":
+          table: activities
+          column: price
+        "$.token_metadata.token.vec[0].inner":
+          table: activities
+          column: token_data_id
+        "$.token_metadata.token_name":
+          table: activities
+          column: token_name
+        "$.token_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.token_metadata.collection_name":
+          table: activities
+          column: collection_name
+      "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent":
+        "$.collection_offer":
+          table: activities
+          column: collection_offer_id
+        "$.purchaser":
+          table: activities
+          column: buyer
+        "$.price":
+          table: activities
+          column: price
+        "$.token_amount":
+          table: activities
+          column: token_amount
+        "$.collection_metadata.collection.vec[0].inner":
+          table: activities
+          column: collection_id
+        "$.collection_metadata.creator_address":
+          table: activities
+          column: creator_address
+        "$.collection_metadata.collection_name":
+          table: activities
+          column: collection_name
