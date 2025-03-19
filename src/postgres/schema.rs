@@ -77,7 +77,7 @@ diesel::table! {
         collection_id -> Nullable<Varchar>,
         collection_name -> Nullable<Varchar>,
         #[max_length = 66]
-        token_data_id -> Varchar,
+        token_data_id -> Nullable<Varchar>,
         token_name -> Nullable<Varchar>,
         #[max_length = 66]
         token_standard -> Nullable<Varchar>,

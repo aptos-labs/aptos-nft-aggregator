@@ -1,53 +1,50 @@
 use crate::{
     config::marketplace_config::{
-        ContractToMarketplaceMap, MarketplaceEventConfigMappings, MarketplaceEventType,
+        MarketplaceEventMappings, MarketplaceEventType, TableMappings, ALL_EVENTS,
     },
-    models::nft_models::{
-        CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
-        CurrentNFTMarketplaceTokenOffer, NftMarketplaceActivity,
-    },
+    models::nft_models::NftMarketplaceActivity,
+    steps::extract_string,
     utils::parse_timestamp,
 };
 use anyhow::Result;
-use aptos_indexer_processor_sdk::utils::errors::ProcessorError;
+use aptos_indexer_processor_sdk::utils::convert::{sha3_256, standardize_address};
 use aptos_protos::transaction::v1::{transaction::TxnData, Transaction};
-use std::{str::FromStr, sync::Arc};
-
+use log::debug;
+use std::{collections::HashMap, sync::Arc};
 pub struct EventRemapper {
-    pub event_mappings: Arc<MarketplaceEventConfigMappings>,
-    pub contract_to_marketplace_map: Arc<ContractToMarketplaceMap>,
+    pub event_mappings: Arc<MarketplaceEventMappings>,
+    pub table_mappings: Arc<TableMappings>,
 }
 
 impl EventRemapper {
     pub fn new(
-        event_mappings: Arc<MarketplaceEventConfigMappings>,
-        contract_to_marketplace_map: Arc<ContractToMarketplaceMap>,
+        event_mappings: Arc<MarketplaceEventMappings>,
+        table_mappings: Arc<TableMappings>,
     ) -> Self {
         Self {
             event_mappings,
-            contract_to_marketplace_map,
+            table_mappings,
         }
     }
 
-    /**
-     * Remaps the fields of the events in the transaction to build a NftMarketplaceActivity
-     */
+    // The remap_events function:
+    // 1. Takes a transaction and activity map as input
+    // 2. Extracts events from the transaction data
+    // 3. For each event:
+    //    - Checks if it matches a known marketplace event type
+    //    - Creates a NftMarketplaceActivity with basic transaction info
+    //    - Populates activity fields from event data based on table mappings
+    //    - Sets token standard (v1 or v2) based on presence of token/collection IDs
+    //    - Generates token_data_id and collection_id if missing
+    // 4. Stores activities in the activity_map, indexed by either:
+    //    - token_data_id if present
+    //    - collection_id as fallback
     pub fn remap_events(
         &self,
         txn: Transaction,
-    ) -> Result<
-        (
-            Vec<NftMarketplaceActivity>,
-            Vec<CurrentNFTMarketplaceListing>,
-            Vec<CurrentNFTMarketplaceTokenOffer>,
-            Vec<CurrentNFTMarketplaceCollectionOffer>,
-        ),
-        ProcessorError,
-    > {
-        let mut activities: Vec<NftMarketplaceActivity> = Vec::new();
-        let mut current_listings: Vec<CurrentNFTMarketplaceListing> = Vec::new();
-        let mut current_token_offers: Vec<CurrentNFTMarketplaceTokenOffer> = Vec::new();
-        let mut current_collection_offers: Vec<CurrentNFTMarketplaceCollectionOffer> = Vec::new();
+        activity_map: &mut HashMap<String, HashMap<MarketplaceEventType, NftMarketplaceActivity>>,
+    ) -> Result<()> {
+        // let mut activities: Vec<NftMarketplaceActivity> = Vec::new();
         let txn_data = txn.txn_data.as_ref().unwrap();
 
         if let TxnData::User(tx_inner) = txn_data {
@@ -56,69 +53,139 @@ impl EventRemapper {
                 parse_timestamp(txn.timestamp.as_ref().unwrap(), txn.version as i64);
 
             for (event_index, event) in events.iter().enumerate() {
-                if let Some(activity) = NftMarketplaceActivity::from_event(
-                    event,
-                    txn.version as i64,
-                    event_index as i64,
-                    txn_timestamp,
-                    &self.event_mappings,
-                    &self.contract_to_marketplace_map,
-                ) {
-                    match MarketplaceEventType::from_str(activity.standard_event_type.as_str())
-                        .unwrap()
-                    {
-                        MarketplaceEventType::PlaceListing => {
-                            let current_listing =
-                                CurrentNFTMarketplaceListing::from_activity(&activity, false);
-                            current_listings.push(current_listing);
-                        },
-                        MarketplaceEventType::CancelListing | MarketplaceEventType::FillListing => {
-                            let current_listing =
-                                CurrentNFTMarketplaceListing::from_activity(&activity, true);
-                            current_listings.push(current_listing);
-                        },
-                        MarketplaceEventType::PlaceOffer => {
-                            let current_token_offer =
-                                CurrentNFTMarketplaceTokenOffer::from_activity(&activity, false);
-                            current_token_offers.push(current_token_offer);
-                        },
-                        MarketplaceEventType::CancelOffer | MarketplaceEventType::FillOffer => {
-                            let current_token_offer =
-                                CurrentNFTMarketplaceTokenOffer::from_activity(&activity, true);
-                            current_token_offers.push(current_token_offer);
-                        },
-                        MarketplaceEventType::PlaceCollectionOffer => {
-                            let current_collection_offer =
-                                CurrentNFTMarketplaceCollectionOffer::from_activity(
-                                    &activity, false,
-                                );
-                            current_collection_offers.push(current_collection_offer);
-                        },
-                        MarketplaceEventType::CancelCollectionOffer => {
-                            let current_collection_offer =
-                                CurrentNFTMarketplaceCollectionOffer::from_activity(
-                                    &activity, true,
-                                );
-                            current_collection_offers.push(current_collection_offer);
-                        },
-                        MarketplaceEventType::FillCollectionOffer => {
-                            let current_collection_offer =
-                                CurrentNFTMarketplaceCollectionOffer::from_activity(
-                                    &activity, true,
-                                );
-                            current_collection_offers.push(current_collection_offer);
-                        },
+                let event_type_str = event.type_str.clone();
+                let event_data = serde_json::from_str(event.data.as_str()).unwrap();
+
+                // find the marketplace for this event
+                if let Some((marketplace_name, standard_event_type)) =
+                    self.event_mappings.get(&event_type_str)
+                {
+                    let mut activity = NftMarketplaceActivity {
+                        txn_version: txn.version as i64,
+                        index: event_index as i64,
+                        marketplace: marketplace_name.clone(),
+                        contract_address: event_type_str.clone(),
+                        block_timestamp: txn_timestamp,
+                        raw_event_type: event_type_str.clone(),
+                        standard_event_type: standard_event_type.clone(),
+                        json_data: serde_json::to_value(event).unwrap(),
+                        ..Default::default()
+                    };
+
+                    // Get table mappings for this marketplace
+                    if let Some(table_mappings) = self.table_mappings.get(marketplace_name) {
+                        // Find which tables this event will populate
+
+                        for (_table_name, column_configs) in table_mappings {
+                            for (column_name, source, _resource_type, paths, event_type) in
+                                column_configs
+                            {
+                                if source == "events"
+                                    && (event_type == ALL_EVENTS
+                                        || event_type == &standard_event_type.to_string())
+                                {
+                                    if let Some(value) = extract_string(paths, &event_data) {
+                                        activity.set_field(column_name, value);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    activities.push(activity);
+
+                    // if either token_data_id is some or collection_id is some, it means it's v2
+                    if activity.token_data_id.is_some() || activity.collection_id.is_some() {
+                        activity.token_standard = Some("v2".to_string());
+                    } else {
+                        activity.token_standard = Some("v1".to_string());
+                    }
+
+                    // Store activity in the map only if it has a token_data_id
+                    // This ensures we can later match resources to activities
+                    // if it's empty it means it's v1
+                    if activity.token_data_id.is_none() {
+                        activity.token_data_id = match generate_token_data_id(
+                            activity.creator_address.clone(),
+                            activity.collection_name.clone(),
+                            activity.token_name.clone(),
+                        ) {
+                            Some(token_data_id) => Some(token_data_id),
+                            None => {
+                                debug!(
+                                    "Failed to generate token data id for activity: {:#?}",
+                                    activity
+                                );
+                                None
+                            },
+                        }
+                    }
+
+                    // Store activity in the map only if it has a collection_id
+                    // This ensures we can later match resources to activities
+                    if activity.collection_id.is_none() {
+                        // only if we can generate a collection id
+                        activity.collection_id = match generate_collection_id(
+                            activity.creator_address.clone(),
+                            activity.collection_name.clone(),
+                        ) {
+                            Some(collection_id) => Some(collection_id),
+                            None => {
+                                // V2 events may be missing data to generate collection id
+                                debug!(
+                                    "Failed to generate collection id for activity: {:#?}",
+                                    activity
+                                );
+                                None
+                            },
+                        };
+                    }
+                    if let Some(ref token_data_id) = activity.token_data_id {
+                        activity_map
+                            .entry(token_data_id.clone())
+                            .or_default()
+                            .insert(standard_event_type.clone(), activity.clone());
+                    } else if let Some(ref collection_id) = activity.collection_id {
+                        activity_map
+                            .entry(collection_id.clone())
+                            .or_default()
+                            .insert(standard_event_type.clone(), activity.clone());
+                    }
                 }
             }
         }
 
-        Ok((
-            activities,
-            current_listings,
-            current_token_offers,
-            current_collection_offers,
-        ))
+        Ok(())
+    }
+}
+
+fn generate_token_data_id(
+    creator_address: Option<String>,
+    collection_name: Option<String>,
+    token_name: Option<String>,
+) -> Option<String> {
+    match (creator_address, collection_name, token_name) {
+        (Some(creator), Some(collection), Some(token))
+            if !creator.is_empty() && !collection.is_empty() && !token.is_empty() =>
+        {
+            let creator_address = standardize_address(&creator);
+            let input = format!("{}::{}::{}", creator_address, collection, token);
+            let hash = sha3_256(input.as_bytes());
+            Some(standardize_address(&hex::encode(hash)))
+        },
+        _ => None,
+    }
+}
+
+fn generate_collection_id(
+    creator_address: Option<String>,
+    collection_name: Option<String>,
+) -> Option<String> {
+    match (creator_address, collection_name) {
+        (Some(creator), Some(collection)) if !creator.is_empty() && !collection.is_empty() => {
+            let creator_address = standardize_address(&creator);
+            let input = format!("{}::{}", creator_address, collection);
+            let hash = sha3_256(input.as_bytes());
+            Some(standardize_address(&hex::encode(hash)))
+        },
+        _ => None,
     }
 }

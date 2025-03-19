@@ -2,8 +2,10 @@ use crate::{
     config::{DbConfig, IndexerProcessorConfig},
     postgres::postgres_utils::{new_db_pool, run_migrations, ArcDbPool},
     steps::{
-        db_writing_step::DBWritingStep, processor_status_saver_step::get_processor_status_saver,
-        remapper_step::ProcessStep, remappers::event_remapper::EventRemapper,
+        db_writing_step::DBWritingStep,
+        processor_status_saver_step::get_processor_status_saver,
+        remapper_step::ProcessStep,
+        remappers::{event_remapper::EventRemapper, resource_remapper::ResourceMapper},
     },
     utils::starting_version::get_starting_version,
 };
@@ -66,7 +68,6 @@ impl ProcessorTrait for Processor {
         .await;
 
         // Merge the starting version from config and the latest processed version from the DB
-        // let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
         let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
 
         // Check and update the ledger chain id to ensure we're indexing the correct chain
@@ -85,7 +86,7 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let (event_mappings, contract_to_marketplace_map) = self
+        let (event_mappings, table_mappings) = self
             .config
             .nft_marketplace_configs
             .get_mappings()
@@ -93,10 +94,13 @@ impl ProcessorTrait for Processor {
                 error!("Failed to get event mapping: {:?}", e);
                 panic!("Failed to get event mapping: {:?}", e);
             });
-        let process = ProcessStep::new(Arc::new(EventRemapper::new(
-            Arc::new(event_mappings.clone()),
-            Arc::new(contract_to_marketplace_map.clone()),
-        )));
+        let process = ProcessStep::new(
+            Arc::new(EventRemapper::new(
+                Arc::new(event_mappings.clone()),
+                Arc::new(table_mappings.clone()),
+            )),
+            Arc::new(ResourceMapper::new(Arc::new(table_mappings.clone()))),
+        );
         let db_writing = DBWritingStep::new(self.db_pool.clone());
         let version_tracker = VersionTrackerStep::new(
             get_processor_status_saver(self.db_pool.clone()),

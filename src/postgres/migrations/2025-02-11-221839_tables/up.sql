@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS nft_marketplace_activities (
   creator_address VARCHAR(66),
   collection_id VARCHAR(66),
   collection_name VARCHAR,
-  token_data_id VARCHAR(66) NOT NULL,
+  token_data_id VARCHAR(66),
   token_name VARCHAR,
   token_standard VARCHAR(66),
   price BIGINT NOT NULL,
