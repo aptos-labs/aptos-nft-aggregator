@@ -1,6 +1,6 @@
 use super::remappers::resource_remapper::ResourceMapper;
 use crate::{
-    config::marketplace_config::MarketplaceEventType,
+    config::marketplace_config::NFTMarketplaceConfig,
     models::nft_models::{
         CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
         CurrentNFTMarketplaceTokenOffer, NftMarketplaceActivity,
@@ -25,91 +25,18 @@ pub struct RemapResult {
 
 // impl EventRemapper {
 pub struct ProcessStep {
-    pub event_remapper: Arc<EventRemapper>,
-    pub resource_mapper: Arc<ResourceMapper>,
+    event_remapper: Arc<EventRemapper>,
+    resource_remapper: Arc<ResourceMapper>,
 }
 
 impl ProcessStep {
-    pub fn new(event_remapper: Arc<EventRemapper>, resource_mapper: Arc<ResourceMapper>) -> Self {
-        Self {
+    pub fn new(config: NFTMarketplaceConfig) -> anyhow::Result<Self> {
+        let event_remapper: Arc<EventRemapper> = EventRemapper::new(&config)?;
+        let resource_remapper: Arc<ResourceMapper> = ResourceMapper::new(&config)?;
+        Ok(Self {
             event_remapper,
-            resource_mapper,
-        }
-    }
-
-    fn process_single_transaction(
-        &self,
-        txn: Transaction,
-    ) -> Result<
-        (
-            Vec<NftMarketplaceActivity>,
-            Vec<CurrentNFTMarketplaceListing>,
-            Vec<CurrentNFTMarketplaceTokenOffer>,
-            Vec<CurrentNFTMarketplaceCollectionOffer>,
-        ),
-        ProcessorError,
-    > {
-        let mut activity_map: HashMap<
-            String,
-            HashMap<MarketplaceEventType, NftMarketplaceActivity>,
-        > = HashMap::new();
-
-        self.event_remapper
-            .remap_events(txn.clone(), &mut activity_map)
-            .map_err(|e| ProcessorError::ProcessError {
-                message: format!("Error remapping events: {:#}", e),
-            })?;
-
-        if !activity_map.is_empty() {
-            self.resource_mapper
-                .remap_resources(txn.clone(), &mut activity_map)
-                .map_err(|e| ProcessorError::ProcessError {
-                    message: format!("Error remapping resources: {:#}", e),
-                })?;
-        }
-
-        let mut final_activities = Vec::new();
-        let mut current_listings = Vec::new();
-        let mut current_token_offers = Vec::new();
-        let mut current_collection_offers = Vec::new();
-
-        for (_, event_activities) in activity_map {
-            for (_, activity) in event_activities {
-                final_activities.push(activity.clone());
-
-                match activity.standard_event_type {
-                    MarketplaceEventType::PlaceListing
-                    | MarketplaceEventType::CancelListing
-                    | MarketplaceEventType::FillListing => {
-                        current_listings
-                            .push(CurrentNFTMarketplaceListing::from_activity(&activity));
-                    },
-                    MarketplaceEventType::PlaceTokenOffer
-                    | MarketplaceEventType::CancelTokenOffer
-                    | MarketplaceEventType::FillTokenOffer => {
-                        current_token_offers
-                            .push(CurrentNFTMarketplaceTokenOffer::from_activity(&activity));
-                    },
-                    MarketplaceEventType::PlaceCollectionOffer
-                    | MarketplaceEventType::CancelCollectionOffer
-                    | MarketplaceEventType::FillCollectionOffer => {
-                        current_collection_offers.push(
-                            CurrentNFTMarketplaceCollectionOffer::from_activity(&activity),
-                        );
-                    },
-                    _ => {
-                        eprintln!("Unknown event type: {:?}", activity.standard_event_type);
-                    },
-                }
-            }
-        }
-
-        Ok((
-            final_activities,
-            current_listings,
-            current_token_offers,
-            current_collection_offers,
-        ))
+            resource_remapper,
+        })
     }
 }
 
@@ -121,6 +48,7 @@ impl Processable for ProcessStep {
         Vec<CurrentNFTMarketplaceListing>,
         Vec<CurrentNFTMarketplaceTokenOffer>,
         Vec<CurrentNFTMarketplaceCollectionOffer>,
+        HashMap<String, HashMap<String, String>>,
     );
     type RunType = AsyncRunType;
 
@@ -134,45 +62,74 @@ impl Processable for ProcessStep {
                 Vec<CurrentNFTMarketplaceListing>,
                 Vec<CurrentNFTMarketplaceTokenOffer>,
                 Vec<CurrentNFTMarketplaceCollectionOffer>,
+                HashMap<String, HashMap<String, String>>,
             )>,
         >,
         ProcessorError,
     > {
-        let results: Result<Vec<_>, ProcessorError> = transactions
+        let results = transactions
             .data
             .par_iter()
-            .map(|txn| self.process_single_transaction(txn.clone()))
-            .collect();
+            .map(|transaction| {
+                let event_remapper = self.event_remapper.clone();
+                let resource_remapper = self.resource_remapper.clone();
+                let (activities, listings, token_offers, collection_offers) =
+                    event_remapper.remap_events(transaction.clone())?;
 
-        match results {
-            Ok(results) => {
-                let mut all_activities = Vec::new();
-                let mut all_listings = Vec::new();
-                let mut all_token_offers = Vec::new();
-                let mut all_collection_offers = Vec::new();
+                let resource_updates = resource_remapper.remap_resources(transaction.clone())?;
 
-                for (activities, listings, token_offers, collection_offers) in results {
-                    all_activities.extend(activities);
-                    all_listings.extend(listings);
-                    all_token_offers.extend(token_offers);
-                    all_collection_offers.extend(collection_offers);
-                }
+                Ok((
+                    activities,
+                    listings,
+                    token_offers,
+                    collection_offers,
+                    resource_updates,
+                ))
+            })
+            .collect::<anyhow::Result<Vec<_>>>()
+            .map_err(|e| ProcessorError::ProcessError {
+                message: format!("{:#}", e),
+            })?;
 
-                Ok(Some(TransactionContext {
-                    data: (
-                        all_activities,
-                        all_listings,
-                        all_token_offers,
-                        all_collection_offers,
-                    ),
-                    metadata: transactions.metadata,
-                }))
-            },
-            Err(e) => {
-                eprintln!("Error processing transactions: {:#}", e);
-                Err(e)
-            },
+        let (
+            mut all_activities,
+            mut all_listings,
+            mut all_token_offers,
+            mut all_collection_offers,
+            mut all_resource_updates,
+        ) = (
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            HashMap::<String, HashMap<String, String>>::new(),
+        );
+
+        for (activities, listings, token_offers, collection_offers, resource_updates) in results {
+            all_activities.extend(activities);
+            all_listings.extend(listings);
+            all_token_offers.extend(token_offers);
+            all_collection_offers.extend(collection_offers);
+
+            // Merge resource_updates by key
+            resource_updates.into_iter().for_each(|(key, value_map)| {
+                all_resource_updates
+                    .entry(key)
+                    .or_default()
+                    .extend(value_map);
+            });
         }
+
+        Ok(Some(TransactionContext {
+            data: (
+                all_activities,
+                all_listings,
+                all_token_offers,
+                all_collection_offers,
+                all_resource_updates,
+            ),
+            metadata: transactions.metadata,
+        }))
     }
 }
 
@@ -183,3 +140,43 @@ impl NamedStep for ProcessStep {
         "ProcessStep".to_string()
     }
 }
+
+// // Store activity in the map only if it has a token_data_id
+// // This ensures we can later match resources to activities
+// // if it's empty it means it's v1
+// if activity.token_data_id.is_none() {
+//     activity.token_data_id = match generate_token_data_id(
+//         activity.creator_address.clone(),
+//         activity.collection_name.clone(),
+//         activity.token_name.clone(),
+//     ) {
+//         Some(token_data_id) => Some(token_data_id),
+//         None => {
+//             debug!(
+//                 "Failed to generate token data id for activity: {:#?}",
+//                 activity
+//             );
+//             None
+//         },
+//     }
+// }
+
+// // Store activity in the map only if it has a collection_id
+// // This ensures we can later match resources to activities
+// if activity.collection_id.is_none() {
+//     // only if we can generate a collection id
+//     activity.collection_id = match generate_collection_id(
+//         activity.creator_address.clone(),
+//         activity.collection_name.clone(),
+//     ) {
+//         Some(collection_id) => Some(collection_id),
+//         None => {
+//             // V2 events may be missing data to generate collection id
+//             debug!(
+//                 "Failed to generate collection id for activity: {:#?}",
+//                 activity
+//             );
+//             None
+//         },
+//     };
+// }

@@ -187,7 +187,7 @@ pub fn insert_nft_marketplace_activities(
     (
         diesel::insert_into(schema::nft_marketplace_activities::table)
             .values(items_to_insert)
-            .on_conflict((txn_version, index))
+            .on_conflict((txn_version, index, marketplace))
             .do_nothing(),
         None,
     )
@@ -204,7 +204,7 @@ pub fn insert_current_nft_marketplace_listings(
     (
         diesel::insert_into(schema::current_nft_marketplace_listings::table)
             .values(items_to_insert)
-            .on_conflict(token_data_id)
+            .on_conflict((token_data_id, marketplace))
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
@@ -212,8 +212,9 @@ pub fn insert_current_nft_marketplace_listings(
                 token_amount.eq(excluded(token_amount)),
                 last_transaction_version.eq(excluded(last_transaction_version)),
                 price.eq(excluded(price)),
+                collection_id.eq(excluded(collection_id)),
             )),
-        Some(" WHERE current_nft_marketplace_listings.last_transaction_timestamp <= excluded.last_transaction_timestamp "),
+        None,
     )
 }
 
@@ -227,7 +228,7 @@ pub fn insert_current_nft_marketplace_token_offers(
     (
         diesel::insert_into(schema::current_nft_marketplace_token_offers::table)
             .values(items_to_insert)
-            .on_conflict((token_data_id, buyer))
+            .on_conflict((token_data_id, buyer, marketplace))
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
@@ -235,8 +236,11 @@ pub fn insert_current_nft_marketplace_token_offers(
                 token_amount.eq(excluded(token_amount)),
                 last_transaction_version.eq(excluded(last_transaction_version)),
                 price.eq(excluded(price)),
+                token_name.eq(excluded(token_name)),
+                collection_id.eq(excluded(collection_id)),
+                buyer.eq(excluded(buyer)),
             )),
-        Some(" WHERE current_nft_marketplace_token_offers.last_transaction_version < excluded.last_transaction_version "),
+        None,
     )
 }
 
@@ -251,7 +255,7 @@ pub fn insert_current_nft_marketplace_collection_offers(
     (
         diesel::insert_into(schema::current_nft_marketplace_collection_offers::table)
             .values(items_to_insert)
-            .on_conflict(collection_offer_id)
+            .on_conflict((collection_offer_id, marketplace))
             .do_update()
             .set((
                 is_deleted.eq(excluded(is_deleted)),
@@ -260,6 +264,6 @@ pub fn insert_current_nft_marketplace_collection_offers(
                 last_transaction_version.eq(excluded(last_transaction_version)),
                 price.eq(excluded(price)),
             )),
-        Some(" WHERE current_nft_marketplace_collection_offers.last_transaction_version < excluded.last_transaction_version "),
+        None,
     )
 }

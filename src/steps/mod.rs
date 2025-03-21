@@ -1,6 +1,5 @@
-use anyhow::{Context, Result};
-use jsonpath_rust::{JsonPath, JsonPathValue};
-use serde_json::Value;
+use jsonpath_rust::JsonPath;
+use serde_json::Value as SerdeJsonValue;
 use std::{
     hash::{Hash, Hasher},
     str::FromStr,
@@ -8,78 +7,57 @@ use std::{
 
 pub mod db_writing_step;
 pub mod processor_status_saver_step;
+pub mod reduction_step;
 pub mod remapper_step;
 pub mod remappers;
 
 /// Extracts a string, ensuring proper handling of missing values
-pub fn extract_string(paths: &HashableJsonPaths, from: &Value) -> Option<String> {
+pub fn extract_string(paths: &HashableJsonPath, from: &SerdeJsonValue) -> Option<String> {
     paths
         .extract_from(from)
         .ok()
         .and_then(|v| v.as_str().map(String::from))
 }
 
-pub fn extract_vec_inner(paths: &HashableJsonPaths, from: &Value) -> Option<Vec<Value>> {
-    paths
-        .extract_from(from)
-        .ok()
-        .and_then(|v| v.as_array().cloned())
-        .map(|v| v.to_vec())
+/// A wrapper around JsonPath so that it can be hashed
+#[derive(Debug, Clone)]
+pub struct HashableJsonPath {
+    json_path: JsonPath,
+    /// The raw string representation of the JsonPath
+    raw: String,
 }
 
-/// A wrapper around multiple JSON paths, supporting fallbacks.
-#[derive(Clone, Debug)]
-pub struct HashableJsonPaths {
-    json_paths: Vec<JsonPath>,
-    /// The raw string representations of the JSON paths.
-    raw: Vec<String>,
-}
-
-impl HashableJsonPaths {
-    pub fn new(paths: Vec<String>) -> Result<Self> {
-        let mut parsed_paths = Vec::new();
-        for path in &paths {
-            let json_path = JsonPath::from_str(path)
-                .with_context(|| format!("Failed to parse JSON path: {}", path))?;
-
-            parsed_paths.push(json_path);
-        }
+impl HashableJsonPath {
+    pub fn new(raw: &str) -> anyhow::Result<Self> {
+        let json_path = JsonPath::from_str(raw)?;
         Ok(Self {
-            json_paths: parsed_paths,
-            raw: paths,
+            json_path,
+            raw: raw.to_string(),
         })
     }
 
-    /// Extracts a value by trying multiple JSON paths in order.
-    pub fn extract_from(&self, value: &Value) -> anyhow::Result<Value> {
-        for path in self.json_paths.iter() {
-            let results = path.find_slice(value);
-            for result in results {
-                if let JsonPathValue::NoValue = result {
-                    continue; // Skip NoValue
-                }
-                return Ok(result.clone().to_data());
-            }
-        }
-
-        anyhow::bail!(
-            "No valid JSON path found in paths: {:?} for value: {:?}",
-            self.raw,
-            value
-        )
+    /// Executes the JsonPath to extract the value from the provided serde_json::Value
+    pub fn extract_from(&self, value: &SerdeJsonValue) -> anyhow::Result<SerdeJsonValue> {
+        Ok(self
+            .json_path
+            .find_slice(value)
+            .first()
+            .unwrap() // Unwrap is safe here because the fields are guaranteed by the move types; TODO: Perform checks here or check config
+            .clone()
+            .to_data())
     }
 }
 
-impl Hash for HashableJsonPaths {
+impl Hash for HashableJsonPath {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.raw.hash(state);
     }
 }
 
-impl PartialEq for HashableJsonPaths {
+impl PartialEq for HashableJsonPath {
     fn eq(&self, other: &Self) -> bool {
         self.raw == other.raw
     }
 }
 
-impl Eq for HashableJsonPaths {}
+impl Eq for HashableJsonPath {}

@@ -1,9 +1,10 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::steps::HashableJsonPaths;
+use crate::steps::HashableJsonPath;
 use ahash::AHashMap;
 use anyhow::Result;
+use aptos_indexer_processor_sdk::utils::convert::standardize_address;
 use diesel::{
     deserialize::{self, FromSql, FromSqlRow},
     expression::AsExpression,
@@ -12,131 +13,63 @@ use diesel::{
     sql_types::Text,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, io::Write, str::FromStr};
+use std::{collections::HashMap, io::Write};
 use strum::{Display, EnumString};
-// use strum_macros::{EnumString, Display};
 
-pub type MarketplaceEventMappings = AHashMap<String, (String, MarketplaceEventType)>;
-// marketplace_name -> TableMapping
-pub type TableMappings = AHashMap<String, TableMapping>; // (table_name, column_name, source, resource_type, path, event_type)
-
+// event_type -> json_path, db_column
+pub type EventFieldRemappings =
+    HashMap<EventType, HashMap<HashableJsonPath, Vec<RemappableColumn>>>;
+// resource_type -> json_path, db_column
+pub type ResourceFieldRemappings =
+    HashMap<String, HashMap<HashableJsonPath, Vec<RemappableColumn>>>;
 // table_name -> column_name, source, resource_type, path, event_type
 pub type TableMapping =
-    AHashMap<String, Vec<(String, String, Option<String>, HashableJsonPaths, String)>>;
+    AHashMap<String, Vec<(String, String, Option<String>, HashableJsonPath, String)>>;
 
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
-pub const ALL_EVENTS: &str = "all_events";
-pub const EVENTS: &str = "events";
 
-/// Top-level marketplace configurations
+pub const POSTGRES_NUMERIC_DATA_TYPE: &str = "NUMERIC";
+
+pub type EventRemappingConfig = HashMap<String, EventRemapping>;
+pub type ResourceRemappingConfig = HashMap<String, ResourceRemapping>;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct NFTMarketplaceConfigs {
-    pub marketplaces: Vec<MarketplaceConfig>,
+pub struct DbColumn {
+    pub table: String,
+    pub column: String,
 }
 
 /// Represents a marketplace and its configuration
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct MarketplaceConfig {
+pub struct NFTMarketplaceConfig {
     pub name: String,
-    pub event_types: Vec<EventType>,
-    pub tables: HashMap<String, TableConfig>,
+    #[serde(default)]
+    pub event_model_mapping: HashMap<String, MarketplaceEventType>,
+    #[serde(default)]
+    pub events: EventRemappingConfig,
+    #[serde(default)]
+    pub resources: ResourceRemappingConfig,
 }
 
-pub struct ResourceType {
-    pub r#type: String,
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EventRemapping {
+    pub event_fields: HashMap<String, Vec<DbColumn>>,
 }
 
-pub struct ResourceField {
-    pub field_name: String,
-    pub path: Vec<String>,
-}
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct EventType {
-    pub r#type: String, // "listing", "token_offer", "collection_offer"
-    pub cancel: String,
-    pub fill: String,
-    pub place: String,
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ResourceRemapping {
+    pub resource_fields: HashMap<String, Vec<DbColumn>>,
 }
 
-/// Represents configuration for tables within a marketplace
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct TableConfig {
-    pub columns: HashMap<String, ColumnConfig>,
+/// Represents a column in the database and its metadata
+pub struct RemappableColumn {
+    pub db_column: DbColumn,
 }
 
-/// Defines how a column should be extracted from an event or resource
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct ColumnConfig {
-    pub source: Option<String>,        // "write_set_changes"
-    pub resource_type: Option<String>, // Only for "write_set_changes"
-    pub path: Vec<String>,             // JSON path for extraction
-    pub event_type: Option<String>, // The event type that requires write_set_changes if not provided, we will use all events
-}
-
-impl NFTMarketplaceConfigs {
-    pub fn get_mappings(&self) -> Result<(MarketplaceEventMappings, TableMappings)> {
-        let mut event_mappings = AHashMap::new();
-        let mut table_mappings = AHashMap::new();
-
-        for marketplace in &self.marketplaces {
-            let marketplace_name = marketplace.name.clone();
-
-            for event_type in &marketplace.event_types {
-                event_mappings.insert(
-                    event_type.place.clone(),
-                    (
-                        marketplace_name.clone(),
-                        MarketplaceEventType::from_str(&format!("place_{}", event_type.r#type))
-                            .unwrap(),
-                    ),
-                );
-                event_mappings.insert(
-                    event_type.cancel.clone(),
-                    (
-                        marketplace_name.clone(),
-                        MarketplaceEventType::from_str(&format!("cancel_{}", event_type.r#type))
-                            .unwrap(),
-                    ),
-                );
-                event_mappings.insert(
-                    event_type.fill.clone(),
-                    (
-                        marketplace_name.clone(),
-                        MarketplaceEventType::from_str(&format!("fill_{}", event_type.r#type))
-                            .unwrap(),
-                    ),
-                );
-            }
-
-            let mut table_mapping: TableMapping = AHashMap::new();
-
-            for (table_name, table_config) in &marketplace.tables {
-                let entries = table_mapping.entry(table_name.clone()).or_default();
-                for (column_name, column_config) in &table_config.columns {
-                    entries.push((
-                        column_name.clone(),
-                        column_config.source.clone().unwrap_or(EVENTS.to_string()),
-                        column_config.resource_type.clone(),
-                        HashableJsonPaths::new(column_config.path.clone())?,
-                        column_config
-                            .event_type
-                            .clone()
-                            .unwrap_or(ALL_EVENTS.to_string()),
-                    ));
-                }
-            }
-            if !table_mapping.is_empty() {
-                table_mappings.insert(marketplace.name.clone(), table_mapping);
-            }
-        }
-
-        Ok((event_mappings, table_mappings))
+impl RemappableColumn {
+    pub fn new(db_column: DbColumn) -> Self {
+        Self { db_column }
     }
 }
 
@@ -162,7 +95,7 @@ pub enum MarketplaceEventType {
     PlaceListing,
     CancelListing,
     FillListing,
-    // Direct offer events
+    // Token offer events
     PlaceTokenOffer,
     CancelTokenOffer,
     FillTokenOffer,
@@ -186,5 +119,59 @@ impl FromSql<Text, Pg> for MarketplaceEventType {
         let s = std::str::from_utf8(bytes.as_bytes())?;
         s.parse::<MarketplaceEventType>()
             .map_err(|_| "Unrecognized MarketplaceEventType".into())
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EventType {
+    address: String,
+    module: String,
+    r#struct: String,
+}
+
+impl std::fmt::Display for EventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}::{}::{}", self.address, self.module, self.r#struct)
+    }
+}
+
+impl TryFrom<&str> for EventType {
+    type Error = anyhow::Error;
+
+    fn try_from(event_type: &str) -> Result<Self> {
+        let parts: Vec<&str> = event_type.split("::").collect();
+        if parts.len() < 3 {
+            // With v1 events it is possible to emit primitives as events, e.g. just
+            // emit an address or u64 as an event. We don't support this.
+            anyhow::bail!("Unsupported event type: {}", event_type);
+        }
+
+        Ok(EventType {
+            address: standardize_address(parts[0]),
+            module: parts[1].to_string(),
+            r#struct: parts[2..].join("::"), // Don't need to standardize generics because we won't support them
+        })
+    }
+}
+
+impl EventType {
+    /// Returns true if the event type is a framework event. We don't always allow
+    /// users to index framework events.
+    //
+    // WARNING: This code is only safe because we `standardize_address` in the
+    // `try_from` implementation. If we add another way to instantiate an `EventType`,
+    // it must also do this conversion.
+    //
+    // TODO: If we ever get a better Rust SDK, use AccountAddress instead.
+    pub fn is_framework_event(&self) -> bool {
+        // Convert address string to bytes. Skip "0x" prefix.
+        let addr_bytes = hex::decode(&self.address[2..]).unwrap();
+
+        // This is taken from AccountAddress::is_special.
+        addr_bytes[..32 - 1].iter().all(|x| *x == 0) && addr_bytes[32 - 1] < 0b10000
+    }
+
+    pub fn get_struct(&self) -> &str {
+        &self.r#struct
     }
 }
