@@ -1,6 +1,6 @@
 use crate::{
     config::marketplace_config::{MarketplaceEventType, TableMappings, ALL_EVENTS},
-    models::nft_models::NftMarketplaceActivity,
+    models::nft_models::{MarketplaceModel, NftMarketplaceActivity},
     steps::extract_string,
 };
 use anyhow::Result;
@@ -9,7 +9,6 @@ use aptos_protos::transaction::v1::{transaction::TxnData, write_set_change, Tran
 use serde_json::Value;
 use std::{collections::HashMap, sync::Arc};
 use tracing::{error, warn};
-
 pub const WRITE_SET_CHANGES: &str = "write_set_changes";
 pub const CURRENT_NFT_MARKETPLACE_LISTINGS: &str = "current_nft_marketplace_listings";
 pub const CURRENT_NFT_MARKETPLACE_TOKEN_OFFERS: &str = "current_nft_marketplace_token_offers";
@@ -79,8 +78,7 @@ impl ResourceMapper {
 
                     // Update each activity that needs data from this resource
                     for (event_type, activity) in activities.iter_mut() {
-                        if let Some(table_mappings) =
-                            self.table_mappings.get(&activity.marketplace)
+                        if let Some(table_mappings) = self.table_mappings.get(&activity.marketplace)
                         {
                             // Determine correct table based on event type
                             let table_name = determine_table_from_event_type(event_type);
@@ -108,8 +106,7 @@ impl ResourceMapper {
 
                                             // check if the token_standard is set only at the first time
                                             if activity.token_standard.is_none() {
-                                                activity.token_standard =
-                                                    Some("v2".to_string());
+                                                activity.token_standard = Some("v2".to_string());
                                             }
                                         }
                                     }
