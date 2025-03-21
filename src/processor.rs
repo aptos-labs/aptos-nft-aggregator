@@ -68,7 +68,12 @@ impl ProcessorTrait for Processor {
         .await;
 
         // Merge the starting version from config and the latest processed version from the DB
-        let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
+        // let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
+        let starting_version = self
+            .config
+            .transaction_stream_config
+            .starting_version
+            .unwrap();
 
         // Check and update the ledger chain id to ensure we're indexing the correct chain
         let _grpc_chain_id = TransactionStream::new(self.config.transaction_stream_config.clone())
@@ -86,21 +91,9 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let (event_mappings, table_mappings) = self
-            .config
-            .nft_marketplace_configs
-            .get_mappings()
-            .unwrap_or_else(|e| {
-                error!("Failed to get event mapping: {:?}", e);
-                panic!("Failed to get event mapping: {:?}", e);
-            });
-        let process = ProcessStep::new(
-            Arc::new(EventRemapper::new(
-                Arc::new(event_mappings.clone()),
-                Arc::new(table_mappings.clone()),
-            )),
-            Arc::new(ResourceMapper::new(Arc::new(table_mappings.clone()))),
-        );
+        let nft_marketplace_config = self.config.nft_marketplace_config.clone();
+
+        let process = ProcessStep::new(nft_marketplace_config.clone())?;
         let db_writing = DBWritingStep::new(self.db_pool.clone());
         let version_tracker = VersionTrackerStep::new(
             get_processor_status_saver(self.db_pool.clone()),

@@ -1,5 +1,5 @@
 use crate::{
-    config::marketplace_config::MarketplaceEventType,
+    config::marketplace_config::{EventModel, MarketplaceEventType},
     schema::{
         current_nft_marketplace_collection_offers, current_nft_marketplace_listings,
         current_nft_marketplace_token_offers, nft_marketplace_activities,
@@ -45,16 +45,15 @@ pub struct NftMarketplaceActivity {
     pub block_timestamp: NaiveDateTime,
 }
 
-impl NftMarketplaceActivity {
-    /// Dynamically sets a field in the activity struct
-    pub fn set_field(&mut self, column_name: &str, value: String) {
+impl MarketplaceModel for NftMarketplaceActivity {
+    fn set_field(&mut self, column_name: &str, value: String) {
         match column_name {
             "collection_id" => self.collection_id = Some(value),
             "token_data_id" => self.token_data_id = Some(value),
             "token_name" => self.token_name = Some(value),
             "creator_address" => self.creator_address = Some(value),
             "collection_name" => self.collection_name = Some(value),
-            "price" => self.price = value.parse().unwrap_or(0), // Default to 0 if parsing fails
+            "price" => self.price = value.parse().unwrap_or(0),
             "token_amount" => self.token_amount = value.parse().ok(),
             "buyer" => self.buyer = Some(value),
             "seller" => self.seller = Some(value),
@@ -66,9 +65,17 @@ impl NftMarketplaceActivity {
             },
         }
     }
+
+    fn is_valid(&self) -> bool {
+        !self.marketplace.is_empty() && !self.contract_address.is_empty()
+    }
+
+    fn table_name(&self) -> &'static str {
+        "nft_marketplace_activities"
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
 #[diesel(primary_key(token_data_id))]
 #[diesel(table_name = current_nft_marketplace_listings)]
 pub struct CurrentNFTMarketplaceListing {
@@ -84,6 +91,33 @@ pub struct CurrentNFTMarketplaceListing {
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
+}
+
+impl MarketplaceModel for CurrentNFTMarketplaceListing {
+    fn set_field(&mut self, column_name: &str, value: String) {
+        match column_name {
+            "token_data_id" => self.token_data_id = value,
+            "listing_id" => self.listing_id = Some(value),
+            "collection_id" => self.collection_id = Some(value),
+            "seller" => self.seller = value,
+            "price" => self.price = value.parse().unwrap_or(0),
+            "token_amount" => self.token_amount = value.parse().unwrap_or(0),
+            "token_standard" => self.token_standard = value,
+            "marketplace" => self.marketplace = value,
+            "contract_address" => self.contract_address = value,
+            _ => {
+                eprintln!("Unknown column: {}", column_name);
+            },
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        !self.token_data_id.is_empty() && !self.seller.is_empty()
+    }
+
+    fn table_name(&self) -> &'static str {
+        "current_nft_marketplace_listings"
+    }
 }
 
 impl CurrentNFTMarketplaceListing {
@@ -129,7 +163,7 @@ impl CurrentNFTMarketplaceListing {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
 #[diesel(primary_key(token_data_id, buyer))]
 #[diesel(table_name = current_nft_marketplace_token_offers)]
 pub struct CurrentNFTMarketplaceTokenOffer {
@@ -146,6 +180,34 @@ pub struct CurrentNFTMarketplaceTokenOffer {
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
+}
+
+impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
+    fn set_field(&mut self, column_name: &str, value: String) {
+        match column_name {
+            "token_data_id" => self.token_data_id = value,
+            "offer_id" => self.offer_id = Some(value),
+            "buyer" => self.buyer = value,
+            "collection_id" => self.collection_id = value,
+            "price" => self.price = value.parse().unwrap_or(0),
+            "token_amount" => self.token_amount = value.parse().ok(),
+            "token_name" => self.token_name = Some(value),
+            "marketplace" => self.marketplace = value,
+            "token_standard" => self.token_standard = value,
+            "contract_address" => self.contract_address = value,
+            _ => {
+                eprintln!("Unknown column: {}", column_name);
+            },
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        !self.token_data_id.is_empty() && !self.buyer.is_empty()
+    }
+
+    fn table_name(&self) -> &'static str {
+        "current_nft_marketplace_token_offers"
+    }
 }
 
 impl CurrentNFTMarketplaceTokenOffer {
@@ -192,7 +254,7 @@ impl CurrentNFTMarketplaceTokenOffer {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
 #[diesel(primary_key(collection_offer_id))]
 #[diesel(table_name = current_nft_marketplace_collection_offers)]
 pub struct CurrentNFTMarketplaceCollectionOffer {
@@ -207,6 +269,34 @@ pub struct CurrentNFTMarketplaceCollectionOffer {
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
+}
+
+impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
+    fn set_field(&mut self, column_name: &str, value: String) {
+        match column_name {
+            "collection_offer_id" => self.collection_offer_id = value,
+            "collection_id" => self.collection_id = value,
+            "buyer" => self.buyer = value,
+            "price" => self.price = value.parse().unwrap_or(0),
+            "remaining_token_amount" => self.remaining_token_amount = value.parse().ok(),
+            "token_standard" => self.token_standard = value,
+            "marketplace" => self.marketplace = value,
+            "contract_address" => self.contract_address = value,
+            _ => {
+                eprintln!("Unknown column: {}", column_name);
+            },
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        !self.collection_offer_id.is_empty()
+            && !self.collection_id.is_empty()
+            && !self.buyer.is_empty()
+    }
+
+    fn table_name(&self) -> &'static str {
+        "current_nft_marketplace_collection_offers"
+    }
 }
 
 impl CurrentNFTMarketplaceCollectionOffer {
@@ -252,5 +342,45 @@ impl CurrentNFTMarketplaceCollectionOffer {
             last_transaction_version: activity.txn_version,
             last_transaction_timestamp: activity.block_timestamp,
         }
+    }
+}
+
+// Optional: Define a trait for common model behavior
+pub trait MarketplaceModel {
+    fn set_field(&mut self, column: &str, value: String);
+    fn is_valid(&self) -> bool;
+    fn table_name(&self) -> &'static str;
+}
+
+impl CurrentNFTMarketplaceListing {
+    pub fn build_default(marketplace_name: String, event: &EventModel) -> Self {
+        let mut listing = Self::default();
+        listing.marketplace = marketplace_name;
+        listing.contract_address = event.account_address.clone();
+        listing.last_transaction_version = event.transaction_version;
+        listing.last_transaction_timestamp = event.block_timestamp;
+        listing
+    }
+}
+
+impl CurrentNFTMarketplaceTokenOffer {
+    pub fn build_default(marketplace_name: String, event: &EventModel) -> Self {
+        let mut offer = Self::default();
+        offer.marketplace = marketplace_name;
+        offer.contract_address = event.account_address.clone();
+        offer.last_transaction_version = event.transaction_version;
+        offer.last_transaction_timestamp = event.block_timestamp;
+        offer
+    }
+}
+
+impl CurrentNFTMarketplaceCollectionOffer {
+    pub fn build_default(marketplace_name: String, event: &EventModel) -> Self {
+        let mut offer = Self::default();
+        offer.marketplace = marketplace_name;
+        offer.contract_address = event.account_address.clone();
+        offer.last_transaction_version = event.transaction_version;
+        offer.last_transaction_timestamp = event.block_timestamp;
+        offer
     }
 }
