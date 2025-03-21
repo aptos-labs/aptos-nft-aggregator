@@ -1,4 +1,5 @@
 config.yaml
+*-local.yaml
 cursor.txt
 build
 node_modules/

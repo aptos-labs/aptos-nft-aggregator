@@ -2134,6 +2134,7 @@ dependencies = [
  "itertools 0.12.1",
  "jemallocator",
  "jsonpath-rust",
+ "lazy_static",
  "log",
  "native-tls",
  "num_cpus",

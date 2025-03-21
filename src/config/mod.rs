@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{config::marketplace_config::NFTMarketplaceConfigs, processor::Processor};
+use crate::{config::marketplace_config::NFTMarketplaceConfig, processor::Processor};
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_indexer_transaction_stream::TransactionStreamConfig,
@@ -21,7 +21,7 @@ pub struct IndexerProcessorConfig {
     pub transaction_stream_config: TransactionStreamConfig,
     pub db_config: DbConfig,
     pub channel_size: u32,
-    pub nft_marketplace_configs: NFTMarketplaceConfigs,
+    pub nft_marketplace_config: NFTMarketplaceConfig,
 }
 
 #[async_trait::async_trait]
