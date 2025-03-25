@@ -6,10 +6,7 @@
 
 use ahash::AHashMap;
 use aptos_indexer_processor_sdk::utils::{convert::remove_null_bytes, errors::ProcessorError};
-use diesel::{
-    query_builder::{AstPass, Query, QueryFragment, QueryId},
-    ConnectionResult, QueryResult,
-};
+use diesel::{query_builder::QueryFragment, ConnectionResult, QueryResult};
 use diesel_async::{
     pooled_connection::{
         bb8::{Pool, PooledConnection},
@@ -32,17 +29,6 @@ pub type DbPoolConnection<'a> = PooledConnection<'a, MyDbConnection>;
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./src/postgres/migrations");
 
 pub const DEFAULT_MAX_POOL_SIZE: u32 = 150;
-
-#[derive(QueryId)]
-/// Using this will append a where clause at the end of the string upsert function
-///
-/// e.g.
-/// INSERT INTO ... ON CONFLICT DO UPDATE SET ... WHERE "transaction_version" = excluded."transaction_version"
-/// This is needed when we want to maintain a table with only the latest state
-pub struct UpsertFilterLatestTransactionQuery<T> {
-    query: T,
-    where_clause: Option<&'static str>,
-}
 
 // the max is actually u16::MAX but we see that when the size is too big we get an overflow error so reducing it a bit
 pub const MAX_DIESEL_PARAM_SIZE: usize = (u16::MAX / 2) as usize;
@@ -128,7 +114,7 @@ pub async fn new_db_pool(
 
 pub async fn execute_in_chunks<U, T>(
     conn: ArcDbPool,
-    build_query: fn(Vec<T>) -> (U, Option<&'static str>),
+    build_query: fn(Vec<T>) -> U,
     items_to_insert: &[T],
     chunk_size: usize,
 ) -> Result<(), ProcessorError>
@@ -142,9 +128,8 @@ where
             let conn = conn.clone();
             let items = chunk.to_vec();
             tokio::spawn(async move {
-                let (query, additional_where_clause) = build_query(items.clone());
-                execute_or_retry_cleaned(conn, build_query, items, query, additional_where_clause)
-                    .await
+                let query = build_query(items.clone());
+                execute_or_retry_cleaned(conn, build_query, items, query).await
             })
         })
         .collect::<Vec<_>>();
@@ -159,25 +144,27 @@ where
     Ok(())
 }
 
+/// Returns the entry for the config hashmap, or the default field count for the insert.
+///
+/// Given diesel has a limit of how many parameters can be inserted in a single operation (u16::MAX),
+/// we default to chunk an array of items based on how many columns are in the table.
+pub fn get_config_table_chunk_size<T: field_count::FieldCount>(
+    table_name: &str,
+    per_table_chunk_sizes: &AHashMap<String, usize>,
+) -> usize {
+    let chunk_size = per_table_chunk_sizes.get(table_name).copied();
+    chunk_size.unwrap_or_else(|| MAX_DIESEL_PARAM_SIZE / T::field_count())
+}
+
 pub async fn execute_with_better_error<U>(
     pool: ArcDbPool,
     query: U,
-    mut additional_where_clause: Option<&'static str>,
 ) -> Result<usize, ProcessorError>
 where
     U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send,
 {
-    let original_query = diesel::debug_query::<Backend, _>(&query).to_string();
-    // This is needed because if we don't insert any row, then diesel makes a call like this
-    // SELECT 1 FROM TABLE WHERE 1=0
-    if original_query.to_lowercase().contains("where") {
-        additional_where_clause = None;
-    }
-    let final_query = UpsertFilterLatestTransactionQuery {
-        query,
-        where_clause: additional_where_clause,
-    };
-    let debug_string = diesel::debug_query::<Backend, _>(&final_query).to_string();
+    let debug_string = diesel::debug_query::<Backend, _>(&query).to_string();
+
     let conn = &mut pool.get().await.map_err(|e| {
         warn!("Error getting connection from pool: {:?}", e);
         ProcessorError::DBStoreError {
@@ -185,7 +172,7 @@ where
             query: Some(debug_string.clone()),
         }
     })?;
-    final_query
+    query
         .execute(conn)
         .await
         .inspect_err(|e| {
@@ -197,41 +184,16 @@ where
         })
 }
 
-/// Returns the entry for the config hashmap, or the default field count for the insert.
-///
-/// Given diesel has a limit of how many parameters can be inserted in a single operation (u16::MAX),
-/// we default to chunk an array of items based on how many columns are in the table.
-pub fn get_config_table_chunk_size<T: field_count::FieldCount>(
-    table_name: &str,
-    per_table_chunk_sizes: &AHashMap<String, usize>,
-) -> usize {
-    per_table_chunk_sizes
-        .get(table_name)
-        .copied()
-        .unwrap_or_else(|| MAX_DIESEL_PARAM_SIZE / T::field_count())
-}
-
 pub async fn execute_with_better_error_conn<U>(
     conn: &mut MyDbConnection,
     query: U,
-    mut additional_where_clause: Option<&'static str>,
 ) -> QueryResult<usize>
 where
     U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send,
 {
-    let original_query = diesel::debug_query::<Backend, _>(&query).to_string();
-    // This is needed because if we don't insert any row, then diesel makes a call like this
-    // SELECT 1 FROM TABLE WHERE 1=0
-    if original_query.to_lowercase().contains("where") {
-        additional_where_clause = None;
-    }
-    let final_query = UpsertFilterLatestTransactionQuery {
-        query,
-        where_clause: additional_where_clause,
-    };
-    let debug_string = diesel::debug_query::<Backend, _>(&final_query).to_string();
+    let debug_string = diesel::debug_query::<Backend, _>(&query).to_string();
     tracing::debug!("Executing query: {:?}", debug_string);
-    let res = final_query.execute(conn).await;
+    let res = query.execute(conn).await;
     if let Err(ref e) = res {
         tracing::warn!("Error running query: {:?}\n{:?}", e, debug_string);
     }
@@ -240,23 +202,20 @@ where
 
 async fn execute_or_retry_cleaned<U, T>(
     conn: ArcDbPool,
-    build_query: fn(Vec<T>) -> (U, Option<&'static str>),
+    build_query: fn(Vec<T>) -> U,
     items: Vec<T>,
     query: U,
-    additional_where_clause: Option<&'static str>,
 ) -> Result<(), ProcessorError>
 where
     U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send,
     T: serde::Serialize + for<'de> serde::Deserialize<'de> + Clone,
 {
-    match execute_with_better_error(conn.clone(), query, additional_where_clause).await {
+    match execute_with_better_error(conn.clone(), query).await {
         Ok(_) => {},
         Err(_) => {
             let cleaned_items = clean_data_for_db(items, true);
-            let (cleaned_query, additional_where_clause) = build_query(cleaned_items);
-            match execute_with_better_error(conn.clone(), cleaned_query, additional_where_clause)
-                .await
-            {
+            let cleaned_query = build_query(cleaned_items);
+            match execute_with_better_error(conn.clone(), cleaned_query).await {
                 Ok(_) => {},
                 Err(e) => {
                     return Err(e);
@@ -313,24 +272,4 @@ pub async fn run_migrations(postgres_connection_string: String, conn_pool: ArcDb
     })
     .await
     .expect("[Parser] Failed to run migrations");
-}
-
-/// Section below is required to modify the query.
-impl<T: Query> Query for UpsertFilterLatestTransactionQuery<T> {
-    type SqlType = T::SqlType;
-}
-
-//impl<T> RunQueryDsl<MyDbConnection> for UpsertFilterLatestTransactionQuery<T> {}
-
-impl<T> QueryFragment<Backend> for UpsertFilterLatestTransactionQuery<T>
-where
-    T: QueryFragment<Backend>,
-{
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Backend>) -> QueryResult<()> {
-        self.query.walk_ast(out.reborrow())?;
-        if let Some(w) = self.where_clause {
-            out.push_sql(w);
-        }
-        Ok(())
-    }
 }

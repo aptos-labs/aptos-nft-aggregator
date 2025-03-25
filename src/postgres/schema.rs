@@ -15,6 +15,7 @@ diesel::table! {
         contract_address -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        standard_event_type -> Varchar,
         #[max_length = 66]
         token_data_id -> Nullable<Varchar>,
     }
@@ -32,12 +33,13 @@ diesel::table! {
         seller -> Nullable<Varchar>,
         price -> Int8,
         token_amount -> Nullable<Int8>,
-        token_name -> Nullable<Varchar>,
         is_deleted -> Bool,
         marketplace -> Varchar,
         contract_address -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        standard_event_type -> Varchar,
+        token_name -> Nullable<Varchar>,
     }
 }
 
@@ -59,6 +61,7 @@ diesel::table! {
         contract_address -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        standard_event_type -> Varchar,
     }
 }
 

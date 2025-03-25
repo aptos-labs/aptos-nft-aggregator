@@ -12,7 +12,7 @@ use aptos_indexer_processor_sdk::{
     utils::errors::ProcessorError,
 };
 use async_trait::async_trait;
-use diesel::{upsert::excluded, ExpressionMethods};
+use diesel::{query_dsl::methods::FilterDsl, upsert::excluded, ExpressionMethods};
 
 pub fn get_processor_status_saver(conn_pool: ArcDbPool) -> ProcessorStatusSaverEnum {
     ProcessorStatusSaverEnum::Postgres {
@@ -71,13 +71,17 @@ impl ProcessorStatusSaverEnum {
                         .set((
                             processor_status::last_success_version
                                 .eq(excluded(processor_status::last_success_version)),
-                            processor_status::last_updated.eq(excluded(processor_status::last_updated)),
+                            processor_status::last_updated
+                                .eq(excluded(processor_status::last_updated)),
                             processor_status::last_transaction_timestamp
                                 .eq(excluded(processor_status::last_transaction_timestamp)),
-                        )),
-                    Some(" WHERE processor_status.last_success_version <= EXCLUDED.last_success_version "),
+                        ))
+                        .filter(
+                            processor_status::last_success_version
+                                .le(excluded(processor_status::last_success_version)),
+                        ),
                 )
-                    .await?;
+                .await?;
 
                 Ok(())
             },

@@ -15,6 +15,7 @@ use aptos_indexer_processor_sdk::{
 use diesel::{
     pg::{upsert::excluded, Pg},
     query_builder::QueryFragment,
+    query_dsl::methods::FilterDsl,
     ExpressionMethods,
 };
 use tonic::async_trait;
@@ -51,26 +52,32 @@ impl Processable for DBWritingStep {
     ) -> Result<Option<TransactionContext<()>>, ProcessorError> {
         let (activities, listings, token_offers, collection_offers) = input.data;
 
-        // Deduplicate and reduce data
         let mut deduped_activities: Vec<NftMarketplaceActivity> = activities
             .into_iter()
-            .map(|activity| ((activity.txn_version, activity.index), activity))
+            .map(|activity| {
+                (
+                    (
+                        activity.txn_version,
+                        activity.index,
+                        activity.marketplace.clone(),
+                    ),
+                    activity,
+                )
+            })
             .collect::<HashMap<_, _>>()
             .into_values()
             .collect();
 
-        // Sort activities by primary key to prevent deadlocks
         deduped_activities.sort_by(|a, b| {
             a.txn_version
                 .cmp(&b.txn_version)
                 .then(a.index.cmp(&b.index))
         });
 
-        // Deduplicate listings using token_data_id
         let mut deduped_listings: Vec<CurrentNFTMarketplaceListing> = listings
             .into_iter()
             .map(|listing| {
-                let key = listing.token_data_id.clone();
+                let key = (listing.token_data_id.clone(), listing.marketplace.clone());
                 (key, listing)
             })
             .collect::<HashMap<_, _>>()
@@ -78,11 +85,14 @@ impl Processable for DBWritingStep {
             .collect();
         deduped_listings.sort_by(|a, b| a.token_data_id.cmp(&b.token_data_id));
 
-        // Deduplicate token offers using token_data_id and buyer
         let mut deduped_token_offers: Vec<CurrentNFTMarketplaceTokenOffer> = token_offers
             .into_iter()
             .map(|offer| {
-                let key = (offer.token_data_id.clone(), offer.buyer.clone());
+                let key = (
+                    offer.token_data_id.clone(),
+                    offer.buyer.clone(),
+                    offer.marketplace.clone(),
+                );
                 (key, offer)
             })
             .collect::<HashMap<_, _>>()
@@ -100,7 +110,7 @@ impl Processable for DBWritingStep {
             collection_offers
                 .into_iter()
                 .map(|offer| {
-                    let key = offer.collection_offer_id.clone();
+                    let key = (offer.collection_offer_id.clone(), offer.marketplace.clone());
                     (key, offer)
                 })
                 .collect::<HashMap<_, _>>()
@@ -179,91 +189,84 @@ impl NamedStep for DBWritingStep {
 
 pub fn insert_nft_marketplace_activities(
     items_to_insert: Vec<NftMarketplaceActivity>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
     use crate::schema::nft_marketplace_activities::dsl::*;
-    (
-        diesel::insert_into(schema::nft_marketplace_activities::table)
-            .values(items_to_insert)
-            .on_conflict((txn_version, index, marketplace))
-            .do_nothing(),
-        None,
-    )
+
+    diesel::insert_into(schema::nft_marketplace_activities::table)
+        .values(items_to_insert)
+        .on_conflict((txn_version, index, marketplace))
+        .do_nothing()
 }
 
 pub fn insert_current_nft_marketplace_listings(
     items_to_insert: Vec<CurrentNFTMarketplaceListing>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
     use crate::schema::current_nft_marketplace_listings::dsl::*;
 
-    (
-        diesel::insert_into(schema::current_nft_marketplace_listings::table)
-            .values(items_to_insert)
-            .on_conflict((token_data_id, marketplace))
-            .do_update()
-            .set((
-                is_deleted.eq(excluded(is_deleted)),
-                last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
-                token_amount.eq(excluded(token_amount)),
-                last_transaction_version.eq(excluded(last_transaction_version)),
-                price.eq(excluded(price)),
-                collection_id.eq(excluded(collection_id)),
-            )),
-        None,
-    )
+    diesel::insert_into(schema::current_nft_marketplace_listings::table)
+        .values(items_to_insert)
+        .on_conflict((token_data_id, marketplace))
+        .do_update()
+        .set((
+            listing_id.eq(excluded(listing_id)),
+            collection_id.eq(excluded(collection_id)),
+            seller.eq(excluded(seller)),
+            price.eq(excluded(price)),
+            token_amount.eq(excluded(token_amount)),
+            token_name.eq(excluded(token_name)),
+            is_deleted.eq(excluded(is_deleted)),
+            contract_address.eq(excluded(contract_address)),
+            last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
+            last_transaction_version.eq(excluded(last_transaction_version)),
+            standard_event_type.eq(excluded(standard_event_type)),
+        ))
+        .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
 
 pub fn insert_current_nft_marketplace_token_offers(
     items_to_insert: Vec<CurrentNFTMarketplaceTokenOffer>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
     use crate::schema::current_nft_marketplace_token_offers::dsl::*;
-    (
-        diesel::insert_into(schema::current_nft_marketplace_token_offers::table)
-            .values(items_to_insert)
-            .on_conflict((token_data_id, buyer, marketplace))
-            .do_update()
-            .set((
-                is_deleted.eq(excluded(is_deleted)),
-                last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
-                token_amount.eq(excluded(token_amount)),
-                last_transaction_version.eq(excluded(last_transaction_version)),
-                price.eq(excluded(price)),
-                token_name.eq(excluded(token_name)),
-                collection_id.eq(excluded(collection_id)),
-                buyer.eq(excluded(buyer)),
-            )),
-        None,
-    )
+    diesel::insert_into(schema::current_nft_marketplace_token_offers::table)
+        .values(items_to_insert)
+        .on_conflict((token_data_id, buyer, marketplace))
+        .do_update()
+        .set((
+            offer_id.eq(excluded(offer_id)),
+            collection_id.eq(excluded(collection_id)),
+            buyer.eq(excluded(buyer)),
+            price.eq(excluded(price)),
+            token_amount.eq(excluded(token_amount)),
+            token_name.eq(excluded(token_name)),
+            is_deleted.eq(excluded(is_deleted)),
+            contract_address.eq(excluded(contract_address)),
+            last_transaction_version.eq(excluded(last_transaction_version)),
+            last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
+            standard_event_type.eq(excluded(standard_event_type)),
+        ))
+        .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
 
 pub fn insert_current_nft_marketplace_collection_offers(
     items_to_insert: Vec<CurrentNFTMarketplaceCollectionOffer>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
     use crate::schema::current_nft_marketplace_collection_offers::dsl::*;
 
-    (
-        diesel::insert_into(schema::current_nft_marketplace_collection_offers::table)
-            .values(items_to_insert)
-            .on_conflict((collection_offer_id, marketplace))
-            .do_update()
-            .set((
-                is_deleted.eq(excluded(is_deleted)),
-                last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
-                remaining_token_amount.eq(excluded(remaining_token_amount)),
-                last_transaction_version.eq(excluded(last_transaction_version)),
-                price.eq(excluded(price)),
-            )),
-        None,
-    )
+    diesel::insert_into(schema::current_nft_marketplace_collection_offers::table)
+        .values(items_to_insert)
+        .on_conflict((collection_offer_id, marketplace))
+        .do_update()
+        .set((
+            collection_id.eq(excluded(collection_id)),
+            buyer.eq(excluded(buyer)),
+            price.eq(excluded(price)),
+            remaining_token_amount.eq(excluded(remaining_token_amount)),
+            is_deleted.eq(excluded(is_deleted)),
+            contract_address.eq(excluded(contract_address)),
+            last_transaction_version.eq(excluded(last_transaction_version)),
+            last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
+            token_data_id.eq(excluded(token_data_id)),
+            standard_event_type.eq(excluded(standard_event_type)),
+        ))
+        .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::steps::HashableJsonPath;
-use ahash::AHashMap;
 use anyhow::Result;
 use aptos_indexer_processor_sdk::utils::convert::standardize_address;
 use diesel::{
@@ -17,19 +16,12 @@ use std::{collections::HashMap, io::Write};
 use strum::{Display, EnumString};
 
 // event_type -> json_path, db_column
-pub type EventFieldRemappings =
-    HashMap<EventType, HashMap<HashableJsonPath, Vec<RemappableColumn>>>;
+pub type EventFieldRemappings = HashMap<EventType, HashMap<HashableJsonPath, Vec<DbColumn>>>;
 // resource_type -> json_path, db_column
-pub type ResourceFieldRemappings =
-    HashMap<String, HashMap<HashableJsonPath, Vec<RemappableColumn>>>;
-// table_name -> column_name, source, resource_type, path, event_type
-pub type TableMapping =
-    AHashMap<String, Vec<(String, String, Option<String>, HashableJsonPath, String)>>;
+pub type ResourceFieldRemappings = HashMap<String, HashMap<HashableJsonPath, Vec<DbColumn>>>;
 
 /// Maximum length of a token name in characters
 pub const MAX_TOKEN_NAME_LENGTH: usize = 128;
-
-pub const POSTGRES_NUMERIC_DATA_TYPE: &str = "NUMERIC";
 
 pub type EventRemappingConfig = HashMap<String, EventRemapping>;
 pub type ResourceRemappingConfig = HashMap<String, ResourceRemapping>;
@@ -44,6 +36,11 @@ pub struct DbColumn {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct NFTMarketplaceConfig {
     pub name: String,
+    /// Maps event type strings to their corresponding MarketplaceEventType enum values.
+    /// This mapping is used to standardize different marketplace event types across
+    /// different NFT marketplaces into a standarzied event types for processing.
+    /// For example, a "ListNFT" event from one marketplace might map to PlaceListing
+    /// while another marketplace's "CreateListing" event would also map to PlaceListing.
     #[serde(default)]
     pub event_model_mapping: HashMap<String, MarketplaceEventType>,
     #[serde(default)]
@@ -60,17 +57,6 @@ pub struct EventRemapping {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ResourceRemapping {
     pub resource_fields: HashMap<String, Vec<DbColumn>>,
-}
-
-/// Represents a column in the database and its metadata
-pub struct RemappableColumn {
-    pub db_column: DbColumn,
-}
-
-impl RemappableColumn {
-    pub fn new(db_column: DbColumn) -> Self {
-        Self { db_column }
-    }
 }
 
 #[derive(
