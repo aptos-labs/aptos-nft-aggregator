@@ -1,5 +1,5 @@
 use crate::{
-    config::marketplace_config::{NFTMarketplaceConfig, RemappableColumn, ResourceFieldRemappings},
+    config::marketplace_config::{NFTMarketplaceConfig, ResourceFieldRemappings},
     steps::{extract_string, HashableJsonPath},
 };
 use anyhow::Result;
@@ -7,7 +7,7 @@ use aptos_indexer_processor_sdk::utils::{convert::standardize_address, errors::P
 use aptos_protos::transaction::v1::{transaction::TxnData, write_set_change, Transaction};
 use serde_json::Value;
 use std::{collections::HashMap, sync::Arc};
-use tracing::{error, warn};
+use tracing::warn;
 pub const WRITE_SET_CHANGES: &str = "write_set_changes";
 
 pub struct ResourceMapper {
@@ -25,7 +25,7 @@ impl ResourceMapper {
                 let json_path = HashableJsonPath::new(json_path)?;
                 let db_mappings = db_mappings
                     .iter()
-                    .map(|db_mapping| Ok(RemappableColumn::new(db_mapping.clone())))
+                    .map(|db_mapping| Ok(db_mapping.clone()))
                     .collect::<anyhow::Result<Vec<_>>>()?;
 
                 db_mappings_for_resource.insert(json_path, db_mappings);
@@ -41,12 +41,12 @@ impl ResourceMapper {
         &self,
         txn: Transaction,
     ) -> Result<HashMap<String, HashMap<String, String>>> {
-        let txn_data = txn.txn_data.as_ref().ok_or_else(|| {
-            error!("Transaction data is missing");
-            ProcessorError::ProcessError {
+        let txn_data = txn
+            .txn_data
+            .as_ref()
+            .ok_or_else(|| ProcessorError::ProcessError {
                 message: "Transaction data is missing".to_string(),
-            }
-        })?;
+            })?;
 
         let mut resource_updates: HashMap<String, HashMap<String, String>> = HashMap::new();
 
@@ -68,10 +68,7 @@ impl ResourceMapper {
 
                 let resource_address = standardize_address(&write_resource.address);
                 let resource_type = &write_resource.type_str;
-                println!("Resource type: {}", resource_type);
                 if let Some(remappings) = self.field_remappings.get(resource_type) {
-                    println!("Found remappings for resource type: {}", resource_type);
-
                     remappings.iter().try_for_each(|(json_path, db_mappings)| {
                         db_mappings.iter().try_for_each(|db_mapping| {
                             // TODO: handle types when move_type is supported
@@ -80,7 +77,7 @@ impl ResourceMapper {
                             resource_updates
                                 .entry(resource_address.clone()) // Use resource address as key
                                 .or_default()
-                                .insert(db_mapping.db_column.column.clone(), value);
+                                .insert(db_mapping.column.clone(), value);
                             anyhow::Ok(())
                         })
                     })?;

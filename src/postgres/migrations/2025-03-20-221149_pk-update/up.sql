@@ -32,10 +32,23 @@ PRIMARY KEY (collection_offer_id, marketplace);
 
 -- Drop columns if they exist (one per statement)
 ALTER TABLE nft_marketplace_activities DROP COLUMN IF EXISTS token_standard;
+
 ALTER TABLE current_nft_marketplace_listings DROP COLUMN IF EXISTS token_standard;
+ALTER TABLE current_nft_marketplace_listings ADD COLUMN IF NOT EXISTS standard_event_type VARCHAR DEFAULT 'unknown';
+
+ALTER TABLE current_nft_marketplace_listings 
+ALTER COLUMN standard_event_type SET NOT NULL;
 
 ALTER TABLE current_nft_marketplace_token_offers DROP COLUMN IF EXISTS token_standard;
+ALTER TABLE current_nft_marketplace_token_offers ADD COLUMN IF NOT EXISTS standard_event_type VARCHAR DEFAULT 'unknown';
+ALTER TABLE current_nft_marketplace_token_offers 
+ALTER COLUMN standard_event_type SET NOT NULL;
 
 ALTER TABLE current_nft_marketplace_collection_offers DROP COLUMN IF EXISTS token_standard;
+ALTER TABLE current_nft_marketplace_collection_offers ADD COLUMN IF NOT EXISTS standard_event_type VARCHAR DEFAULT 'unknown';
+ALTER TABLE current_nft_marketplace_collection_offers 
+ALTER COLUMN standard_event_type SET NOT NULL;
 
 ALTER TABLE current_nft_marketplace_collection_offers ADD COLUMN IF NOT EXISTS token_data_id VARCHAR(66);
+
+ALTER TABLE current_nft_marketplace_listings ADD COLUMN IF NOT EXISTS token_name VARCHAR;
