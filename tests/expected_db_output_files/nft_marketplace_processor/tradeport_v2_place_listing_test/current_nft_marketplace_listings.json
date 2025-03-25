@@ -1,0 +1,32 @@
+[
+  {
+    "token_data_id": "0x78d80871a136e75a0cde6b3ff0f45bc8e4c78f29e990b58947e49a1eecaaf6bf",
+    "listing_id": "0x6db18abc2ba8fb386af8bc9e6d35ef88256a25fcc9cbbfffb0d785be1f64fa8c",
+    "collection_id": "0x7b4cd01cc85280139fbf2a11dd929a073febeba767d74904d0c691d68b74f321",
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "price": 119000000,
+    "token_amount": null,
+    "token_name": "The Baptmen #1745",
+    "is_deleted": false,
+    "marketplace": "tradeport_v2",
+    "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+    "last_transaction_version": 2386809975,
+    "last_transaction_timestamp": "2025-02-19T18:01:31.944133",
+    "standard_event_type": "place_listing"
+  },
+  {
+    "token_data_id": "0x826cb695c5748ae84e9ed87902e9b214058d7b7589b32bcc48c30bdfe89f03e7",
+    "listing_id": "0x3929540e32fb063ddf7fecb764c914493d2844978621767b9f013326093258eb",
+    "collection_id": "0x7b4cd01cc85280139fbf2a11dd929a073febeba767d74904d0c691d68b74f321",
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "price": 119000000,
+    "token_amount": null,
+    "token_name": "The Baptmen #1385",
+    "is_deleted": false,
+    "marketplace": "tradeport_v2",
+    "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+    "last_transaction_version": 2386809975,
+    "last_transaction_timestamp": "2025-02-19T18:01:31.944133",
+    "standard_event_type": "place_listing"
+  }
+]

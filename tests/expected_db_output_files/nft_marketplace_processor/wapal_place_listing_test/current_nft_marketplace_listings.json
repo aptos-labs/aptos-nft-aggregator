@@ -1,0 +1,32 @@
+[
+  {
+    "token_data_id": "0xbc600af43ac14abe414c209456a995baefadccf78cc1241b2119b6a8ebe98b06",
+    "listing_id": "0xa67bf73aee5f50029a94fcfadc751b4818b42dd9123721e9c6872bdd3fd0b505",
+    "collection_id": null,
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "price": 459900000,
+    "token_amount": null,
+    "token_name": null,
+    "is_deleted": false,
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "last_transaction_version": 2382251863,
+    "last_transaction_timestamp": "2025-02-18T20:04:10.543248",
+    "standard_event_type": "place_listing"
+  },
+  {
+    "token_data_id": "0xd88b304033e2b615d5fae295a9986313d3ea713f3a625d06ae686c26181dcc7e",
+    "listing_id": "0x7d3092ed4eab5a0ebffb73868748f06d15cae1b3d82d6bbaeebd33f5acd36502",
+    "collection_id": null,
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "price": 459900000,
+    "token_amount": null,
+    "token_name": null,
+    "is_deleted": false,
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "last_transaction_version": 2382251863,
+    "last_transaction_timestamp": "2025-02-18T20:04:10.543248",
+    "standard_event_type": "place_listing"
+  }
+]

@@ -1,0 +1,48 @@
+[
+  {
+    "txn_version": 2386889884,
+    "index": 1,
+    "raw_event_type": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent",
+    "standard_event_type": "cancel_collection_offer",
+    "creator_address": null,
+    "collection_id": "0xa2485c3b392d211770ed161e73a1097d21016c7dd41f53592434380b2aa14cba",
+    "collection_name": null,
+    "token_data_id": null,
+    "token_name": null,
+    "price": 2726630000,
+    "token_amount": null,
+    "buyer": "0x8c557bb0a12d47c1eda90dd4883b44674111b915fa39ff862e6a0a39140dcd4",
+    "seller": null,
+    "expiration_time": null,
+    "listing_id": null,
+    "offer_id": "0x2b040f0a6dcf7a2dc0bf2c0e0cfe962983038ab3df4211daba31d5f8d7a005d7",
+    "json_data": {
+      "data": {
+        "bid": {
+          "inner": "0x2b040f0a6dcf7a2dc0bf2c0e0cfe962983038ab3df4211daba31d5f8d7a005d7"
+        },
+        "price": "2726630000",
+        "bid_buyer": "0x8c557bb0a12d47c1eda90dd4883b44674111b915fa39ff862e6a0a39140dcd4",
+        "timestamp": "1739990687880613",
+        "collection": {
+          "inner": "0xa2485c3b392d211770ed161e73a1097d21016c7dd41f53592434380b2aa14cba"
+        }
+      },
+      "event_type": {
+        "module": "biddings_v2",
+        "struct": "DeleteCollectionBidEvent",
+        "address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26"
+      },
+      "event_index": 1,
+      "account_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+      "block_timestamp": "2025-02-19T18:44:47.880613",
+      "creation_number": 22,
+      "sequence_number": 41274,
+      "transaction_version": 2386889884,
+      "transaction_block_height": 292870330
+    },
+    "marketplace": "tradeport_v2",
+    "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+    "block_timestamp": "2025-02-19T18:44:47.880613"
+  }
+]

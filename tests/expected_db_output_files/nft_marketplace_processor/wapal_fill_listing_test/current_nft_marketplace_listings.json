@@ -1,0 +1,17 @@
+[
+  {
+    "token_data_id": "0x8e01798f5411d261c87423c163226456480518ccd35591a141384c25d1af181a",
+    "listing_id": null,
+    "collection_id": null,
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "price": 397900000,
+    "token_amount": null,
+    "token_name": null,
+    "is_deleted": true,
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "last_transaction_version": 2382221134,
+    "last_transaction_timestamp": "2025-02-18T19:52:20.290288",
+    "standard_event_type": "fill_listing"
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "txn_version": 2381742315,
+    "index": 1,
+    "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent",
+    "standard_event_type": "cancel_listing",
+    "creator_address": "0xf54f8f7ffc2b779d81b721b3d42fe9a53f96e1d3459a8001934307783d493725",
+    "collection_id": null,
+    "collection_name": "The Loonies",
+    "token_data_id": "0xa8b76ee68f7574dafb6f19988880c16571ccd10ac159a8684067a9fc0df293",
+    "token_name": "The Loonies #3210",
+    "price": 3200000000,
+    "token_amount": null,
+    "buyer": null,
+    "seller": "0xecd896bfa7eae31fb5085dca8e2f3c88ea3577bd54fafeaeb4ad6ede1e13e81e",
+    "expiration_time": null,
+    "listing_id": "0x560197dcdc27af1cadc1cc75b51d9f0e3a0f40d7a761397c13bfdb4097924c1f",
+    "offer_id": null,
+    "json_data": {
+      "data": {
+        "type": "fixed price",
+        "price": "3200000000",
+        "seller": "0xecd896bfa7eae31fb5085dca8e2f3c88ea3577bd54fafeaeb4ad6ede1e13e81e",
+        "listing": "0x560197dcdc27af1cadc1cc75b51d9f0e3a0f40d7a761397c13bfdb4097924c1f",
+        "token_metadata": {
+          "token": {
+            "vec": [
+              {
+                "inner": "0xa8b76ee68f7574dafb6f19988880c16571ccd10ac159a8684067a9fc0df293"
+              }
+            ]
+          },
+          "collection": {
+            "vec": [
+              {
+                "inner": "0xa2485c3b392d211770ed161e73a1097d21016c7dd41f53592434380b2aa14cba"
+              }
+            ]
+          },
+          "token_name": "The Loonies #3210",
+          "collection_name": "The Loonies",
+          "creator_address": "0xf54f8f7ffc2b779d81b721b3d42fe9a53f96e1d3459a8001934307783d493725",
+          "property_version": {
+            "vec": []
+          }
+        }
+      },
+      "event_type": {
+        "module": "events",
+        "struct": "ListingCanceledEvent",
+        "address": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
+      },
+      "event_index": 1,
+      "account_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+      "block_timestamp": "2025-02-18T17:15:52.960045",
+      "creation_number": 1125899906842628,
+      "sequence_number": 74310,
+      "transaction_version": 2381742315,
+      "transaction_block_height": 292395841
+    },
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "block_timestamp": "2025-02-18T17:15:52.960045"
+  }
+]

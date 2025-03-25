@@ -1,0 +1,17 @@
+[
+  {
+    "token_data_id": "0x14af06f106978a591fe475f93d63be2206da03a8409ff31d353866515de49250",
+    "offer_id": "0xdd69203952afa9962f3277f2be027fad3d21d57b986a61d674279d5e395323e",
+    "marketplace": "wapal",
+    "collection_id": null,
+    "buyer": "0x62928b3712d452190346090807d5cfb40dabb54740cf1d2acfc5b4d3d9e0b370",
+    "price": 25000000,
+    "token_amount": 0,
+    "token_name": "AptosDogs #1596",
+    "is_deleted": false,
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "last_transaction_version": 2382313982,
+    "last_transaction_timestamp": "2025-02-18T20:30:34.289382",
+    "standard_event_type": "place_token_offer"
+  }
+]

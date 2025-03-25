@@ -1,0 +1,17 @@
+[
+  {
+    "token_data_id": "0x5eebc18e7f35cc5db4abd90631f35d0454cf0181fbd0042c023e858372b2e2a8",
+    "offer_id": "0x6132638f6078196e0a2c554cf195f08f73b56e672134c429cdda7f04272c3b13",
+    "marketplace": "wapal",
+    "collection_id": null,
+    "buyer": "0x6ce9d41971de334c94541fcdd8f4cd2a69456057d444192e1257dacfc528ca0a",
+    "price": 2800000000,
+    "token_amount": 0,
+    "token_name": "The Loonies #1768",
+    "is_deleted": true,
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "last_transaction_version": 2381810159,
+    "last_transaction_timestamp": "2025-02-18T17:35:15.692708",
+    "standard_event_type": "cancel_token_offer"
+  }
+]
