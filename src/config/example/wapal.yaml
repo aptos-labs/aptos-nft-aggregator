@@ -298,6 +298,8 @@
           "$.token_amount":
             - table: nft_marketplace_activities
               column: token_amount
+            - table: current_nft_marketplace_collection_offers
+              column: remaining_token_amount
           "$.collection_metadata.collection.vec[0].inner":
             - table: nft_marketplace_activities
               column: collection_id

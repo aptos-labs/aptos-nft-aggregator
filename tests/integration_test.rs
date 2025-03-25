@@ -1,35 +1,27 @@
-use ahash::AHashMap;
 use aptos_indexer_processor_sdk::traits::processor_trait::ProcessorTrait;
 use aptos_indexer_testing_framework::{
     database::{PostgresTestDatabase, TestDatabase},
     sdk_test_context::{remove_inserted_at, SdkTestContext},
 };
-use chrono::NaiveDateTime;
-// use super::{DEFAULT_OUTPUT_FOLDER, run_processor_test, validate_json};
+use assert_json_diff::assert_json_eq;
+use diesel::{pg::PgConnection, Connection};
 use nft_aggregator::{
-    config::{marketplace_config::NFTMarketplaceConfig, DbConfig, IndexerProcessorConfig, PostgresConfig},
+    config::{
+        marketplace_config::NFTMarketplaceConfig, DbConfig, IndexerProcessorConfig, PostgresConfig,
+    },
     models::nft_models::{
         CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
         CurrentNFTMarketplaceTokenOffer, NftMarketplaceActivity,
     },
     processor::Processor,
 };
-use std::collections::{HashMap, HashSet};
-use assert_json_diff::assert_json_eq;
-use diesel::{Connection};
 use serde_json::Value;
+use serde_yaml;
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
-use diesel::{pg::PgConnection, ExpressionMethods, QueryDsl, RunQueryDsl};
-use serde_yaml;
-use nft_aggregator::schema::{
-    current_nft_marketplace_collection_offers, current_nft_marketplace_listings,
-    current_nft_marketplace_token_offers, nft_marketplace_activities,
-};
-
-
 
 // Mock transaction data for testing
 // const MOCK_NFT_MINT_TXN: &[u8] = include_bytes!("test_data/mock_nft_mint_txn.json");
@@ -91,7 +83,10 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
 
 // Configuration Helper Functions
 fn build_test_nft_marketplace_config(marketplace_name: &str) -> NFTMarketplaceConfig {
-    let config_path = PathBuf::from(format!("tests/test_data/{}_test_marketplace_config.yaml", marketplace_name));
+    let config_path = PathBuf::from(format!(
+        "tests/test_data/{}_test_marketplace_config.yaml",
+        marketplace_name
+    ));
     let config_str = std::fs::read_to_string(&config_path)
         .unwrap_or_else(|e| panic!("Failed to read config file: {}", e));
     serde_yaml::from_str(&config_str)
@@ -108,9 +103,6 @@ fn setup_nft_processor_config(
         connection_string: db_url.to_string(),
         db_pool_size: 100,
     };
-
-    let nft_marketplace_config = build_test_nft_marketplace_config(marketplace_name);
-    println!("nft_marketplace_config: {:?}", nft_marketplace_config);
 
     let db_config = DbConfig::PostgresConfig(postgres_config);
     let processor_config = IndexerProcessorConfig {
@@ -175,18 +167,14 @@ pub fn validate_json(
 ) -> anyhow::Result<()> {
     for (table_name, db_value) in db_values.iter_mut() {
         let expected_file_path = match file_name.clone() {
-            Some(custom_name) => {
-                PathBuf::from(&output_path)
-                    .join(processor_name)
-                    .join(custom_name.clone())
-                    .join(format!("{}.json", table_name))
-            },
-            None => {
-                Path::new(&output_path)
-                    .join(processor_name)
-                    .join(txn_version.to_string())
-                    .join(format!("{}.json", table_name))
-            },
+            Some(custom_name) => PathBuf::from(&output_path)
+                .join(processor_name)
+                .join(custom_name.clone())
+                .join(format!("{}.json", table_name)),
+            None => Path::new(&output_path)
+                .join(processor_name)
+                .join(txn_version.to_string())
+                .join(format!("{}.json", table_name)),
         };
 
         let mut expected_json = match read_and_parse_json(expected_file_path.to_str().unwrap()) {
@@ -279,7 +267,8 @@ async fn process_transactions(
     }
 
     let db_url = db.get_db_url();
-    let (processor_config, processor_name) = setup_nft_processor_config(&test_context, &db_url, marketplace_name);
+    let (processor_config, processor_name) =
+        setup_nft_processor_config(&test_context, &db_url, marketplace_name);
 
     let nft_processor = Processor::new(processor_config)
         .await
@@ -316,37 +305,33 @@ async fn process_transactions(
     }
 }
 
-
-
 #[cfg(test)]
 mod nft_processor_tests {
     use super::*;
-    use aptos_indexer_testing_framework::{
-        cli_parser::get_test_config,
-    };
     use aptos_indexer_test_transactions::json_transactions::generated_transactions::{
-        IMPORTED_MAINNET_TXNS_2382313982_WAPAL_PLACE_OFFER,
-        IMPORTED_MAINNET_TXNS_2381810159_WAPAL_CANCEL_OFFER,
+        IMPORTED_MAINNET_TXNS_2277018899_TRADEPORT_V2_ACCEPT_TOKEN_DELIST_SAME_TOKEN_DATA_ID,
+        IMPORTED_MAINNET_TXNS_2296098846_TRADEPORT_V2_ACCEPT_TOKEN_DELIST2,
+        IMPORTED_MAINNET_TXNS_2296149225_TRADEPORT_V2_ACCEPT_TOKEN_DELIST,
+        IMPORTED_MAINNET_TXNS_2298838662_TRADEPORT_V2_FILL_OFFER,
         IMPORTED_MAINNET_TXNS_2313248448_WAPAL_FILL_OFFER,
         IMPORTED_MAINNET_TXNS_2381742315_WAPAL_CANCEL_LISTING,
-        IMPORTED_MAINNET_TXNS_2382251863_WAPAL_PLACE_LISTING,
+        IMPORTED_MAINNET_TXNS_2381810159_WAPAL_CANCEL_OFFER,
+        IMPORTED_MAINNET_TXNS_2382219668_WAPAL_FILL_COLLECTION_OFFER,
         IMPORTED_MAINNET_TXNS_2382221134_WAPAL_FILL_LISTING,
+        IMPORTED_MAINNET_TXNS_2382251863_WAPAL_PLACE_LISTING,
+        IMPORTED_MAINNET_TXNS_2382313982_WAPAL_PLACE_OFFER,
         IMPORTED_MAINNET_TXNS_2382373209_WAPAL_PLACE_COLLECTION_OFFER,
         IMPORTED_MAINNET_TXNS_2382373978_WAPAL_CANCEL_COLLECTION_OFFER,
-        IMPORTED_MAINNET_TXNS_2382219668_WAPAL_FILL_COLLECTION_OFFER,
-        IMPORTED_MAINNET_TXNS_2386809975_TRADEPORT_V2_PLACE_LISTING,
-        IMPORTED_MAINNET_TXNS_2386716658_TRADEPORT_V2_CANCEL_LISTING,
-        IMPORTED_MAINNET_TXNS_2386455218_TRADEPORT_V2_FILL_LISTING,
-        IMPORTED_MAINNET_TXNS_2386133936_TRADEPORT_V2_PLACE_OFFER,
-        IMPORTED_MAINNET_TXNS_2386142672_TRADEPORT_V2_CANCEL_OFFER
-        ,IMPORTED_MAINNET_TXNS_2298838662_TRADEPORT_V2_FILL_OFFER,
-        IMPORTED_MAINNET_TXNS_2386891051_TRADEPORT_V2_PLACE_COLLECTION_OFFER,
-        IMPORTED_MAINNET_TXNS_2386889884_TRADEPORT_V2_CANCEL_COLLECTION_OFFER,
         IMPORTED_MAINNET_TXNS_2386021136_TRADEPORT_V2_FILL_COLLECTION_OFFER,
-        IMPORTED_MAINNET_TXNS_2296149225_TRADEPORT_V2_ACCEPT_TOKEN_DELIST,
-        IMPORTED_MAINNET_TXNS_2296098846_TRADEPORT_V2_ACCEPT_TOKEN_DELIST2,
-        IMPORTED_MAINNET_TXNS_2277018899_TRADEPORT_V2_ACCEPT_TOKEN_DELIST_SAME_TOKEN_DATA_ID,
+        IMPORTED_MAINNET_TXNS_2386133936_TRADEPORT_V2_PLACE_OFFER,
+        IMPORTED_MAINNET_TXNS_2386142672_TRADEPORT_V2_CANCEL_OFFER,
+        IMPORTED_MAINNET_TXNS_2386455218_TRADEPORT_V2_FILL_LISTING,
+        IMPORTED_MAINNET_TXNS_2386716658_TRADEPORT_V2_CANCEL_LISTING,
+        IMPORTED_MAINNET_TXNS_2386809975_TRADEPORT_V2_PLACE_LISTING,
+        IMPORTED_MAINNET_TXNS_2386889884_TRADEPORT_V2_CANCEL_COLLECTION_OFFER,
+        IMPORTED_MAINNET_TXNS_2386891051_TRADEPORT_V2_PLACE_COLLECTION_OFFER,
     };
+    use aptos_indexer_testing_framework::cli_parser::get_test_config;
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_wapal_place_offer() {
@@ -541,13 +526,13 @@ mod nft_processor_tests {
         .await;
     }
 
-
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_sequential_two_tradeport_v2_accept_token_delist_events() {
         sequential_multi_transaction_helper_function(
-            &[&[IMPORTED_MAINNET_TXNS_2296149225_TRADEPORT_V2_ACCEPT_TOKEN_DELIST], &[
-                IMPORTED_MAINNET_TXNS_2296098846_TRADEPORT_V2_ACCEPT_TOKEN_DELIST2,
-            ]],
+            &[
+                &[IMPORTED_MAINNET_TXNS_2296149225_TRADEPORT_V2_ACCEPT_TOKEN_DELIST],
+                &[IMPORTED_MAINNET_TXNS_2296098846_TRADEPORT_V2_ACCEPT_TOKEN_DELIST2],
+            ],
             "sequential_two_tradeport_v2_accept_token_delist_events_test",
             "tradeport_v2",
         )
@@ -561,10 +546,10 @@ mod nft_processor_tests {
             &[IMPORTED_MAINNET_TXNS_2296098846_TRADEPORT_V2_ACCEPT_TOKEN_DELIST2],
             Some("tradeport_v2_accept_token_delist_test".to_string()),
             "tradeport_v2",
-        )   
+        )
         .await;
     }
-    
+
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_sequential_two_tradeport_v2_accept_token_delist_events_same_token_data_id() {
         sequential_multi_transaction_helper_function(
@@ -577,13 +562,17 @@ mod nft_processor_tests {
         .await;
     }
 
-    async fn process_single_batch_txns(txns: &[&[u8]], test_case_name: Option<String>, marketplace_name: &str) {
+    async fn process_single_batch_txns(
+        txns: &[&[u8]],
+        test_case_name: Option<String>,
+        marketplace_name: &str,
+    ) {
         let (generate_flag, custom_output_path) = get_test_config();
         let output_path = custom_output_path.unwrap_or_else(|| DEFAULT_OUTPUT_FOLDER.to_string());
-    
+
         let mut db = PostgresTestDatabase::new();
         db.setup().await.unwrap();
-    
+
         process_transactions(
             &mut db,
             txns,
@@ -597,31 +586,30 @@ mod nft_processor_tests {
     }
 
     /// Tests processing of two transactions sequentially
-/// Validates handling of multiple transactions with shared context
-async fn sequential_multi_transaction_helper_function(
-    txn_batches: &[&[&[u8]]],
-    output_name: &str,
-    marketplace_name: &str,
-) {
-    let (generate_flag, custom_output_path) = get_test_config();
-    let output_path = custom_output_path.unwrap_or_else(|| DEFAULT_OUTPUT_FOLDER.to_string());
+    /// Validates handling of multiple transactions with shared context
+    async fn sequential_multi_transaction_helper_function(
+        txn_batches: &[&[&[u8]]],
+        output_name: &str,
+        marketplace_name: &str,
+    ) {
+        let (generate_flag, custom_output_path) = get_test_config();
+        let output_path = custom_output_path.unwrap_or_else(|| DEFAULT_OUTPUT_FOLDER.to_string());
 
-    let mut db = PostgresTestDatabase::new();
-    db.setup().await.unwrap();
+        let mut db = PostgresTestDatabase::new();
+        db.setup().await.unwrap();
 
-    for (i, txn_batch) in txn_batches.iter().enumerate() {
-        let is_last = i == txn_batches.len() - 1;
-        process_transactions(
-            &mut db,
-            txn_batch,
-            output_name,
-            is_last && generate_flag,
-            &output_path,
-            is_last,
-            marketplace_name,
-        )
-        .await;
+        for (i, txn_batch) in txn_batches.iter().enumerate() {
+            let is_last = i == txn_batches.len() - 1;
+            process_transactions(
+                &mut db,
+                txn_batch,
+                output_name,
+                is_last && generate_flag,
+                &output_path,
+                is_last,
+                marketplace_name,
+            )
+            .await;
+        }
     }
 }
-}
-
