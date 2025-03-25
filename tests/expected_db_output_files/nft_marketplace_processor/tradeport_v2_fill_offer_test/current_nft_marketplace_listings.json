@@ -1,0 +1,17 @@
+[
+  {
+    "token_data_id": "0x496627a8924237cbcf4ac7efd743eee5e6004ab35bbad6c64a9280fa6ebea26f",
+    "listing_id": "0x1b4a34336112158ef3d58708f1d54da931c1ed9786c4b1f074498e2c19be4719",
+    "collection_id": "0x9d9ae026d65ad917bffcc6984370468e751ec3e9cd7a69f114c8a58c34d408b7",
+    "seller": "0x5c85d808ce379ba504a346508c878f72080ded0aa8b0df48b8eb2966d47a0a72",
+    "price": 50000000,
+    "token_amount": null,
+    "token_name": "Greeny #3578",
+    "is_deleted": true,
+    "marketplace": "tradeport_v2",
+    "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+    "last_transaction_version": 2298838662,
+    "last_transaction_timestamp": "2025-01-30T19:03:19.318155",
+    "standard_event_type": "cancel_listing"
+  }
+]
