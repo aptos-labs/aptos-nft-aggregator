@@ -2,7 +2,7 @@ nft_marketplace_config:
   name: wagmi
   event_model_mapping:
     0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::ListingPlaced: place_listing  
-    0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::ListingCanceledEvent: cancel_listing
+    0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::ListingCanceled: cancel_listing
     0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::ListingFilled: fill_listing
     0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::TokenOfferPlaced: place_token_offer
     0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::TokenOfferCanceled: cancel_token_offer
@@ -44,6 +44,16 @@ nft_marketplace_config:
         "$.token_metadata.collection_name":
           - table: nft_marketplace_activities
             column: collection_name
+        "$.token_metadata.token_name":
+          - table: nft_marketplace_activities
+            column: token_name
+          - table: current_nft_marketplace_listings
+            column: token_name
+        "$.token_metadata.collection.vec[0].inner":
+          - table: nft_marketplace_activities
+            column: collection_id
+          - table: current_nft_marketplace_listings
+            column: collection_id
     0x1645ab97846c17347b0c48ce175dd590952c9642907168f8556316be4920ab03::events::ListingCanceled:
       event_fields:
         "$.token_metadata.token.vec[0].inner":
@@ -62,6 +72,16 @@ nft_marketplace_config:
         "$.token_metadata.collection_name":
           - table: nft_marketplace_activities
             column: collection_name
+        "$.token_metadata.token_name":
+          - table: nft_marketplace_activities
+            column: token_name
+          - table: current_nft_marketplace_listings
+            column: token_name
+        "$.token_metadata.collection.vec[0].inner":
+          - table: nft_marketplace_activities
+            column: collection_id
+          - table: current_nft_marketplace_listings
+            column: collection_id
         "$.price":
           - table: nft_marketplace_activities
             column: price
@@ -93,6 +113,16 @@ nft_marketplace_config:
         "$.token_metadata.collection_name":
           - table: nft_marketplace_activities
             column: collection_name
+        "$.token_metadata.token_name":
+          - table: nft_marketplace_activities
+            column: token_name
+          - table: current_nft_marketplace_listings
+            column: token_name
+        "$.token_metadata.collection.vec[0].inner":
+          - table: nft_marketplace_activities
+            column: collection_id
+          - table: current_nft_marketplace_listings
+            column: collection_id
         "$.price":
           - table: nft_marketplace_activities
             column: price

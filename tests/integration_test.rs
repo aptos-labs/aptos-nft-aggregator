@@ -16,16 +16,11 @@ use nft_aggregator::{
     processor::Processor,
 };
 use serde_json::Value;
-use serde_yaml;
 use std::{
     collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
-
-// Mock transaction data for testing
-// const MOCK_NFT_MINT_TXN: &[u8] = include_bytes!("test_data/mock_nft_mint_txn.json");
-// const MOCK_NFT_TRANSFER_TXN: &[u8] = include_bytes!("test_data/mock_nft_transfer_txn.json");
 
 // Constants
 pub const DEFAULT_OUTPUT_FOLDER: &str = "tests/expected_db_output_files";
@@ -42,6 +37,11 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
 
     // Load activities
     let activities: Vec<NftMarketplaceActivity> = nft_marketplace_activities::table
+        .order_by((
+            nft_marketplace_activities::txn_version,
+            nft_marketplace_activities::index,
+            nft_marketplace_activities::marketplace,
+        ))
         .load::<NftMarketplaceActivity>(conn)
         .map_err(|e| anyhow::anyhow!("Failed to load activities: {}", e))?;
     result.insert(
@@ -51,6 +51,10 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
 
     // Load current listings
     let listings: Vec<CurrentNFTMarketplaceListing> = current_nft_marketplace_listings::table
+        .order_by((
+            current_nft_marketplace_listings::token_data_id,
+            current_nft_marketplace_listings::marketplace,
+        ))
         .load::<CurrentNFTMarketplaceListing>(conn)
         .map_err(|e| anyhow::anyhow!("Failed to load listings: {}", e))?;
     result.insert(
@@ -61,6 +65,11 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
     // Load token offers
     let token_offers: Vec<CurrentNFTMarketplaceTokenOffer> =
         current_nft_marketplace_token_offers::table
+            .order_by((
+                current_nft_marketplace_token_offers::token_data_id,
+                current_nft_marketplace_token_offers::buyer,
+                current_nft_marketplace_token_offers::marketplace,
+            ))
             .load::<CurrentNFTMarketplaceTokenOffer>(conn)
             .map_err(|e| anyhow::anyhow!("Failed to load token offers: {}", e))?;
     result.insert(
@@ -71,6 +80,10 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
     // Load collection offers
     let collection_offers: Vec<CurrentNFTMarketplaceCollectionOffer> =
         current_nft_marketplace_collection_offers::table
+            .order_by((
+                current_nft_marketplace_collection_offers::collection_offer_id,
+                current_nft_marketplace_collection_offers::marketplace,
+            ))
             .load::<CurrentNFTMarketplaceCollectionOffer>(conn)
             .map_err(|e| anyhow::anyhow!("Failed to load collection offers: {}", e))?;
     result.insert(
@@ -84,7 +97,7 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
 // Configuration Helper Functions
 fn build_test_nft_marketplace_config(marketplace_name: &str) -> NFTMarketplaceConfig {
     let config_path = PathBuf::from(format!(
-        "tests/test_data/{}_test_marketplace_config.yaml",
+        "tests/test_config/{}_test_marketplace_config.yaml",
         marketplace_name
     ));
     let config_str = std::fs::read_to_string(&config_path)
