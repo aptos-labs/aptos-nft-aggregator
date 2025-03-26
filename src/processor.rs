@@ -5,7 +5,6 @@ use crate::{
         db_writing_step::DBWritingStep, processor_status_saver_step::get_processor_status_saver,
         reduction_step::NFTReductionStep, remapper_step::ProcessStep,
     },
-    utils::starting_version::get_starting_version,
 };
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{

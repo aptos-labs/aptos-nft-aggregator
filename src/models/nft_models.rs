@@ -150,13 +150,13 @@ pub struct CurrentNFTMarketplaceListing {
     pub seller: Option<String>,
     pub price: i64,
     pub token_amount: Option<i64>,
-    pub token_name: Option<String>,
     pub is_deleted: bool,
     pub marketplace: String,
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
     pub standard_event_type: String,
+    pub token_name: Option<String>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceListing {

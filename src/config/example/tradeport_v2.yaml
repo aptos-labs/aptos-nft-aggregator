@@ -1,15 +1,15 @@
 nft_marketplace_config:
   name: tradeport_v2
   event_model_mapping:
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent: PlaceListing
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent: CancelListing
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent: FillListing
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent: PlaceTokenOffer
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent: CancelTokenOffer
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent: FillTokenOffer
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent: place_listing
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::DeleteListingEvent: cancel_listing
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::BuyEvent: fill_listing
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertTokenBidEvent: place_token_offer
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteTokenBidEvent: cancel_token_offer
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptTokenBidEvent: fill_token_offer
     0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::InsertCollectionBidEvent: PlaceCollectionOffer
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent: CancelCollectionOffer
-    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent: FillCollectionOffer
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::DeleteCollectionBidEvent: cancel_collection_offer
+    0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::biddings_v2::AcceptCollectionBidEvent: fill_collection_offer
   events:
     0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent:
       event_fields:
