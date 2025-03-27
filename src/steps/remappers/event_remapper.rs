@@ -14,11 +14,13 @@ use crate::{
         remappers::{SecondaryModel, TableType},
         HashableJsonPath,
     },
-    utils::parse_timestamp,
 };
 use anyhow::Result;
-use aptos_indexer_processor_sdk::utils::convert::{sha3_256, standardize_address};
-use aptos_protos::transaction::v1::{transaction::TxnData, Transaction};
+use aptos_indexer_processor_sdk::{
+    aptos_indexer_transaction_stream::utils::time::parse_timestamp,
+    aptos_protos::transaction::v1::{transaction::TxnData, Transaction},
+    utils::convert::{sha3_256, standardize_address},
+};
 use std::{collections::HashMap, str::FromStr, sync::Arc};
 use tracing::{debug, warn};
 
@@ -80,7 +82,8 @@ impl EventRemapper {
         let mut current_collection_offers: Vec<CurrentNFTMarketplaceCollectionOffer> = Vec::new();
         let mut current_listings: Vec<CurrentNFTMarketplaceListing> = Vec::new();
 
-        let txn_timestamp = parse_timestamp(txn.timestamp.as_ref().unwrap(), txn.version as i64);
+        let txn_timestamp =
+            parse_timestamp(txn.timestamp.as_ref().unwrap(), txn.version as i64).naive_utc();
 
         let events = self.get_events(Arc::new(txn))?;
 
@@ -381,10 +384,11 @@ impl EventRemapper {
                 return Ok(vec![]);
             },
         };
-        let txn_timestamp = parse_timestamp(transaction.timestamp.as_ref().unwrap(), txn_version);
+        let txn_timestamp =
+            parse_timestamp(transaction.timestamp.as_ref().unwrap(), txn_version).naive_utc();
         let default = vec![];
         let raw_events = match txn_data {
-            TxnData::User(tx_inner) => &tx_inner.events,
+            TxnData::User(tx_inner) => tx_inner.events.as_slice(),
             _ => &default,
         };
         EventModel::from_events(raw_events, txn_version, block_height, txn_timestamp)
@@ -417,7 +421,11 @@ impl EventRemapper {
         }
 
         // Generate collection_id if needed
-        if model.get_field(MarketplaceField::CollectionId).is_none() {
+        if model
+            .get_field(MarketplaceField::CollectionId)
+            .unwrap_or_default()
+            .is_empty()
+        {
             if let Some(generated_collection_id) =
                 generate_collection_id(creator_address.clone(), collection_name.clone())
             {
@@ -494,8 +502,10 @@ fn generate_collection_offer_id(
 mod tests {
     use super::*;
     use crate::config::marketplace_config::{DbColumn, EventRemapping};
-    use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::{Event, UserTransaction};
-    use aptos_protos::util::timestamp::Timestamp;
+    use aptos_indexer_processor_sdk::aptos_protos::{
+        transaction::v1::{Event, UserTransaction},
+        util::timestamp::Timestamp,
+    };
 
     fn create_db_column(table: &str, column: &str) -> DbColumn {
         DbColumn {

@@ -3,8 +3,10 @@ use crate::{
     steps::{extract_string, HashableJsonPath},
 };
 use anyhow::Result;
-use aptos_indexer_processor_sdk::utils::{convert::standardize_address, errors::ProcessorError};
-use aptos_protos::transaction::v1::{transaction::TxnData, write_set_change, Transaction};
+use aptos_indexer_processor_sdk::{
+    aptos_protos::transaction::v1::{transaction::TxnData, write_set_change, Transaction},
+    utils::{convert::standardize_address, errors::ProcessorError},
+};
 use serde_json::Value;
 use std::{collections::HashMap, sync::Arc};
 use tracing::warn;
