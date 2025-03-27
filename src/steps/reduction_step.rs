@@ -63,7 +63,10 @@ impl NFTAccumulator {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct NFTReductionStep {
+pub struct NFTReductionStep
+where
+    Self: Sized + Send + 'static,
+{
     accumulator: NFTAccumulator,
 }
 

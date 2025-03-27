@@ -9,11 +9,11 @@ use crate::{
 };
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
+    aptos_protos::transaction::v1::Transaction,
     traits::{AsyncRunType, AsyncStep, NamedStep, Processable},
     types::transaction_context::TransactionContext,
     utils::errors::ProcessorError,
 };
-use aptos_protos::transaction::v1::Transaction;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::{collections::HashMap, sync::Arc};
 use tonic::async_trait;
@@ -23,8 +23,10 @@ pub struct RemapResult {
     pub errors: Vec<String>,
 }
 
-// impl EventRemapper {
-pub struct ProcessStep {
+pub struct ProcessStep
+where
+    Self: Sized + Send + 'static,
+{
     event_remapper: Arc<EventRemapper>,
     resource_remapper: Arc<ResourceMapper>,
 }
@@ -149,43 +151,3 @@ impl NamedStep for ProcessStep {
         "ProcessStep".to_string()
     }
 }
-
-// // Store activity in the map only if it has a token_data_id
-// // This ensures we can later match resources to activities
-// // if it's empty it means it's v1
-// if activity.token_data_id.is_none() {
-//     activity.token_data_id = match generate_token_data_id(
-//         activity.creator_address.clone(),
-//         activity.collection_name.clone(),
-//         activity.token_name.clone(),
-//     ) {
-//         Some(token_data_id) => Some(token_data_id),
-//         None => {
-//             debug!(
-//                 "Failed to generate token data id for activity: {:#?}",
-//                 activity
-//             );
-//             None
-//         },
-//     }
-// }
-
-// // Store activity in the map only if it has a collection_id
-// // This ensures we can later match resources to activities
-// if activity.collection_id.is_none() {
-//     // only if we can generate a collection id
-//     activity.collection_id = match generate_collection_id(
-//         activity.creator_address.clone(),
-//         activity.collection_name.clone(),
-//     ) {
-//         Some(collection_id) => Some(collection_id),
-//         None => {
-//             // V2 events may be missing data to generate collection id
-//             debug!(
-//                 "Failed to generate collection id for activity: {:#?}",
-//                 activity
-//             );
-//             None
-//         },
-//     };
-// }

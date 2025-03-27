@@ -1,7 +1,6 @@
 use aptos_protos::util::timestamp::Timestamp;
 
 pub mod marketplace_resource_utils;
-pub mod starting_version;
 
 pub const MAX_TIMESTAMP_SECS: i64 = 253_402_300_799;
 

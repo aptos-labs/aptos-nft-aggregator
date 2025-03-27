@@ -1,13 +1,18 @@
-use aptos_indexer_processor_sdk::traits::processor_trait::ProcessorTrait;
-use aptos_indexer_testing_framework::{
-    database::{PostgresTestDatabase, TestDatabase},
-    sdk_test_context::{remove_inserted_at, SdkTestContext},
+use aptos_indexer_processor_sdk::{
+    postgres::subconfigs::postgres_config::PostgresConfig,
+    testing_framework::{
+        database::{PostgresTestDatabase, TestDatabase},
+        sdk_test_context::{remove_inserted_at, SdkTestContext},
+    },
+    traits::processor_trait::ProcessorTrait,
 };
 use assert_json_diff::assert_json_eq;
 use diesel::{pg::PgConnection, Connection};
 use nft_aggregator::{
     config::{
-        marketplace_config::NFTMarketplaceConfig, DbConfig, IndexerProcessorConfig, PostgresConfig,
+        marketplace_config::NFTMarketplaceConfig,
+        processor_mode::{ProcessorMode, TestingConfig},
+        DbConfig, IndexerProcessorConfig,
     },
     models::nft_models::{
         CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
@@ -25,7 +30,6 @@ use std::{
 // Constants
 pub const DEFAULT_OUTPUT_FOLDER: &str = "tests/expected_db_output_files";
 
-// Database Helper Functions
 fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_json::Value>> {
     use diesel::prelude::*;
     use nft_aggregator::schema::{
@@ -119,9 +123,12 @@ fn setup_nft_processor_config(
 
     let db_config = DbConfig::PostgresConfig(postgres_config);
     let processor_config = IndexerProcessorConfig {
-        transaction_stream_config,
+        transaction_stream_config: transaction_stream_config.clone(),
         db_config,
-        channel_size: 100,
+        processor_mode: ProcessorMode::Testing(TestingConfig {
+            override_starting_version: transaction_stream_config.starting_version.unwrap(),
+            ending_version: transaction_stream_config.request_ending_version,
+        }),
         nft_marketplace_config: build_test_nft_marketplace_config(marketplace_name),
     };
 
@@ -321,6 +328,7 @@ async fn process_transactions(
 #[cfg(test)]
 mod nft_processor_tests {
     use super::*;
+    use aptos_indexer_processor_sdk::testing_framework::cli_parser::get_test_config;
     use aptos_indexer_test_transactions::json_transactions::generated_transactions::{
         IMPORTED_MAINNET_TXNS_2277018899_TRADEPORT_V2_ACCEPT_TOKEN_DELIST_SAME_TOKEN_DATA_ID,
         IMPORTED_MAINNET_TXNS_2296098846_TRADEPORT_V2_ACCEPT_TOKEN_DELIST2,
@@ -344,7 +352,6 @@ mod nft_processor_tests {
         IMPORTED_MAINNET_TXNS_2386889884_TRADEPORT_V2_CANCEL_COLLECTION_OFFER,
         IMPORTED_MAINNET_TXNS_2386891051_TRADEPORT_V2_PLACE_COLLECTION_OFFER,
     };
-    use aptos_indexer_testing_framework::cli_parser::get_test_config;
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_wapal_place_offer() {
