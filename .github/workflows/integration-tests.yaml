@@ -28,32 +28,7 @@ jobs:
       # Install toml-cli using cargo
       - name: Install toml-cli
         run: cargo install toml-cli
-
-      # Show Cargo.toml Before Update
-      - name: Show Cargo.toml Before Update
-        run: cat Cargo.toml
-
-      # Update aptos-system-utils dependency using toml-cli
-      - name: Update aptos-system-utils dependency
-        if: ${{ github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' }}
-        run: |
-          COMMIT_HASH=${{ github.event.client_payload.commit_hash || github.event.inputs.commit_hash }}
-          echo "Updating aptos-system-utils dependency in Cargo.toml to use commit hash $COMMIT_HASH"
-          toml set Cargo.toml workspace.dependencies.aptos-system-utils.rev "$COMMIT_HASH" > Cargo.tmp && mv Cargo.tmp Cargo.toml
-
-      # Update aptos-indexer-test-transactions dependency using toml-cli
-      - name: Update aptos-indexer-test-transactions dependency
-        if: ${{ github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' }}
-        run: |
-          COMMIT_HASH=${{ github.event.client_payload.commit_hash || github.event.inputs.commit_hash }}
-
-          echo "Updating aptos-indexer-test-transactions dependency in Cargo.toml to use commit hash $COMMIT_HASH"
-          toml set Cargo.toml workspace.dependencies.aptos-indexer-test-transactions.rev "$COMMIT_HASH" > Cargo.tmp && mv Cargo.tmp Cargo.toml
-
-      # Show Cargo.toml after the update
-      - name: Show Cargo.toml After Update
-        run: cat Cargo.toml  # Correct path to the Cargo.toml file
-          
+ 
       # Ensure Cargo.lock is updated with the latest dependencies
       - name: rust setup
         run: |
@@ -78,33 +53,20 @@ jobs:
         id: tests
         run: |
           # TODO: until we have more comprehensive cli parsers, we will need to run tests separately.
-          cargo test integration_test -- --nocapture
+          cargo test -- --nocapture
         working-directory: .
-
-      # Run all Tests
-      # - name: Run Sanity Tests
-      #   id: sanity-check
-      #   continue-on-error: true
-      #   run: |
-      #     cargo test regression_tests -- --nocapture
-      #   working-directory: .
       
-      - name: Fail if tests fail
-        if: ${{ steps.sanity-check.outcome == 'failure' && github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'indexer-sdk-update') }}
-        run: |
-          echo "Integration failed"
-          exit 1
-
-      - name: Send Slack Notification to oncall
-        if: ${{ steps.sanity-check.outcome == 'failure' && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'indexer-sdk-update') }}
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          # eco-infra-oncall channel.
-          channel-id: 'C0468USBLQJ'
-          slack-message: |
-            :warning: Tests failed on PR with indexer-sdk-update label
-            PR: ${{ github.event.pull_request.html_url }}
-            Author: ${{ github.event.pull_request.user.login }}
-            Title: ${{ github.event.pull_request.title }}
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      # TODO: uncomment this when we are ready 
+      # - name: Send Slack Notification to oncall
+      #   if: ${{ steps.tests.outcome == 'failure' && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'indexer-sdk-update') }}
+      #   uses: slackapi/slack-github-action@v1.24.0
+      #   with:
+      #     # eco-infra-oncall channel.
+      #     channel-id: 'C0468USBLQJ'
+      #     slack-message: |
+      #       :warning: Tests failed on PR with indexer-sdk-update label
+      #       PR: ${{ github.event.pull_request.html_url }}
+      #       Author: ${{ github.event.pull_request.user.login }}
+      #       Title: ${{ github.event.pull_request.title }}
+      #   env:
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

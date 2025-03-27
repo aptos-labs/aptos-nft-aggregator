@@ -5,7 +5,7 @@
     "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent",
     "standard_event_type": "fill_listing",
     "creator_address": "0x43ec2cb158e3569842d537740fd53403e992b9e7349cc5d3dfaa5aff8faaef2",
-    "collection_id": null,
+    "collection_id": "0x4e9cd532347bb258db362f01d895d43287861182145165f0e4ae4f6b80802a30",
     "collection_name": "Bruh Bears",
     "token_data_id": "0x8e01798f5411d261c87423c163226456480518ccd35591a141384c25d1af181a",
     "token_name": "Bruh Bear #4084",
