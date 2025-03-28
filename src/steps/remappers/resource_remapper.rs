@@ -30,7 +30,6 @@ impl ResourceMapper {
 
                 db_mappings_for_resource.insert(json_path, db_mappings);
             }
-            println!("add Resource type: {}", resource_type);
             field_remappings.insert(resource_type.clone(), db_mappings_for_resource);
         }
 

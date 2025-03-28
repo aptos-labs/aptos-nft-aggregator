@@ -44,7 +44,7 @@ impl ProcessStep {
 impl Processable for ProcessStep {
     type Input = Vec<Transaction>;
     type Output = (
-        Vec<NftMarketplaceActivity>,
+        HashMap<i64, Vec<NftMarketplaceActivity>>,
         Vec<CurrentNFTMarketplaceListing>,
         Vec<CurrentNFTMarketplaceTokenOffer>,
         Vec<CurrentNFTMarketplaceCollectionOffer>,
@@ -58,7 +58,7 @@ impl Processable for ProcessStep {
     ) -> Result<
         Option<
             TransactionContext<(
-                Vec<NftMarketplaceActivity>,
+                HashMap<i64, Vec<NftMarketplaceActivity>>,
                 Vec<CurrentNFTMarketplaceListing>,
                 Vec<CurrentNFTMarketplaceTokenOffer>,
                 Vec<CurrentNFTMarketplaceCollectionOffer>,
@@ -120,9 +120,18 @@ impl Processable for ProcessStep {
             });
         }
 
+        // iterate activities and crete a map of key txn_veesrion to activity, so it can be used later to be updated during reduction step
+        let mut activities_map: HashMap<i64, Vec<NftMarketplaceActivity>> = HashMap::new();
+        for activity in all_activities {
+            activities_map
+                .entry(activity.txn_version)
+                .or_default()
+                .push(activity);
+        }
+
         Ok(Some(TransactionContext {
             data: (
-                all_activities,
+                activities_map,
                 all_listings,
                 all_token_offers,
                 all_collection_offers,
