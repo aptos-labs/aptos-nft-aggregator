@@ -128,6 +128,14 @@ impl MarketplaceModel for NftMarketplaceActivity {
             _ => None,
         }
     }
+
+    fn get_txn_version(&self) -> i64 {
+        self.txn_version
+    }
+
+    fn get_standard_event_type(&self) -> &str {
+        &self.standard_event_type
+    }
 }
 
 #[derive(
@@ -206,6 +214,14 @@ impl MarketplaceModel for CurrentNFTMarketplaceListing {
             },
             _ => None,
         }
+    }
+
+    fn get_txn_version(&self) -> i64 {
+        self.last_transaction_version
+    }
+
+    fn get_standard_event_type(&self) -> &str {
+        &self.standard_event_type
     }
 }
 
@@ -311,6 +327,14 @@ impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
             _ => None,
         }
     }
+
+    fn get_txn_version(&self) -> i64 {
+        self.last_transaction_version
+    }
+
+    fn get_standard_event_type(&self) -> &str {
+        &self.standard_event_type
+    }
 }
 
 impl CurrentNFTMarketplaceTokenOffer {
@@ -414,6 +438,14 @@ impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
             _ => None,
         }
     }
+
+    fn get_txn_version(&self) -> i64 {
+        self.last_transaction_version
+    }
+
+    fn get_standard_event_type(&self) -> &str {
+        &self.standard_event_type
+    }
 }
 
 impl CurrentNFTMarketplaceCollectionOffer {
@@ -474,6 +506,8 @@ pub trait MarketplaceModel {
     fn table_name(&self) -> &'static str;
     fn updated_at(&self) -> i64;
     fn get_field(&self, field: MarketplaceField) -> Option<String>;
+    fn get_txn_version(&self) -> i64;
+    fn get_standard_event_type(&self) -> &str;
 }
 
 #[cfg(test)]

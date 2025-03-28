@@ -1,6 +1,10 @@
-use crate::models::nft_models::{
-    CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
-    CurrentNFTMarketplaceTokenOffer, MarketplaceField, MarketplaceModel, NftMarketplaceActivity,
+use crate::{
+    config::marketplace_config::MarketplaceEventType,
+    models::nft_models::{
+        CurrentNFTMarketplaceCollectionOffer, CurrentNFTMarketplaceListing,
+        CurrentNFTMarketplaceTokenOffer, MarketplaceField, MarketplaceModel,
+        NftMarketplaceActivity,
+    },
 };
 use aptos_indexer_processor_sdk::{
     traits::{AsyncRunType, AsyncStep, NamedStep, Processable},
@@ -8,11 +12,7 @@ use aptos_indexer_processor_sdk::{
     utils::errors::ProcessorError,
 };
 use log::debug;
-use std::{
-    collections::HashMap,
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, mem, str::FromStr};
 
 #[derive(Clone, Debug, Default)]
 pub struct NFTAccumulator {
@@ -46,7 +46,7 @@ impl NFTAccumulator {
     }
 
     pub fn drain(
-        self,
+        &mut self,
     ) -> (
         Vec<NftMarketplaceActivity>,
         Vec<CurrentNFTMarketplaceListing>,
@@ -54,23 +54,23 @@ impl NFTAccumulator {
         Vec<CurrentNFTMarketplaceCollectionOffer>,
     ) {
         (
-            self.activities,
-            self.listings.into_values().collect(),
-            self.token_offers.into_values().collect(),
-            self.collection_offers.into_values().collect(),
+            mem::take(&mut self.activities),
+            self.listings.drain().map(|(_, v)| v).collect(),
+            self.token_offers.drain().map(|(_, v)| v).collect(),
+            self.collection_offers.drain().map(|(_, v)| v).collect(),
         )
     }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct NFTReductionStep {
-    accumulator: Arc<Mutex<NFTAccumulator>>,
+    accumulator: NFTAccumulator,
 }
 
 impl NFTReductionStep {
     pub fn new() -> Self {
         Self {
-            accumulator: Arc::new(Mutex::new(NFTAccumulator::default())),
+            accumulator: NFTAccumulator::default(),
         }
     }
 }
@@ -85,7 +85,7 @@ pub type Tables = (
 #[async_trait::async_trait]
 impl Processable for NFTReductionStep {
     type Input = (
-        Vec<NftMarketplaceActivity>,
+        HashMap<i64, Vec<NftMarketplaceActivity>>,
         Vec<CurrentNFTMarketplaceListing>,
         Vec<CurrentNFTMarketplaceTokenOffer>,
         Vec<CurrentNFTMarketplaceCollectionOffer>,
@@ -103,79 +103,63 @@ impl Processable for NFTReductionStep {
         &mut self,
         transactions: TransactionContext<Self::Input>,
     ) -> Result<Option<TransactionContext<Self::Output>>, ProcessorError> {
-        let accumulator = self.accumulator.clone();
         let (
-            activities,
+            mut activities,
             current_listings,
             current_token_offers,
             current_collection_offers,
             resource_updates,
         ) = transactions.data;
 
-        let mut acc = accumulator.lock().expect("Failed to acquire lock");
-
-        let mut token_updates: HashMap<String, CurrentNFTMarketplaceListing> = HashMap::new();
-        let mut token_offer_updates: HashMap<String, CurrentNFTMarketplaceTokenOffer> =
-            HashMap::new();
-        let mut collection_offer_updates: HashMap<String, CurrentNFTMarketplaceCollectionOffer> =
-            HashMap::new();
-
-        activities.into_iter().for_each(|a| acc.add_activity(a));
-
-        current_listings.into_iter().for_each(|listing| {
-            let token_data_id = listing.token_data_id.clone();
-            token_updates.insert(token_data_id, listing);
-        });
-
-        current_token_offers.into_iter().for_each(|offer| {
-            let token_data_id = offer.token_data_id.clone();
-            token_offer_updates.insert(token_data_id, offer);
-        });
-
-        current_collection_offers
-            .into_iter()
-            .for_each(|collection_offer| {
-                if !collection_offer.collection_offer_id.is_empty() {
-                    // If we have a token_data_id, also store it for resource updates
-                    if let Some(token_data_id) = collection_offer.token_data_id.as_ref() {
-                        println!("Token data id: {:#?}", token_data_id);
-                        collection_offer_updates.insert(token_data_id.clone(), collection_offer);
-                    } else {
-                        // if token_data_id is not present, we don't need resource updates, but since this vector is used for the accumulator, we still need to store it otherwise, it won't be stored in the db.
-                        collection_offer_updates.insert(
-                            collection_offer.collection_offer_id.clone(),
-                            collection_offer.clone(),
-                        );
-                    }
-                } else {
-                    println!("Skipping collection offer with empty collection_offer_id");
-                }
-            });
-
-        // TODO: figure out how we can enrich activities with resource updates. for now, join can be used to enrich activities with other tables. as we are only using this to enrich fields (e.g. token_name) that are not critical, this should be fine.
-        for (resource_address, partial_update) in &resource_updates {
-            if let Some(listing) = token_updates.get_mut(resource_address) {
-                merge_partial_update(listing, partial_update);
-            }
-            if let Some(offer) = token_offer_updates.get_mut(resource_address) {
-                merge_partial_update(offer, partial_update);
-            }
-            if let Some(collection_offer) = collection_offer_updates.get_mut(resource_address) {
-                merge_partial_update(collection_offer, partial_update);
+        // Process listings with resource updates inline
+        for listing in current_listings {
+            if let Some(updates) = resource_updates.get(&listing.token_data_id) {
+                let mut listing = listing;
+                merge_partial_update(&mut listing, updates, &mut activities);
+                self.accumulator.fold_listing(listing);
+            } else {
+                self.accumulator.fold_listing(listing);
             }
         }
 
-        token_updates
-            .into_iter()
-            .for_each(|(_, listing)| acc.fold_listing(listing));
-        token_offer_updates
-            .into_iter()
-            .for_each(|(_, offer)| acc.fold_token_offer(offer));
-        collection_offer_updates
-            .into_iter()
-            .for_each(|(_, offer)| acc.fold_collection_offer(offer));
+        // Process token offers with resource updates inline
+        for offer in current_token_offers {
+            if let Some(updates) = resource_updates.get(&offer.token_data_id) {
+                let mut offer = offer;
+                merge_partial_update(&mut offer, updates, &mut activities);
+                self.accumulator.fold_token_offer(offer);
+            } else {
+                self.accumulator.fold_token_offer(offer);
+            }
+        }
 
-        let reduced_data = acc.clone().drain();
+        // Process collection offers with resource updates inline
+        for collection_offer in current_collection_offers {
+            if !collection_offer.collection_offer_id.is_empty() {
+                if let Some(token_data_id) = &collection_offer.token_data_id {
+                    if let Some(updates) = resource_updates.get(token_data_id) {
+                        let mut offer = collection_offer;
+                        merge_partial_update(&mut offer, updates, &mut activities);
+                        self.accumulator.fold_collection_offer(offer);
+                    } else {
+                        self.accumulator.fold_collection_offer(collection_offer);
+                    }
+                } else {
+                    self.accumulator.fold_collection_offer(collection_offer);
+                }
+            } else {
+                debug!("Skipping collection offer with empty collection_offer_id");
+            }
+        }
+
+        // process activities after all updates are applied
+        for activities_vec_same_txn_version in activities.into_values() {
+            for activity in activities_vec_same_txn_version {
+                self.accumulator.add_activity(activity);
+            }
+        }
+
+        let reduced_data = self.accumulator.drain();
 
         Ok(Some(TransactionContext {
             data: reduced_data,
@@ -195,6 +179,7 @@ impl NamedStep for NFTReductionStep {
 fn merge_partial_update<T: MarketplaceModel>(
     model: &mut T,
     partial_update: &HashMap<String, String>,
+    activities: &mut HashMap<i64, Vec<NftMarketplaceActivity>>,
 ) {
     for (column, value) in partial_update {
         // Only update if the field is not set in the event or is empty
@@ -205,13 +190,44 @@ fn merge_partial_update<T: MarketplaceModel>(
                 .get_field(MarketplaceField::from_str(column).unwrap())
                 .is_some_and(|v| v.is_empty())
         {
-            debug!(
-                "Field {} is not set in the event, using write_set_changes value",
-                column
-            );
+            if let Some(activities_vec) = activities.get_mut(&model.get_txn_version()) {
+                // Try to find matching activity based on token_data_id or collection_id
+                if let Some(matching_activity) = activities_vec.iter_mut().find(|activity| {
+                    // we should first check if it's one of collection offer types
+                    let standard_event_type = model.get_standard_event_type();
+                    if standard_event_type == MarketplaceEventType::PlaceCollectionOffer.to_string()
+                        || standard_event_type
+                            == MarketplaceEventType::CancelCollectionOffer.to_string()
+                        || standard_event_type
+                            == MarketplaceEventType::FillCollectionOffer.to_string()
+                    {
+                        // Match on collection_offer_id for collection offers
+                        model
+                            .get_field(MarketplaceField::CollectionOfferId)
+                            .and_then(|collection_offer_id| {
+                                activity.offer_id.as_ref().map(|activity_offer_id| {
+                                    &collection_offer_id == activity_offer_id
+                                })
+                            })
+                            .unwrap_or(false)
+                    } else {
+                        // Match on token_data_id for other events
+                        model
+                            .get_field(MarketplaceField::TokenDataId)
+                            .and_then(|model_id| {
+                                activity
+                                    .token_data_id
+                                    .as_ref()
+                                    .map(|activity_id| &model_id == activity_id)
+                            })
+                            .unwrap_or(false)
+                    }
+                }) {
+                    matching_activity
+                        .set_field(MarketplaceField::from_str(column).unwrap(), value.clone());
+                }
+            }
             model.set_field(MarketplaceField::from_str(column).unwrap(), value.clone());
-        } else {
-            debug!("Field {} is set in the event, keeping event value", column);
         }
     }
 }

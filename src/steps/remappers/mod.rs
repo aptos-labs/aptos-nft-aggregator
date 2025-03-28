@@ -50,6 +50,14 @@ impl MarketplaceModel for SecondaryModel {
     fn get_field(&self, _column: MarketplaceField) -> Option<String> {
         unimplemented!("SecondaryModel::get_field should not be called");
     }
+
+    fn get_txn_version(&self) -> i64 {
+        unimplemented!("SecondaryModel::get_txn_version should not be called");
+    }
+
+    fn get_standard_event_type(&self) -> &str {
+        unimplemented!("SecondaryModel::get_standard_event_type should not be called");
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
