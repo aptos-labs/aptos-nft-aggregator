@@ -195,7 +195,21 @@ pub fn insert_nft_marketplace_activities(
     diesel::insert_into(schema::nft_marketplace_activities::table)
         .values(items_to_insert)
         .on_conflict((txn_version, index, marketplace))
-        .do_nothing()
+        .do_update()
+        .set((
+            token_data_id.eq(excluded(token_data_id)),
+            collection_id.eq(excluded(collection_id)),
+            seller.eq(excluded(seller)),
+            price.eq(excluded(price)),
+            listing_id.eq(excluded(listing_id)),
+            token_amount.eq(excluded(token_amount)),
+            token_name.eq(excluded(token_name)),
+            creator_address.eq(excluded(creator_address)),
+            collection_name.eq(excluded(collection_name)),
+            raw_event_type.eq(excluded(raw_event_type)),
+            standard_event_type.eq(excluded(standard_event_type)),
+            expiration_time.eq(excluded(expiration_time)),
+        ))
 }
 
 pub fn insert_current_nft_marketplace_listings(
