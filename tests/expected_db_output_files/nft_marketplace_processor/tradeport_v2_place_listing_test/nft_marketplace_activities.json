@@ -1,6 +1,52 @@
 [
   {
     "txn_version": 2386809975,
+    "index": 1,
+    "raw_event_type": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent",
+    "standard_event_type": "place_listing",
+    "creator_address": null,
+    "collection_id": "0x7b4cd01cc85280139fbf2a11dd929a073febeba767d74904d0c691d68b74f321",
+    "collection_name": null,
+    "token_data_id": "0x826cb695c5748ae84e9ed87902e9b214058d7b7589b32bcc48c30bdfe89f03e7",
+    "token_name": "The Baptmen #1385",
+    "price": 119000000,
+    "token_amount": null,
+    "buyer": null,
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "expiration_time": null,
+    "listing_id": "0x3929540e32fb063ddf7fecb764c914493d2844978621767b9f013326093258eb",
+    "offer_id": null,
+    "json_data": {
+      "data": {
+        "price": "119000000",
+        "token": {
+          "inner": "0x826cb695c5748ae84e9ed87902e9b214058d7b7589b32bcc48c30bdfe89f03e7"
+        },
+        "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+        "listing": {
+          "inner": "0x3929540e32fb063ddf7fecb764c914493d2844978621767b9f013326093258eb"
+        },
+        "timestamp": "1739988091944133"
+      },
+      "event_type": {
+        "module": "listings_v2",
+        "struct": "InsertListingEvent",
+        "address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26"
+      },
+      "event_index": 1,
+      "account_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+      "block_timestamp": "2025-02-19T18:01:31.944133",
+      "creation_number": 15,
+      "sequence_number": 135603,
+      "transaction_version": 2386809975,
+      "transaction_block_height": 292856727
+    },
+    "marketplace": "tradeport_v2",
+    "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+    "block_timestamp": "2025-02-19T18:01:31.944133"
+  },
+  {
+    "txn_version": 2386809975,
     "index": 5,
     "raw_event_type": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26::listings_v2::InsertListingEvent",
     "standard_event_type": "place_listing",
