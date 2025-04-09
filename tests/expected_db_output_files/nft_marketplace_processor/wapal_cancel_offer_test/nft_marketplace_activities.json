@@ -5,7 +5,7 @@
     "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent",
     "standard_event_type": "cancel_token_offer",
     "creator_address": "0xf54f8f7ffc2b779d81b721b3d42fe9a53f96e1d3459a8001934307783d493725",
-    "collection_id": "0x7414cd4f13367dc9630dc731ad8800293a47985cfcbba19c109b4c3ffe366abd",
+    "collection_id": "0xa2485c3b392d211770ed161e73a1097d21016c7dd41f53592434380b2aa14cba",
     "collection_name": "The Loonies",
     "token_data_id": "0x5eebc18e7f35cc5db4abd90631f35d0454cf0181fbd0042c023e858372b2e2a8",
     "token_name": "The Loonies #1768",

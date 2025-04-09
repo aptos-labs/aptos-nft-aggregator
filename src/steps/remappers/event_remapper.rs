@@ -19,7 +19,7 @@ use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_indexer_transaction_stream::utils::time::parse_timestamp,
     aptos_protos::transaction::v1::{transaction::TxnData, Transaction},
-    utils::convert::{sha3_256, standardize_address},
+    utils::{convert::standardize_address, extract::hash_str},
 };
 use std::{collections::HashMap, str::FromStr, sync::Arc};
 use tracing::{debug, warn};
@@ -450,8 +450,8 @@ fn generate_token_data_id(
         {
             let creator_address = standardize_address(&creator);
             let input = format!("{}::{}::{}", creator_address, collection, token);
-            let hash = sha3_256(input.as_bytes());
-            Some(standardize_address(&hex::encode(hash)))
+            let hash_str = hash_str(&input);
+            Some(standardize_address(&hash_str))
         },
         _ => {
             debug!("Missing required fields for token data id generation - skipping");
@@ -468,8 +468,8 @@ fn generate_collection_id(
         (Some(creator), Some(collection)) if !creator.is_empty() && !collection.is_empty() => {
             let creator_address = standardize_address(&creator);
             let input = format!("{}::{}", creator_address, collection);
-            let hash = sha3_256(input.as_bytes());
-            Some(standardize_address(&hex::encode(hash)))
+            let hash_str = hash_str(&input);
+            Some(standardize_address(&hash_str))
         },
         _ => {
             debug!("Missing required fields for collection id generation - skipping");
@@ -488,8 +488,8 @@ fn generate_collection_offer_id(
             let creator_address = standardize_address(&creator);
             let buyer_address = standardize_address(&buyer);
             let input = format!("{}::{}", creator_address, buyer_address);
-            let hash = sha3_256(input.as_bytes());
-            Some(standardize_address(&hex::encode(hash)))
+            let hash_str = hash_str(&input);
+            Some(standardize_address(&hash_str))
         },
         _ => {
             debug!("Missing required fields for collection offer id generation - skipping");
@@ -595,8 +595,8 @@ mod tests {
     fn build_test_token_data_id(creator: &str, collection: &str, token: &str) -> String {
         let creator_address = standardize_address(creator);
         let input = format!("{}::{}::{}", creator_address, collection, token);
-        let hash = sha3_256(input.as_bytes());
-        standardize_address(&hex::encode(hash))
+        let hash_str = hash_str(&input);
+        standardize_address(&hash_str)
     }
 
     #[test]

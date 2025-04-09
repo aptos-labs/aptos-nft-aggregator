@@ -11,6 +11,7 @@
     "last_transaction_version": 2386889884,
     "last_transaction_timestamp": "2025-02-19T18:44:47.880613",
     "standard_event_type": "cancel_collection_offer",
-    "token_data_id": null
+    "token_data_id": null,
+    "expiration_time": null
   }
 ]

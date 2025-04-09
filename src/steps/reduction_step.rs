@@ -147,6 +147,12 @@ impl Processable for NFTReductionStep {
                     } else {
                         self.accumulator.fold_collection_offer(collection_offer);
                     }
+                } else if let Some(updates) =
+                    resource_updates.get(&collection_offer.collection_offer_id)
+                {
+                    let mut offer = collection_offer;
+                    merge_partial_update(&mut offer, updates, &mut activities);
+                    self.accumulator.fold_collection_offer(offer);
                 } else {
                     self.accumulator.fold_collection_offer(collection_offer);
                 }

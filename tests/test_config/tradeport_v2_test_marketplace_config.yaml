@@ -236,3 +236,5 @@ resources:
       "$.name.value":
         - table: current_nft_marketplace_token_offers
           column: token_name
+        - table: current_nft_marketplace_listings
+          column: token_name

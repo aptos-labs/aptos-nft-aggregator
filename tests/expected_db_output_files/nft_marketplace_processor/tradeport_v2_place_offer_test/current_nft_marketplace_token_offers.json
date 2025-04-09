@@ -12,6 +12,7 @@
     "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
     "last_transaction_version": 2386133936,
     "last_transaction_timestamp": "2025-02-19T12:58:08.265903",
-    "standard_event_type": "place_token_offer"
+    "standard_event_type": "place_token_offer",
+    "expiration_time": null
   }
 ]
