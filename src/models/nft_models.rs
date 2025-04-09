@@ -5,6 +5,7 @@ use crate::{
         current_nft_marketplace_token_offers, nft_marketplace_activities,
     },
 };
+use aptos_indexer_processor_sdk::aptos_indexer_transaction_stream::utils::time::parse_timestamp_secs;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use field_count::FieldCount;
@@ -44,7 +45,7 @@ pub struct NftMarketplaceActivity {
     pub token_amount: Option<i64>,
     pub buyer: Option<String>,
     pub seller: Option<String>,
-    pub expiration_time: Option<String>,
+    pub expiration_time: Option<NaiveDateTime>,
     pub listing_id: Option<String>,
     pub offer_id: Option<String>,
     pub json_data: serde_json::Value,
@@ -70,7 +71,14 @@ impl MarketplaceModel for NftMarketplaceActivity {
             MarketplaceField::TokenAmount => self.token_amount = value.parse().ok(),
             MarketplaceField::Buyer => self.buyer = Some(value),
             MarketplaceField::Seller => self.seller = Some(value),
-            MarketplaceField::ExpirationTime => self.expiration_time = Some(value),
+            MarketplaceField::ExpirationTime => {
+                if let Ok(timestamp_secs) = value.parse::<u64>() {
+                    self.expiration_time =
+                        Some(parse_timestamp_secs(timestamp_secs, 0).naive_utc());
+                } else {
+                    self.expiration_time = None;
+                }
+            },
             MarketplaceField::ListingId => self.listing_id = Some(value),
             MarketplaceField::OfferId | MarketplaceField::CollectionOfferId => {
                 self.offer_id = Some(value)
@@ -117,9 +125,9 @@ impl MarketplaceModel for NftMarketplaceActivity {
             },
             MarketplaceField::Buyer => Some(self.buyer.clone().unwrap_or_default()),
             MarketplaceField::Seller => Some(self.seller.clone().unwrap_or_default()),
-            MarketplaceField::ExpirationTime => {
-                Some(self.expiration_time.clone().unwrap_or_default())
-            },
+            MarketplaceField::ExpirationTime => self
+                .expiration_time
+                .map(|ts| ts.and_utc().timestamp().to_string()),
             MarketplaceField::ListingId => Some(self.listing_id.clone().unwrap_or_default()),
             MarketplaceField::OfferId => Some(self.offer_id.clone().unwrap_or_default()),
             MarketplaceField::Marketplace => Some(self.marketplace.clone()),
@@ -150,13 +158,13 @@ pub struct CurrentNFTMarketplaceListing {
     pub seller: Option<String>,
     pub price: i64,
     pub token_amount: Option<i64>,
+    pub token_name: Option<String>,
     pub is_deleted: bool,
     pub marketplace: String,
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
     pub standard_event_type: String,
-    pub token_name: Option<String>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceListing {
@@ -269,6 +277,7 @@ pub struct CurrentNFTMarketplaceTokenOffer {
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
     pub standard_event_type: String,
+    pub expiration_time: Option<NaiveDateTime>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
@@ -288,6 +297,14 @@ impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
             },
             MarketplaceField::LastTransactionTimestamp => {
                 self.last_transaction_timestamp = value.parse().unwrap_or(NaiveDateTime::default())
+            },
+            MarketplaceField::ExpirationTime => {
+                if let Ok(timestamp_secs) = value.parse::<u64>() {
+                    self.expiration_time =
+                        Some(parse_timestamp_secs(timestamp_secs, 0).naive_utc());
+                } else {
+                    self.expiration_time = None;
+                }
             },
             _ => tracing::debug!("Unknown field: {:?}", field),
         }
@@ -358,6 +375,7 @@ impl CurrentNFTMarketplaceTokenOffer {
             last_transaction_version: event.transaction_version,
             last_transaction_timestamp: event.block_timestamp,
             standard_event_type: event_type,
+            expiration_time: None,
         }
     }
 }
@@ -380,6 +398,7 @@ pub struct CurrentNFTMarketplaceCollectionOffer {
     pub last_transaction_timestamp: NaiveDateTime,
     pub standard_event_type: String,
     pub token_data_id: Option<String>,
+    pub expiration_time: Option<NaiveDateTime>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
@@ -401,6 +420,14 @@ impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
                 self.last_transaction_timestamp = value.parse().unwrap_or(NaiveDateTime::default())
             },
             MarketplaceField::TokenDataId => self.token_data_id = Some(value),
+            MarketplaceField::ExpirationTime => {
+                if let Ok(timestamp_secs) = value.parse::<u64>() {
+                    self.expiration_time =
+                        Some(parse_timestamp_secs(timestamp_secs, 0).naive_utc());
+                } else {
+                    self.expiration_time = None;
+                }
+            },
             _ => tracing::debug!("Unknown field: {:?}", field),
         }
     }
@@ -472,6 +499,7 @@ impl CurrentNFTMarketplaceCollectionOffer {
             last_transaction_timestamp: event.block_timestamp,
             token_data_id: None,
             standard_event_type: event_type,
+            expiration_time: None,
         }
     }
 }
