@@ -119,6 +119,18 @@ impl Processable for DBWritingStep {
 
         deduped_collection_offers.sort_by(|a, b| a.collection_offer_id.cmp(&b.collection_offer_id));
 
+        for offer in &deduped_collection_offers {
+            println!("offer: {:#?}", offer);
+        }
+
+        for listing in &deduped_listings {
+            println!("listing: {:#?}", listing);
+        }
+
+        for activity in &deduped_activities {
+            println!("activity: {:#?}", activity);
+        }
+        
         // Execute DB operations with sorted, deduplicated data
         let activities_result = execute_in_chunks(
             self.db_pool.clone(),
@@ -195,7 +207,21 @@ pub fn insert_nft_marketplace_activities(
     diesel::insert_into(schema::nft_marketplace_activities::table)
         .values(items_to_insert)
         .on_conflict((txn_version, index, marketplace))
-        .do_nothing()
+        .do_update()
+        .set((
+            token_data_id.eq(excluded(token_data_id)),
+            collection_id.eq(excluded(collection_id)),
+            seller.eq(excluded(seller)),
+            price.eq(excluded(price)),
+            listing_id.eq(excluded(listing_id)),
+            token_amount.eq(excluded(token_amount)),
+            token_name.eq(excluded(token_name)),
+            creator_address.eq(excluded(creator_address)),
+            collection_name.eq(excluded(collection_name)),
+            raw_event_type.eq(excluded(raw_event_type)),
+            standard_event_type.eq(excluded(standard_event_type)),
+            expiration_time.eq(excluded(expiration_time)),
+        ))
 }
 
 pub fn insert_current_nft_marketplace_listings(
@@ -243,6 +269,7 @@ pub fn insert_current_nft_marketplace_token_offers(
             last_transaction_version.eq(excluded(last_transaction_version)),
             last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             standard_event_type.eq(excluded(standard_event_type)),
+            expiration_time.eq(excluded(expiration_time)),
         ))
         .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
@@ -267,6 +294,7 @@ pub fn insert_current_nft_marketplace_collection_offers(
             last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             token_data_id.eq(excluded(token_data_id)),
             standard_event_type.eq(excluded(standard_event_type)),
+            expiration_time.eq(excluded(expiration_time)),
         ))
         .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
