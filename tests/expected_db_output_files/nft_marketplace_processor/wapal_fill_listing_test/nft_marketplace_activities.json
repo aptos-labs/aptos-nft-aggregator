@@ -1,0 +1,62 @@
+[
+  {
+    "txn_version": 2382221134,
+    "index": 13,
+    "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent",
+    "standard_event_type": "fill_listing",
+    "creator_address": "0x43ec2cb158e3569842d537740fd53403e992b9e7349cc5d3dfaa5aff8faaef2",
+    "collection_id": null,
+    "collection_name": "Bruh Bears",
+    "token_data_id": "0x8e01798f5411d261c87423c163226456480518ccd35591a141384c25d1af181a",
+    "token_name": "Bruh Bear #4084",
+    "price": 397900000,
+    "token_amount": null,
+    "buyer": "0x735507953f702ddad6dbf5a98de6fd3f57f50b89da9c68672414d8431f103726",
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "expiration_time": null,
+    "listing_id": null,
+    "offer_id": null,
+    "json_data": {
+      "data": {
+        "type": "fixed price",
+        "price": "397900000",
+        "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+        "listing": "0x7d618afb24770a0491e128c2d4db80598471795d76ed7a5bc0b88067b5f28d0d",
+        "purchaser": "0x735507953f702ddad6dbf5a98de6fd3f57f50b89da9c68672414d8431f103726",
+        "royalties": "21884500",
+        "commission": "5968500",
+        "token_metadata": {
+          "token": {
+            "vec": []
+          },
+          "collection": {
+            "vec": []
+          },
+          "token_name": "Bruh Bear #4084",
+          "collection_name": "Bruh Bears",
+          "creator_address": "0x43ec2cb158e3569842d537740fd53403e992b9e7349cc5d3dfaa5aff8faaef2",
+          "property_version": {
+            "vec": [
+              "1"
+            ]
+          }
+        }
+      },
+      "event_type": {
+        "module": "events",
+        "struct": "ListingFilledEvent",
+        "address": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
+      },
+      "event_index": 13,
+      "account_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+      "block_timestamp": "2025-02-18T19:52:20.290288",
+      "creation_number": 1125899906842629,
+      "sequence_number": 692269,
+      "transaction_version": 2382221134,
+      "transaction_block_height": 292444152
+    },
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "block_timestamp": "2025-02-18T19:52:20.290288"
+  }
+]

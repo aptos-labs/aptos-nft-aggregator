@@ -1,0 +1,128 @@
+[
+  {
+    "txn_version": 2382251863,
+    "index": 0,
+    "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent",
+    "standard_event_type": "place_listing",
+    "creator_address": "0x7bc33fea1f7f5e7dc023c5cb041d0aadd664c8f738f619829095c19a9cc34e0",
+    "collection_id": null,
+    "collection_name": "Sloth balls",
+    "token_data_id": "0xbc600af43ac14abe414c209456a995baefadccf78cc1241b2119b6a8ebe98b06",
+    "token_name": "Sloth Ball #1938",
+    "price": 459900000,
+    "token_amount": null,
+    "buyer": null,
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "expiration_time": null,
+    "listing_id": "0xa67bf73aee5f50029a94fcfadc751b4818b42dd9123721e9c6872bdd3fd0b505",
+    "offer_id": null,
+    "json_data": {
+      "data": {
+        "type": "fixed price",
+        "price": "459900000",
+        "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+        "listing": "0xa67bf73aee5f50029a94fcfadc751b4818b42dd9123721e9c6872bdd3fd0b505",
+        "token_metadata": {
+          "token": {
+            "vec": [
+              {
+                "inner": "0xbc600af43ac14abe414c209456a995baefadccf78cc1241b2119b6a8ebe98b06"
+              }
+            ]
+          },
+          "collection": {
+            "vec": [
+              {
+                "inner": "0x53858a7a4b6faf7cb2d198efe80351abc658d9cefcd2e95587f3d473cc90a041"
+              }
+            ]
+          },
+          "token_name": "Sloth Ball #1938",
+          "collection_name": "Sloth balls",
+          "creator_address": "0x7bc33fea1f7f5e7dc023c5cb041d0aadd664c8f738f619829095c19a9cc34e0",
+          "property_version": {
+            "vec": []
+          }
+        }
+      },
+      "event_type": {
+        "module": "events",
+        "struct": "ListingPlacedEvent",
+        "address": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
+      },
+      "event_index": 0,
+      "account_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+      "block_timestamp": "2025-02-18T20:04:10.543248",
+      "creation_number": 1125899906842627,
+      "sequence_number": 1773319,
+      "transaction_version": 2382251863,
+      "transaction_block_height": 292447858
+    },
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "block_timestamp": "2025-02-18T20:04:10.543248"
+  },
+  {
+    "txn_version": 2382251863,
+    "index": 1,
+    "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent",
+    "standard_event_type": "place_listing",
+    "creator_address": "0x7bc33fea1f7f5e7dc023c5cb041d0aadd664c8f738f619829095c19a9cc34e0",
+    "collection_id": null,
+    "collection_name": "Sloth balls",
+    "token_data_id": "0xd88b304033e2b615d5fae295a9986313d3ea713f3a625d06ae686c26181dcc7e",
+    "token_name": "Sloth Ball #109",
+    "price": 459900000,
+    "token_amount": null,
+    "buyer": null,
+    "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+    "expiration_time": null,
+    "listing_id": "0x7d3092ed4eab5a0ebffb73868748f06d15cae1b3d82d6bbaeebd33f5acd36502",
+    "offer_id": null,
+    "json_data": {
+      "data": {
+        "type": "fixed price",
+        "price": "459900000",
+        "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
+        "listing": "0x7d3092ed4eab5a0ebffb73868748f06d15cae1b3d82d6bbaeebd33f5acd36502",
+        "token_metadata": {
+          "token": {
+            "vec": [
+              {
+                "inner": "0xd88b304033e2b615d5fae295a9986313d3ea713f3a625d06ae686c26181dcc7e"
+              }
+            ]
+          },
+          "collection": {
+            "vec": [
+              {
+                "inner": "0x53858a7a4b6faf7cb2d198efe80351abc658d9cefcd2e95587f3d473cc90a041"
+              }
+            ]
+          },
+          "token_name": "Sloth Ball #109",
+          "collection_name": "Sloth balls",
+          "creator_address": "0x7bc33fea1f7f5e7dc023c5cb041d0aadd664c8f738f619829095c19a9cc34e0",
+          "property_version": {
+            "vec": []
+          }
+        }
+      },
+      "event_type": {
+        "module": "events",
+        "struct": "ListingPlacedEvent",
+        "address": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9"
+      },
+      "event_index": 1,
+      "account_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+      "block_timestamp": "2025-02-18T20:04:10.543248",
+      "creation_number": 1125899906842627,
+      "sequence_number": 1773320,
+      "transaction_version": 2382251863,
+      "transaction_block_height": 292447858
+    },
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "block_timestamp": "2025-02-18T20:04:10.543248"
+  }
+]

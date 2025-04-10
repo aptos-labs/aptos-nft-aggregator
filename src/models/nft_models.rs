@@ -32,11 +32,9 @@ pub const CURRENT_NFT_MARKETPLACE_COLLECTION_OFFERS_TABLE_NAME: &str =
 pub struct NftMarketplaceActivity {
     pub txn_version: i64,
     pub index: i64,
-    pub listing_id: Option<String>,
-    pub offer_id: Option<String>,
     pub raw_event_type: String,
-    #[diesel(sql_type = Text)] // Ensure compatibility with PostgreSQL
     pub standard_event_type: String,
+    #[diesel(sql_type = Text)] // Ensure compatibility with PostgreSQL
     pub creator_address: Option<String>,
     pub collection_id: Option<String>,
     pub collection_name: Option<String>,
@@ -47,6 +45,8 @@ pub struct NftMarketplaceActivity {
     pub buyer: Option<String>,
     pub seller: Option<String>,
     pub expiration_time: Option<String>,
+    pub listing_id: Option<String>,
+    pub offer_id: Option<String>,
     pub json_data: serde_json::Value,
     pub marketplace: String,
     pub contract_address: String,
@@ -150,13 +150,13 @@ pub struct CurrentNFTMarketplaceListing {
     pub seller: Option<String>,
     pub price: i64,
     pub token_amount: Option<i64>,
-    pub token_name: Option<String>,
     pub is_deleted: bool,
     pub marketplace: String,
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
     pub standard_event_type: String,
+    pub token_name: Option<String>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceListing {
@@ -378,8 +378,8 @@ pub struct CurrentNFTMarketplaceCollectionOffer {
     pub contract_address: String,
     pub last_transaction_version: i64,
     pub last_transaction_timestamp: NaiveDateTime,
-    pub token_data_id: Option<String>,
     pub standard_event_type: String,
+    pub token_data_id: Option<String>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {

@@ -1,0 +1,16 @@
+[
+  {
+    "collection_offer_id": "0xe3c39dbed236c7ddcf847f9734baf8168911babd8384f17538102b17ab156bd",
+    "collection_id": "0xae91e12aadaaa2d0e45a2f3dea52befe42002977e038edf53d15dbc298d64d89",
+    "buyer": "0x8c557bb0a12d47c1eda90dd4883b44674111b915fa39ff862e6a0a39140dcd4",
+    "price": 20630000,
+    "remaining_token_amount": 0,
+    "is_deleted": true,
+    "marketplace": "tradeport_v2",
+    "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
+    "last_transaction_version": 2386021136,
+    "last_transaction_timestamp": "2025-02-19T12:13:39.744142",
+    "standard_event_type": "fill_collection_offer",
+    "token_data_id": "0x1cad42fedce28de2e45b1de11e26abe0d540edae729341135388cdbec4b8262d"
+  }
+]

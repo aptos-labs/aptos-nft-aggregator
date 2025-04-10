@@ -1,15 +1,15 @@
   nft_marketplace_config:
     name: wapal
     event_model_mapping:
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent: Listing
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent: Listing
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent: Listing
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent: TokenOffer
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent: TokenOffer
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent: TokenOffer
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent: CollectionOffer
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent: CollectionOffer
-      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent: CollectionOffer
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent: place_listing
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent: cancel_listing
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent: fill_listing
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent: place_token_offer
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent: cancel_token_offer
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent: fill_token_offer
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent: place_collection_offer
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent: cancel_collection_offer
+      0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferFilledEvent: fill_collection_offer
     events:
       0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingPlacedEvent:
         event_fields:
@@ -125,6 +125,32 @@
               column: listing_id
             - table: current_nft_marketplace_listings
               column: listing_id
+            #  v1
+          "$.token_id.token_data_id.name":
+            - table: nft_marketplace_activities
+              column: token_name
+            - table: current_nft_marketplace_listings
+              column: token_name
+          "$.token_id.token_data_id.creator":
+            - table: nft_marketplace_activities
+              column: creator_address
+            - table: current_nft_marketplace_listings
+              column: creator_address
+          "$.token_id.token_data_id.collection":
+            - table: nft_marketplace_activities
+              column: collection_id
+            - table: current_nft_marketplace_listings
+              column: collection_id
+          "$.buyer":
+            - table: nft_marketplace_activities
+              column: buyer
+            - table: current_nft_marketplace_listings
+              column: buyer
+          "$.owner":
+            - table: nft_marketplace_activities
+              column: seller
+            - table: current_nft_marketplace_listings
+              column: seller              
       0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent:
         event_fields:
           "$.token_offer":
@@ -298,6 +324,8 @@
           "$.token_amount":
             - table: nft_marketplace_activities
               column: token_amount
+            - table: current_nft_marketplace_collection_offers
+              column: remaining_token_amount
           "$.collection_metadata.collection.vec[0].inner":
             - table: nft_marketplace_activities
               column: collection_id

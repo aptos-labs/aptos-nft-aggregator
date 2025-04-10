@@ -13,7 +13,11 @@ ahash = { version = "0.8.7", features = ["serde"] }
 anyhow = "1.0.86"
 aptos-indexer-processor-sdk = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "707b8bf33cad1a8143b9e81762d644f1be0451bb" }
 aptos-indexer-processor-sdk-server-framework = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "707b8bf33cad1a8143b9e81762d644f1be0451bb" }
+
+aptos-indexer-test-transactions = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "b068cb3bbee1b6a7a5eb96f189bfdd7ad4542060" }
+aptos-indexer-testing-framework = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "707b8bf33cad1a8143b9e81762d644f1be0451bb" }
 aptos-protos = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "1d8460a995503574ec4e9699d3442d0150d7f3b9" }
+assert-json-diff = "2.0.2"
 async-trait = "0.1.53"
 bcs = { git = "https://github.com/aptos-labs/bcs.git", rev = "d31fab9d81748e2594be5cd5cdf845786a30562d" }
 bigdecimal = { version = "0.4.0", features = ["serde"] }
@@ -58,10 +62,13 @@ postgres-native-tls = "0.5.0"
 rayon = "1.10.0"
 serde = { version = "1.0.193", features = ["derive", "rc"] }
 serde_json = { version = "1.0.81", features = ["preserve_order"] }
+serde_yaml = "0.9.34"
 
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 strum = { version = "0.24.1", features = ["derive"] }
+tempfile = "3.3.0"
+testcontainers = "0.20.1"
 tokio = { version = "1.35.1", features = ["full"] }
 tokio-postgres = "0.7.10"
 tonic = { version = "0.12.3", features = [

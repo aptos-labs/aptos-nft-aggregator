@@ -1,0 +1,16 @@
+[
+  {
+    "collection_offer_id": "0xff2ba0969dfe349d37cbabc28f922201b25ecd8102cb2960d62f9a4b64756de9",
+    "collection_id": null,
+    "buyer": "",
+    "price": 0,
+    "remaining_token_amount": null,
+    "is_deleted": false,
+    "marketplace": "wapal",
+    "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
+    "last_transaction_version": 2382373209,
+    "last_transaction_timestamp": "2025-02-18T20:57:20.932749",
+    "standard_event_type": "place_collection_offer",
+    "token_data_id": null
+  }
+]
