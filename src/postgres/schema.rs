@@ -1,6 +1,20 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    backfill_processor_status (backfill_alias) {
+        #[max_length = 100]
+        backfill_alias -> Varchar,
+        #[max_length = 50]
+        backfill_status -> Varchar,
+        last_success_version -> Int8,
+        last_updated -> Timestamp,
+        last_transaction_timestamp -> Nullable<Timestamp>,
+        backfill_start_version -> Int8,
+        backfill_end_version -> Nullable<Int8>,
+    }
+}
+
+diesel::table! {
     current_nft_marketplace_collection_offers (collection_offer_id, marketplace) {
         #[max_length = 128]
         collection_offer_id -> Varchar,
@@ -108,6 +122,7 @@ diesel::table! {
 }
 
 diesel::allow_tables_to_appear_in_same_query!(
+    backfill_processor_status,
     current_nft_marketplace_collection_offers,
     current_nft_marketplace_listings,
     current_nft_marketplace_token_offers,

@@ -11,11 +11,13 @@ rust-version = "1.81"
 [dependencies]
 ahash = { version = "0.8.7", features = ["serde"] }
 anyhow = "1.0.86"
-aptos-indexer-processor-sdk = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "707b8bf33cad1a8143b9e81762d644f1be0451bb" }
-aptos-indexer-processor-sdk-server-framework = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "707b8bf33cad1a8143b9e81762d644f1be0451bb" }
 
+aptos-indexer-processor-sdk = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "27ac3611a917f3a5e181ea78d72c1acc5c449141", features = [
+    "postgres_full",
+    "testing_framework",
+] }
 aptos-indexer-test-transactions = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "b068cb3bbee1b6a7a5eb96f189bfdd7ad4542060" }
-aptos-indexer-testing-framework = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "707b8bf33cad1a8143b9e81762d644f1be0451bb" }
+
 aptos-protos = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "1d8460a995503574ec4e9699d3442d0150d7f3b9" }
 assert-json-diff = "2.0.2"
 async-trait = "0.1.53"
@@ -23,20 +25,20 @@ bcs = { git = "https://github.com/aptos-labs/bcs.git", rev = "d31fab9d81748e2594
 bigdecimal = { version = "0.4.0", features = ["serde"] }
 chrono = { version = "0.4.19", features = ["clock", "serde"] }
 clap = { version = "4.3.5", features = ["derive", "unstable-styles"] }
-diesel = { version = "2.1", features = [
+diesel = { version = "=2.2.0", features = [
     "chrono",
     "postgres_backend",
     "numeric",
     "serde_json",
 ] }
-diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d02798c67065d763154d7272dd0c09b39757d0f2", features = [
+diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "e3beac66cd41ab53d78a10328bb72f272103e5d1", features = [
     "async-connection-wrapper",
     "postgres",
     "bb8",
     "tokio",
 ] }
-diesel_async_migrations = { git = "https://github.com/niroco/diesel_async_migrations", rev = "11f331b73c5cfcc894380074f748d8fda710ac12" }
 diesel_migrations = { version = "2.1.0", features = ["postgres"] }
+
 dirs = "5.0.1"
 enum_dispatch = "0.3.12"
 field_count = "0.1.1"
@@ -84,5 +86,5 @@ tracing = "0.1.34"
 url = { version = "2.4.0", features = ["serde"] }
 
 [features]
-libpq = ["diesel/postgres"]
+libpq = ["aptos-indexer-processor-sdk/postgres_full", "diesel/postgres"]
 default = ["libpq"]

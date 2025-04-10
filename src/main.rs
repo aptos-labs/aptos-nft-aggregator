@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::Result;
-use aptos_indexer_processor_sdk_server_framework::ServerArgs;
+use aptos_indexer_processor_sdk::server_framework::ServerArgs;
 use clap::Parser;
 use nft_aggregator::config::IndexerProcessorConfig;
 
