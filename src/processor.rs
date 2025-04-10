@@ -2,10 +2,8 @@ use crate::{
     config::{DbConfig, IndexerProcessorConfig},
     postgres::postgres_utils::{new_db_pool, run_migrations, ArcDbPool},
     steps::{
-        db_writing_step::DBWritingStep,
-        processor_status_saver_step::get_processor_status_saver,
-        remapper_step::ProcessStep,
-        remappers::{event_remapper::EventRemapper, resource_remapper::ResourceMapper},
+        db_writing_step::DBWritingStep, processor_status_saver_step::get_processor_status_saver,
+        reduction_step::NFTReductionStep, remapper_step::ProcessStep,
     },
     utils::starting_version::get_starting_version,
 };
@@ -18,8 +16,7 @@ use aptos_indexer_processor_sdk::{
     },
     traits::{processor_trait::ProcessorTrait, IntoRunnableStep},
 };
-use std::sync::Arc;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 pub struct Processor {
     pub config: IndexerProcessorConfig,
@@ -86,21 +83,10 @@ impl ProcessorTrait for Processor {
         })
         .await?;
 
-        let (event_mappings, table_mappings) = self
-            .config
-            .nft_marketplace_configs
-            .get_mappings()
-            .unwrap_or_else(|e| {
-                error!("Failed to get event mapping: {:?}", e);
-                panic!("Failed to get event mapping: {:?}", e);
-            });
-        let process = ProcessStep::new(
-            Arc::new(EventRemapper::new(
-                Arc::new(event_mappings.clone()),
-                Arc::new(table_mappings.clone()),
-            )),
-            Arc::new(ResourceMapper::new(Arc::new(table_mappings.clone()))),
-        );
+        let nft_marketplace_config = self.config.nft_marketplace_config.clone();
+
+        let process = ProcessStep::new(nft_marketplace_config.clone())?;
+        let reduction_step = NFTReductionStep::new();
         let db_writing = DBWritingStep::new(self.db_pool.clone());
         let version_tracker = VersionTrackerStep::new(
             get_processor_status_saver(self.db_pool.clone()),
@@ -112,6 +98,7 @@ impl ProcessorTrait for Processor {
             transaction_stream.into_runnable_step(),
         )
         .connect_to(process.into_runnable_step(), channel_size)
+        .connect_to(reduction_step.into_runnable_step(), channel_size)
         .connect_to(db_writing.into_runnable_step(), channel_size)
         .connect_to(version_tracker.into_runnable_step(), channel_size)
         .end_and_return_output_receiver(channel_size);

@@ -1,7 +1,7 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    current_nft_marketplace_collection_offers (collection_offer_id) {
+    current_nft_marketplace_collection_offers (collection_offer_id, marketplace) {
         #[max_length = 128]
         collection_offer_id -> Varchar,
         #[max_length = 66]
@@ -11,17 +11,18 @@ diesel::table! {
         price -> Int8,
         remaining_token_amount -> Nullable<Int8>,
         is_deleted -> Bool,
-        #[max_length = 66]
-        token_standard -> Nullable<Varchar>,
         marketplace -> Varchar,
         contract_address -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        standard_event_type -> Varchar,
+        #[max_length = 66]
+        token_data_id -> Nullable<Varchar>,
     }
 }
 
 diesel::table! {
-    current_nft_marketplace_listings (token_data_id) {
+    current_nft_marketplace_listings (token_data_id, marketplace) {
         #[max_length = 66]
         token_data_id -> Varchar,
         #[max_length = 128]
@@ -32,18 +33,18 @@ diesel::table! {
         seller -> Nullable<Varchar>,
         price -> Int8,
         token_amount -> Nullable<Int8>,
-        #[max_length = 66]
-        token_standard -> Nullable<Varchar>,
         is_deleted -> Bool,
         marketplace -> Varchar,
         contract_address -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        standard_event_type -> Varchar,
+        token_name -> Nullable<Varchar>,
     }
 }
 
 diesel::table! {
-    current_nft_marketplace_token_offers (token_data_id, buyer) {
+    current_nft_marketplace_token_offers (token_data_id, buyer, marketplace) {
         #[max_length = 66]
         token_data_id -> Varchar,
         #[max_length = 128]
@@ -57,16 +58,15 @@ diesel::table! {
         token_amount -> Nullable<Int8>,
         token_name -> Nullable<Varchar>,
         is_deleted -> Bool,
-        #[max_length = 66]
-        token_standard -> Nullable<Varchar>,
         contract_address -> Varchar,
         last_transaction_version -> Int8,
         last_transaction_timestamp -> Timestamp,
+        standard_event_type -> Varchar,
     }
 }
 
 diesel::table! {
-    nft_marketplace_activities (txn_version, index) {
+    nft_marketplace_activities (txn_version, index, marketplace) {
         txn_version -> Int8,
         index -> Int8,
         raw_event_type -> Varchar,
@@ -79,8 +79,6 @@ diesel::table! {
         #[max_length = 66]
         token_data_id -> Nullable<Varchar>,
         token_name -> Nullable<Varchar>,
-        #[max_length = 66]
-        token_standard -> Nullable<Varchar>,
         price -> Int8,
         token_amount -> Nullable<Int8>,
         #[max_length = 66]

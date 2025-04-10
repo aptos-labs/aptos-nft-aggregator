@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS current_nft_marketplace_listings (
     seller VARCHAR(66),
     price BIGINT NOT NULL,
     token_amount BIGINT,
+    -- token_name VARCHAR, -- need to add
     token_standard VARCHAR(66),
     is_deleted BOOLEAN NOT NULL,
     marketplace VARCHAR NOT NULL,
