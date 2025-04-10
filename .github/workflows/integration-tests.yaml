@@ -1,0 +1,72 @@
+name: Run Integration Tests
+run-name: Run Integration Tests for commit ${{ github.event.client_payload.commit_hash || github.event.inputs.commit_hash || 'main' }} by @${{ github.actor }}
+on:
+  repository_dispatch:
+    types: [test-txn-json-change-detected]  # Custom event type to trigger the workflow
+
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'Commit hash to use for the dependency update'
+        required: true
+        default: 'main'
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  Integration-tests:
+    runs-on: runs-on,runner=2cpu-linux-x64,run-id=${{ github.run_id }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }} # check out the code from the pull request branch:
+
+      # Install toml-cli using cargo
+      - name: Install toml-cli
+        run: cargo install toml-cli
+ 
+      # Ensure Cargo.lock is updated with the latest dependencies
+      - name: rust setup
+        run: |
+          sudo apt update && sudo apt install libdw-dev
+          cargo update -p aptos-indexer-test-transactions
+        working-directory: .
+
+      # Cache Cargo
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          
+      # Run Integration Tests
+      - name: Run Integration Tests
+        id: tests
+        run: |
+          # TODO: until we have more comprehensive cli parsers, we will need to run tests separately.
+          cargo test -- --nocapture
+        working-directory: .
+      
+      # TODO: uncomment this when we are ready 
+      # - name: Send Slack Notification to oncall
+      #   if: ${{ steps.tests.outcome == 'failure' && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'indexer-sdk-update') }}
+      #   uses: slackapi/slack-github-action@v1.24.0
+      #   with:
+      #     # eco-infra-oncall channel.
+      #     channel-id: 'C0468USBLQJ'
+      #     slack-message: |
+      #       :warning: Tests failed on PR with indexer-sdk-update label
+      #       PR: ${{ github.event.pull_request.html_url }}
+      #       Author: ${{ github.event.pull_request.user.login }}
+      #       Title: ${{ github.event.pull_request.title }}
+      #   env:
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
