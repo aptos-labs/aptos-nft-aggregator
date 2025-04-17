@@ -35,26 +35,7 @@ events:
       "$.token_metadata.token_name":
         - table: nft_marketplace_activities
           column: token_name
-      "$.token_metadata.creator_address":
-        - table: nft_marketplace_activities
-          column: creator_address
-      "$.token_metadata.collection_name":
-        - table: nft_marketplace_activities
-          column: collection_name
-  0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent:
-    event_fields:
-      "$.collection.vec[0].inner":
-        - table: nft_marketplace_activities
-          column: collection_id
         - table: current_nft_marketplace_listings
-          column: collection_id
-      "$.token_metadata.token.vec[0].inner":
-        - table: nft_marketplace_activities
-          column: token_data_id
-        - table: current_nft_marketplace_listings
-          column: token_data_id
-      "$.token_metadata.token_name":
-        - table: nft_marketplace_activities
           column: token_name
       "$.token_metadata.creator_address":
         - table: nft_marketplace_activities
@@ -62,31 +43,33 @@ events:
       "$.token_metadata.collection_name":
         - table: nft_marketplace_activities
           column: collection_name
-      "$.price":
+      "$.token_metadata.collection.vec[0].inner":
         - table: nft_marketplace_activities
-          column: price
+          column: collection_id
         - table: current_nft_marketplace_listings
-          column: price
-      "$.purchaser":
-        - table: nft_marketplace_activities
-          column: buyer
-      "$.seller":
-        - table: nft_marketplace_activities
-          column: seller
-        - table: current_nft_marketplace_listings
-          column: seller
-      "$.token_amount":
-        - table: nft_marketplace_activities
-          column: token_amount
-        - table: current_nft_marketplace_listings
-          column: token_amount
+          column: collection_id
+  0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingCanceledEvent:
+    event_fields:
       "$.listing":
         - table: nft_marketplace_activities
           column: listing_id
         - table: current_nft_marketplace_listings
           column: listing_id
-  0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent:
-    event_fields:
+      "$.seller":
+        - table: nft_marketplace_activities
+          column: seller
+        - table: current_nft_marketplace_listings
+          column: seller
+      "$.price":
+        - table: nft_marketplace_activities
+          column: price
+        - table: current_nft_marketplace_listings
+          column: price
+      "$.token_metadata.collection.vec[0].inner":
+        - table: nft_marketplace_activities
+          column: collection_id
+        - table: current_nft_marketplace_listings
+          column: collection_id
       "$.token_metadata.token.vec[0].inner":
         - table: nft_marketplace_activities
           column: token_data_id
@@ -95,56 +78,55 @@ events:
       "$.token_metadata.token_name":
         - table: nft_marketplace_activities
           column: token_name
+        - table: current_nft_marketplace_listings
+          column: token_name
       "$.token_metadata.creator_address":
         - table: nft_marketplace_activities
           column: creator_address
       "$.token_metadata.collection_name":
         - table: nft_marketplace_activities
           column: collection_name
-      "$.price":
+  0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::ListingFilledEvent:
+    event_fields:
+      "$.listing":
         - table: nft_marketplace_activities
-          column: price
+          column: listing_id
         - table: current_nft_marketplace_listings
-          column: price
-      "$.purchaser":
-        - table: nft_marketplace_activities
-          column: buyer
+          column: listing_id
       "$.seller":
         - table: nft_marketplace_activities
           column: seller
         - table: current_nft_marketplace_listings
           column: seller
-      "$.token_amount":
+      "$.purchaser":
         - table: nft_marketplace_activities
-          column: token_amount
-        - table: current_nft_marketplace_listings
-          column: token_amount
-      #  v1
-      "$.token_id.token_data_id.name":
+          column: buyer
+      "$.price":
         - table: nft_marketplace_activities
-          column: token_name
+          column: price
         - table: current_nft_marketplace_listings
-          column: token_name
-      "$.token_id.token_data_id.creator":
-        - table: nft_marketplace_activities
-          column: creator_address
-        - table: current_nft_marketplace_listings
-          column: creator_address
-      "$.token_id.token_data_id.collection":
+          column: price
+      "$.token_metadata.collection.vec[0].inner":
         - table: nft_marketplace_activities
           column: collection_id
         - table: current_nft_marketplace_listings
           column: collection_id
-      "$.buyer":
+      "$.token_metadata.token.vec[0].inner":
         - table: nft_marketplace_activities
-          column: buyer
+          column: token_data_id
         - table: current_nft_marketplace_listings
-          column: buyer
-      "$.owner":
+          column: token_data_id
+      "$.token_metadata.token_name":
         - table: nft_marketplace_activities
-          column: seller
+          column: token_name
         - table: current_nft_marketplace_listings
-          column: seller
+          column: token_name
+      "$.token_metadata.creator_address":
+        - table: nft_marketplace_activities
+          column: creator_address
+      "$.token_metadata.collection_name":
+        - table: nft_marketplace_activities
+          column: collection_name
   0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferPlacedEvent:
     event_fields:
       "$.token_offer":
@@ -178,6 +160,11 @@ events:
       "$.token_metadata.collection_name":
         - table: nft_marketplace_activities
           column: collection_name
+      "$.token_metadata.collection.vec[0].inner":
+        - table: nft_marketplace_activities
+          column: collection_id
+        - table: current_nft_marketplace_token_offers
+          column: collection_id
   0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferCanceledEvent:
     event_fields:
       "$.token_offer":
@@ -211,6 +198,11 @@ events:
       "$.token_metadata.collection_name":
         - table: nft_marketplace_activities
           column: collection_name
+      "$.token_metadata.collection.vec[0].inner":
+        - table: nft_marketplace_activities
+          column: collection_id
+        - table: current_nft_marketplace_token_offers
+          column: collection_id
   0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::TokenOfferFilledEvent:
     event_fields:
       "$.token_offer":
@@ -247,6 +239,44 @@ events:
       "$.token_metadata.collection_name":
         - table: nft_marketplace_activities
           column: collection_name
+      "$.token_metadata.collection.vec[0].inner":
+        - table: nft_marketplace_activities
+          column: collection_id
+        - table: current_nft_marketplace_token_offers
+          column: collection_id
+  0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent:
+    event_fields:
+      "$.collection_offer":
+        - table: nft_marketplace_activities
+          column: offer_id
+        - table: current_nft_marketplace_collection_offers
+          column: collection_offer_id
+      "$.purchaser":
+        - table: nft_marketplace_activities
+          column: buyer
+        - table: current_nft_marketplace_collection_offers
+          column: buyer
+      "$.price":
+        - table: nft_marketplace_activities
+          column: price
+        - table: current_nft_marketplace_collection_offers
+          column: price
+      "$.token_amount":
+        - table: nft_marketplace_activities
+          column: token_amount
+        - table: current_nft_marketplace_collection_offers
+          column: remaining_token_amount
+      "$.collection_metadata.collection.vec[0].inner":
+        - table: nft_marketplace_activities
+          column: collection_id
+        - table: current_nft_marketplace_collection_offers
+          column: collection_id
+      "$.collection_metadata.creator_address":
+        - table: nft_marketplace_activities
+          column: creator_address
+      "$.collection_metadata.collection_name":
+        - table: nft_marketplace_activities
+          column: collection_name
   0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent:
     event_fields:
       "$.collection_offer": 
@@ -262,11 +292,17 @@ events:
       "$.price":
         - table: nft_marketplace_activities
           column: price
+        - table: current_nft_marketplace_collection_offers
+          column: price
       "$.remaining_token_amount":
         - table: nft_marketplace_activities
           column: token_amount
+        - table: current_nft_marketplace_collection_offers
+          column: remaining_token_amount
       "$.collection_metadata.collection.vec[0].inner":
         - table: nft_marketplace_activities
+          column: collection_id
+        - table: current_nft_marketplace_collection_offers
           column: collection_id
       "$.collection_metadata.creator_address":
         - table: nft_marketplace_activities
@@ -284,14 +320,20 @@ events:
       "$.purchaser":
         - table: nft_marketplace_activities
           column: buyer
+        - table: current_nft_marketplace_collection_offers
+          column: buyer
       "$.seller":
         - table: nft_marketplace_activities
           column: seller
       "$.price":
         - table: nft_marketplace_activities
           column: price
+        - table: current_nft_marketplace_collection_offers
+          column: price
       "$.token_metadata.token.vec[0].inner":
         - table: nft_marketplace_activities
+          column: token_data_id
+        - table: current_nft_marketplace_collection_offers
           column: token_data_id
       "$.token_metadata.token_name":
         - table: nft_marketplace_activities
@@ -302,28 +344,23 @@ events:
       "$.token_metadata.collection_name":
         - table: nft_marketplace_activities
           column: collection_name
-  0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferPlacedEvent:
-    event_fields:
-      "$.collection_offer":
-        - table: nft_marketplace_activities
-          column: offer_id
-        - table: current_nft_marketplace_collection_offers
-          column: collection_offer_id
-      "$.purchaser":
-        - table: nft_marketplace_activities
-          column: buyer
-      "$.price":
-        - table: nft_marketplace_activities
-          column: price
-      "$.token_amount":
-        - table: nft_marketplace_activities
-          column: token_amount
-      "$.collection_metadata.collection.vec[0].inner":
+      "$.token_metadata.collection.vec[0].inner":
         - table: nft_marketplace_activities
           column: collection_id
-      "$.collection_metadata.creator_address":
+        - table: current_nft_marketplace_collection_offers
+          column: collection_id
+resources:
+  "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::collection_offer::CollectionOffer":
+    resource_fields:
+      "$.expiration_time":
+        - table: current_nft_marketplace_collection_offers
+          column: expiration_time
         - table: nft_marketplace_activities
-          column: creator_address
-      "$.collection_metadata.collection_name":
+          column: expiration_time
+  "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::token_offer::TokenOffer":
+    resource_fields:
+      "$.expiration_time":
+        - table: current_nft_marketplace_token_offers
+          column: expiration_time
         - table: nft_marketplace_activities
-          column: collection_name
+          column: expiration_time

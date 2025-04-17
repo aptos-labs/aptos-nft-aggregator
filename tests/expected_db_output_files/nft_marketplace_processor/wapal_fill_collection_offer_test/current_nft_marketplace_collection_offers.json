@@ -1,9 +1,9 @@
 [
   {
     "collection_offer_id": "0x8eb23351a1e2a9ed5d5516d6a592ec8fe8e3beeaedd7a7de9cdfc1cc8d9a0d73",
-    "collection_id": "0x7414cd4f13367dc9630dc731ad8800293a47985cfcbba19c109b4c3ffe366abd",
-    "buyer": "",
-    "price": 0,
+    "collection_id": "0xa2485c3b392d211770ed161e73a1097d21016c7dd41f53592434380b2aa14cba",
+    "buyer": "0xd098ed4c8a4fecfd082149216a1029ff1ed3d4dffd628348b018ed00036eec22",
+    "price": 2550510000,
     "remaining_token_amount": 0,
     "is_deleted": true,
     "marketplace": "wapal",
@@ -11,6 +11,7 @@
     "last_transaction_version": 2382219668,
     "last_transaction_timestamp": "2025-02-18T19:51:46.707377",
     "standard_event_type": "fill_collection_offer",
-    "token_data_id": "0x6fb89c0645a46b4d5cdd88de1cae331c498fc887b30d7c29940953a14bb26912"
+    "token_data_id": "0xfa0f4628e8737fe9149070e0aa5801a4c0c872f519fa622c363c7f397cf38229",
+    "expiration_time": null
   }
 ]

@@ -74,7 +74,6 @@ impl ResourceMapper {
                         db_mappings.iter().try_for_each(|db_mapping| {
                             // TODO: handle types when move_type is supported
                             let value = extract_string(json_path, &data).unwrap_or_default();
-
                             resource_updates
                                 .entry(resource_address.clone()) // Use resource address as key
                                 .or_default()

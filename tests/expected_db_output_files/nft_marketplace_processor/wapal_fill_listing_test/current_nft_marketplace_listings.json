@@ -1,17 +1,17 @@
 [
   {
-    "token_data_id": "0x8e01798f5411d261c87423c163226456480518ccd35591a141384c25d1af181a",
-    "listing_id": null,
-    "collection_id": "0x4e9cd532347bb258db362f01d895d43287861182145165f0e4ae4f6b80802a30",
+    "token_data_id": "0x74c366102a0abbc452f44c5017c69d99d52acc8140f7c35f141b09051a4891fa",
+    "listing_id": "0x7d618afb24770a0491e128c2d4db80598471795d76ed7a5bc0b88067b5f28d0d",
+    "collection_id": "0xda59e5f610419f274a20341fb198bf98415712de11a4468cfd45cbe495600c2a",
     "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
     "price": 397900000,
     "token_amount": null,
+    "token_name": "Bruh Bear #4084",
     "is_deleted": true,
     "marketplace": "wapal",
     "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
     "last_transaction_version": 2382221134,
     "last_transaction_timestamp": "2025-02-18T19:52:20.290288",
-    "standard_event_type": "fill_listing",
-    "token_name": null
+    "standard_event_type": "fill_listing"
   }
 ]

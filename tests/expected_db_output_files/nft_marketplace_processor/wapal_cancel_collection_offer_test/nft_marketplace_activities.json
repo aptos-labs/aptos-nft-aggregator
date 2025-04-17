@@ -5,7 +5,7 @@
     "raw_event_type": "0x584b50b999c78ade62f8359c91b5165ff390338d45f8e55969a04e65d76258c9::events::CollectionOfferCanceledEvent",
     "standard_event_type": "cancel_collection_offer",
     "creator_address": "0x7bc33fea1f7f5e7dc023c5cb041d0aadd664c8f738f619829095c19a9cc34e0",
-    "collection_id": "0x3629cca4a01eecf479b73e133ba0f352ac14552480b0467a1e8c0609b4712a06",
+    "collection_id": "0xd82f5841196bf66232316dc61188947583f418346b72758c0f45827cc5838617",
     "collection_name": "Cool Sloths",
     "token_data_id": null,
     "token_name": null,
