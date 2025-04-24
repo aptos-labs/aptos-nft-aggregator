@@ -13,7 +13,6 @@
     "token_amount": null,
     "buyer": null,
     "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
-    "expiration_time": null,
     "listing_id": "0x3929540e32fb063ddf7fecb764c914493d2844978621767b9f013326093258eb",
     "offer_id": null,
     "json_data": {
@@ -43,7 +42,9 @@
     },
     "marketplace": "tradeport_v2",
     "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
-    "block_timestamp": "2025-02-19T18:01:31.944133"
+    "block_timestamp": "2025-02-19T18:01:31.944133",
+    "expiration_time": null,
+    "bid_key": null
   },
   {
     "txn_version": 2386809975,
@@ -59,7 +60,6 @@
     "token_amount": null,
     "buyer": null,
     "seller": "0xc24b9ea285e953bbf7470309b879bc60d5a68e71e2f2c17be047c3f74664e82b",
-    "expiration_time": null,
     "listing_id": "0x6db18abc2ba8fb386af8bc9e6d35ef88256a25fcc9cbbfffb0d785be1f64fa8c",
     "offer_id": null,
     "json_data": {
@@ -89,6 +89,8 @@
     },
     "marketplace": "tradeport_v2",
     "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
-    "block_timestamp": "2025-02-19T18:01:31.944133"
+    "block_timestamp": "2025-02-19T18:01:31.944133",
+    "expiration_time": null,
+    "bid_key": null
   }
 ]

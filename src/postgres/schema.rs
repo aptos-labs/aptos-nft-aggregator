@@ -33,6 +33,7 @@ diesel::table! {
         #[max_length = 66]
         token_data_id -> Nullable<Varchar>,
         expiration_time -> Nullable<Timestamp>,
+        bid_key -> Nullable<Int8>,
     }
 }
 
@@ -78,6 +79,7 @@ diesel::table! {
         last_transaction_timestamp -> Timestamp,
         standard_event_type -> Varchar,
         expiration_time -> Nullable<Timestamp>,
+        bid_key -> Nullable<Int8>,
     }
 }
 
@@ -101,7 +103,6 @@ diesel::table! {
         buyer -> Nullable<Varchar>,
         #[max_length = 66]
         seller -> Nullable<Varchar>,
-        expiration_time -> Nullable<Timestamp>,
         #[max_length = 128]
         listing_id -> Nullable<Varchar>,
         #[max_length = 128]
@@ -110,6 +111,8 @@ diesel::table! {
         marketplace -> Varchar,
         contract_address -> Varchar,
         block_timestamp -> Timestamp,
+        expiration_time -> Nullable<Timestamp>,
+        bid_key -> Nullable<Int8>,
     }
 }
 

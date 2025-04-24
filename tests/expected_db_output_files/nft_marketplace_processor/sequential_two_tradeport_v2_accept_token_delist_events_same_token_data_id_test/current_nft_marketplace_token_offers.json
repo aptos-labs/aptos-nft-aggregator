@@ -13,7 +13,8 @@
     "last_transaction_version": 2277018899,
     "last_transaction_timestamp": "2025-01-28T19:34:12.915658",
     "standard_event_type": "fill_token_offer",
-    "expiration_time": null
+    "expiration_time": null,
+    "bid_key": null
   },
   {
     "token_data_id": "0x6bc9d89f72ecc22dbca30025a10bc888cb1c90d6d6ee0d90f2739e6043557bf0",
@@ -29,6 +30,7 @@
     "last_transaction_version": 2296098846,
     "last_transaction_timestamp": "2025-01-30T07:05:19.436414",
     "standard_event_type": "fill_token_offer",
-    "expiration_time": null
+    "expiration_time": null,
+    "bid_key": null
   }
 ]

@@ -13,7 +13,6 @@
     "token_amount": null,
     "buyer": "0x6ce9d41971de334c94541fcdd8f4cd2a69456057d444192e1257dacfc528ca0a",
     "seller": null,
-    "expiration_time": null,
     "listing_id": null,
     "offer_id": "0x6132638f6078196e0a2c554cf195f08f73b56e672134c429cdda7f04272c3b13",
     "json_data": {
@@ -59,7 +58,9 @@
     },
     "marketplace": "wapal",
     "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
-    "block_timestamp": "2025-02-18T17:35:15.692708"
+    "block_timestamp": "2025-02-18T17:35:15.692708",
+    "expiration_time": null,
+    "bid_key": null
   },
   {
     "txn_version": 2382313982,
@@ -75,7 +76,6 @@
     "token_amount": null,
     "buyer": "0x62928b3712d452190346090807d5cfb40dabb54740cf1d2acfc5b4d3d9e0b370",
     "seller": null,
-    "expiration_time": null,
     "listing_id": null,
     "offer_id": "0xdd69203952afa9962f3277f2be027fad3d21d57b986a61d674279d5e395323e",
     "json_data": {
@@ -115,6 +115,8 @@
     },
     "marketplace": "wapal",
     "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
-    "block_timestamp": "2025-02-18T20:30:34.289382"
+    "block_timestamp": "2025-02-18T20:30:34.289382",
+    "expiration_time": null,
+    "bid_key": null
   }
 ]

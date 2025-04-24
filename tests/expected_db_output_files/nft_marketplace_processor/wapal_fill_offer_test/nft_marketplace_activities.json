@@ -13,7 +13,6 @@
     "token_amount": null,
     "buyer": "0x22113f16f9b7c6761ef14df757c016b8736a9023e8881cd5e11579b0b98ef562",
     "seller": "0xc60f124dc24f4ea97232bc5ead5f37252b7cbee47f48ef05932998050c414d14",
-    "expiration_time": null,
     "listing_id": null,
     "offer_id": "0x9d14c489b6f56ac55e8707022400c23bb83bd0b0cd486c862defccf6241a219e",
     "json_data": {
@@ -62,6 +61,8 @@
     },
     "marketplace": "wapal",
     "contract_address": "0x71f7c94805c33d32a7f9560c95f02e9d3b5bc49884a883916f03abe6da11ac08",
-    "block_timestamp": "2025-02-02T17:32:50.466815"
+    "block_timestamp": "2025-02-02T17:32:50.466815",
+    "expiration_time": null,
+    "bid_key": null
   }
 ]

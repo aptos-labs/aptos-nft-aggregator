@@ -120,12 +120,12 @@ checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 [[package]]
 name = "aptos-indexer-processor-sdk"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=27ac3611a917f3a5e181ea78d72c1acc5c449141#27ac3611a917f3a5e181ea78d72c1acc5c449141"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=de12c1b13b170aa22b4ee397244a2a6f7065a23a#de12c1b13b170aa22b4ee397244a2a6f7065a23a"
 dependencies = [
  "ahash",
  "anyhow",
  "aptos-indexer-transaction-stream",
- "aptos-protos 1.3.1 (git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7)",
+ "aptos-protos 1.3.1 (git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a)",
  "aptos-system-utils",
  "async-trait",
  "autometrics",
@@ -185,11 +185,11 @@ dependencies = [
 [[package]]
 name = "aptos-indexer-transaction-stream"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=27ac3611a917f3a5e181ea78d72c1acc5c449141#27ac3611a917f3a5e181ea78d72c1acc5c449141"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=de12c1b13b170aa22b4ee397244a2a6f7065a23a#de12c1b13b170aa22b4ee397244a2a6f7065a23a"
 dependencies = [
  "anyhow",
  "aptos-moving-average",
- "aptos-protos 1.3.1 (git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7)",
+ "aptos-protos 1.3.1 (git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a)",
  "aptos-transaction-filter",
  "chrono",
  "futures-util",
@@ -207,7 +207,7 @@ dependencies = [
 [[package]]
 name = "aptos-moving-average"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=27ac3611a917f3a5e181ea78d72c1acc5c449141#27ac3611a917f3a5e181ea78d72c1acc5c449141"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=de12c1b13b170aa22b4ee397244a2a6f7065a23a#de12c1b13b170aa22b4ee397244a2a6f7065a23a"
 dependencies = [
  "chrono",
 ]
@@ -215,7 +215,7 @@ dependencies = [
 [[package]]
 name = "aptos-profiler"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7#1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7"
+source = "git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a#f20a71dcc8406befe6a23621144840a8a671b27a"
 dependencies = [
  "anyhow",
  "backtrace",
@@ -239,7 +239,7 @@ dependencies = [
 [[package]]
 name = "aptos-protos"
 version = "1.3.1"
-source = "git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7#1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7"
+source = "git+https://github.com/aptos-labs/aptos-core.git?rev=b068cb3bbee1b6a7a5eb96f189bfdd7ad4542060#b068cb3bbee1b6a7a5eb96f189bfdd7ad4542060"
 dependencies = [
  "pbjson",
  "prost",
@@ -250,7 +250,7 @@ dependencies = [
 [[package]]
 name = "aptos-protos"
 version = "1.3.1"
-source = "git+https://github.com/aptos-labs/aptos-core.git?rev=b068cb3bbee1b6a7a5eb96f189bfdd7ad4542060#b068cb3bbee1b6a7a5eb96f189bfdd7ad4542060"
+source = "git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a#f20a71dcc8406befe6a23621144840a8a671b27a"
 dependencies = [
  "pbjson",
  "prost",
@@ -261,7 +261,7 @@ dependencies = [
 [[package]]
 name = "aptos-system-utils"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7#1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7"
+source = "git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a#f20a71dcc8406befe6a23621144840a8a671b27a"
 dependencies = [
  "anyhow",
  "aptos-profiler",
@@ -281,10 +281,10 @@ dependencies = [
 [[package]]
 name = "aptos-transaction-filter"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7#1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7"
+source = "git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a#f20a71dcc8406befe6a23621144840a8a671b27a"
 dependencies = [
  "anyhow",
- "aptos-protos 1.3.1 (git+https://github.com/aptos-labs/aptos-core.git?rev=1fc4424ee1099830ae667a0bda43ab5d7fd3c8f7)",
+ "aptos-protos 1.3.1 (git+https://github.com/aptos-labs/aptos-core.git?rev=f20a71dcc8406befe6a23621144840a8a671b27a)",
  "derivative",
  "derive_builder",
  "memchr",
@@ -2023,7 +2023,7 @@ dependencies = [
 [[package]]
 name = "instrumented-channel"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=27ac3611a917f3a5e181ea78d72c1acc5c449141#27ac3611a917f3a5e181ea78d72c1acc5c449141"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=de12c1b13b170aa22b4ee397244a2a6f7065a23a#de12c1b13b170aa22b4ee397244a2a6f7065a23a"
 dependencies = [
  "delegate",
  "derive_builder",
@@ -2146,9 +2146,9 @@ dependencies = [
 
 [[package]]
 name = "kanal"
-version = "0.1.1"
+version = "0.1.0-pre8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e3953adf0cd667798b396c2fa13552d6d9b3269d7dd1154c4c416442d1ff574"
+checksum = "b05d55519627edaf7fd0f29981f6dc03fb52df3f5b257130eb8d0bf2801ea1d7"
 dependencies = [
  "futures-core",
  "lock_api",
@@ -3579,7 +3579,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 [[package]]
 name = "sample"
 version = "0.1.0"
-source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=27ac3611a917f3a5e181ea78d72c1acc5c449141#27ac3611a917f3a5e181ea78d72c1acc5c449141"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processor-sdk.git?rev=de12c1b13b170aa22b4ee397244a2a6f7065a23a#de12c1b13b170aa22b4ee397244a2a6f7065a23a"
 dependencies = [
  "tracing",
 ]

@@ -101,13 +101,11 @@ fn load_data(conn: &mut PgConnection) -> anyhow::Result<HashMap<String, serde_js
 // Configuration Helper Functions
 fn build_test_nft_marketplace_config(marketplace_name: &str) -> NFTMarketplaceConfig {
     let config_path = PathBuf::from(format!(
-        "tests/test_config/{}_test_marketplace_config.yaml",
-        marketplace_name
+        "tests/test_config/{marketplace_name}_test_marketplace_config.yaml"
     ));
     let config_str = std::fs::read_to_string(&config_path)
-        .unwrap_or_else(|e| panic!("Failed to read config file: {}", e));
-    serde_yaml::from_str(&config_str)
-        .unwrap_or_else(|e| panic!("Failed to parse config file: {}", e))
+        .unwrap_or_else(|e| panic!("Failed to read config file: {e}"));
+    serde_yaml::from_str(&config_str).unwrap_or_else(|e| panic!("Failed to parse config file: {e}"))
 }
 
 fn setup_nft_processor_config(
@@ -157,13 +155,13 @@ pub fn read_and_parse_json(path: &str) -> anyhow::Result<Value> {
         Ok(content) => match serde_json::from_str::<Value>(&content) {
             Ok(json) => Ok(json),
             Err(e) => {
-                eprintln!("[ERROR] Failed to parse JSON at {}: {}", path, e);
-                Err(anyhow::anyhow!("Failed to parse JSON: {}", e))
+                eprintln!("[ERROR] Failed to parse JSON at {path}: {e}");
+                Err(anyhow::anyhow!("Failed to parse JSON: {e}"))
             },
         },
         Err(e) => {
-            eprintln!("[ERROR] Failed to read file at {}: {}", path, e);
-            Err(anyhow::anyhow!("Failed to read file: {}", e))
+            eprintln!("[ERROR] Failed to read file at {path}: {e}");
+            Err(anyhow::anyhow!("Failed to read file: {e}"))
         },
     }
 }
@@ -190,21 +188,20 @@ pub fn validate_json(
             Some(custom_name) => PathBuf::from(&output_path)
                 .join(processor_name)
                 .join(custom_name.clone())
-                .join(format!("{}.json", table_name)),
+                .join(format!("{table_name}.json")),
             None => Path::new(&output_path)
                 .join(processor_name)
                 .join(txn_version.to_string())
-                .join(format!("{}.json", table_name)),
+                .join(format!("{table_name}.json")),
         };
 
         let mut expected_json = match read_and_parse_json(expected_file_path.to_str().unwrap()) {
             Ok(json) => json,
             Err(e) => {
                 eprintln!(
-                    "[ERROR] Error handling JSON for processor {} table {} and transaction version {}: {}",
-                    processor_name, table_name, txn_version, e
+                    "[ERROR] Error handling JSON for processor {processor_name} table {table_name} and transaction version {txn_version}: {e}"
                 );
-                panic!("Failed to read and parse JSON for table: {}", table_name);
+                panic!("Failed to read and parse JSON for table: {table_name}");
             },
         };
 
@@ -212,10 +209,7 @@ pub fn validate_json(
         remove_transaction_timestamp(db_value);
         remove_inserted_at(&mut expected_json);
         remove_transaction_timestamp(&mut expected_json);
-        println!(
-            "Diffing table: {}, diffing version: {}",
-            table_name, txn_version
-        );
+        println!("Diffing table: {table_name}, diffing version: {txn_version}");
         assert_json_eq!(db_value, expected_json);
     }
     Ok(())
@@ -248,20 +242,20 @@ where
             custom_file_name,
             move || {
                 let mut conn = PgConnection::establish(&db_url).unwrap_or_else(|e| {
-                    eprintln!("[ERROR] Failed to establish DB connection: {:?}", e);
-                    panic!("Failed to establish DB connection: {:?}", e);
+                    eprintln!("[ERROR] Failed to establish DB connection: {e:?}");
+                    panic!("Failed to establish DB connection: {e:?}");
                 });
 
                 let db_values = match load_data(&mut conn) {
                     Ok(db_data) => db_data,
                     Err(e) => {
-                        eprintln!("[ERROR] Failed to load data {}", e);
+                        eprintln!("[ERROR] Failed to load data {e:?}");
                         return Err(e);
                     },
                 };
 
                 if db_values.is_empty() {
-                    eprintln!("[WARNING] No data found for versions: {:?}", txn_versions);
+                    eprintln!("[WARNING] No data found for versions: {txn_versions:?}");
                 }
 
                 Ok(db_values)
@@ -317,10 +311,7 @@ async fn process_transactions(
             }
         },
         Err(e) => {
-            panic!(
-                "Test failed on {} due to processor error: {}",
-                transaction_name, e
-            );
+            panic!("Test failed on {transaction_name} due to processor error: {e}");
         },
     }
 }

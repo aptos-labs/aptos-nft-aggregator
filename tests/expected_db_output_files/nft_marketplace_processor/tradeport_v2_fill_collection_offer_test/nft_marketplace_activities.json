@@ -13,7 +13,6 @@
     "token_amount": null,
     "buyer": "0x8c557bb0a12d47c1eda90dd4883b44674111b915fa39ff862e6a0a39140dcd4",
     "seller": "0x756e65ad425f2baf916afb562c21a259ad3bf65f7bee439a562e03251859cf90",
-    "expiration_time": null,
     "listing_id": null,
     "offer_id": "0xe3c39dbed236c7ddcf847f9734baf8168911babd8384f17538102b17ab156bd",
     "json_data": {
@@ -44,6 +43,8 @@
     },
     "marketplace": "tradeport_v2",
     "contract_address": "0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26",
-    "block_timestamp": "2025-02-19T12:13:39.744142"
+    "block_timestamp": "2025-02-19T12:13:39.744142",
+    "expiration_time": null,
+    "bid_key": null
   }
 ]
