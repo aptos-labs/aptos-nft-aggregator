@@ -195,7 +195,10 @@ pub fn insert_nft_marketplace_activities(
     diesel::insert_into(schema::nft_marketplace_activities::table)
         .values(items_to_insert)
         .on_conflict((txn_version, index, marketplace))
-        .do_nothing()
+        .do_update()
+        .set((
+            bid_key.eq(excluded(bid_key)),
+        ))
 }
 
 pub fn insert_current_nft_marketplace_listings(
