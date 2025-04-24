@@ -45,13 +45,14 @@ pub struct NftMarketplaceActivity {
     pub token_amount: Option<i64>,
     pub buyer: Option<String>,
     pub seller: Option<String>,
-    pub expiration_time: Option<NaiveDateTime>,
     pub listing_id: Option<String>,
     pub offer_id: Option<String>,
     pub json_data: serde_json::Value,
     pub marketplace: String,
     pub contract_address: String,
     pub block_timestamp: NaiveDateTime,
+    pub expiration_time: Option<NaiveDateTime>,
+    pub bid_key: Option<i64>,
 }
 
 impl MarketplaceModel for NftMarketplaceActivity {
@@ -88,6 +89,7 @@ impl MarketplaceModel for NftMarketplaceActivity {
             MarketplaceField::BlockTimestamp => {
                 self.block_timestamp = value.parse().unwrap_or(NaiveDateTime::default())
             },
+            MarketplaceField::BidKey => self.bid_key = value.parse().ok(),
             _ => tracing::debug!("Unknown field: {:?}", field),
         }
     }
@@ -133,6 +135,7 @@ impl MarketplaceModel for NftMarketplaceActivity {
             MarketplaceField::Marketplace => Some(self.marketplace.clone()),
             MarketplaceField::ContractAddress => Some(self.contract_address.clone()),
             MarketplaceField::BlockTimestamp => Some(self.block_timestamp.to_string()),
+            MarketplaceField::BidKey => self.bid_key.map(|val| val.to_string()),
             _ => None,
         }
     }
@@ -278,6 +281,7 @@ pub struct CurrentNFTMarketplaceTokenOffer {
     pub last_transaction_timestamp: NaiveDateTime,
     pub standard_event_type: String,
     pub expiration_time: Option<NaiveDateTime>,
+    pub bid_key: Option<i64>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
@@ -306,6 +310,7 @@ impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
                     self.expiration_time = None;
                 }
             },
+            MarketplaceField::BidKey => self.bid_key = value.parse().ok(),
             _ => tracing::debug!("Unknown field: {:?}", field),
         }
     }
@@ -341,6 +346,7 @@ impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
             MarketplaceField::LastTransactionTimestamp => {
                 Some(self.last_transaction_timestamp.to_string())
             },
+            MarketplaceField::BidKey => self.bid_key.map(|val| val.to_string()),
             _ => None,
         }
     }
@@ -376,6 +382,7 @@ impl CurrentNFTMarketplaceTokenOffer {
             last_transaction_timestamp: event.block_timestamp,
             standard_event_type: event_type,
             expiration_time: None,
+            bid_key: None,
         }
     }
 }
@@ -399,6 +406,7 @@ pub struct CurrentNFTMarketplaceCollectionOffer {
     pub standard_event_type: String,
     pub token_data_id: Option<String>,
     pub expiration_time: Option<NaiveDateTime>,
+    pub bid_key: Option<i64>,
 }
 
 impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
@@ -428,6 +436,7 @@ impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
                     self.expiration_time = None;
                 }
             },
+            MarketplaceField::BidKey => self.bid_key = value.parse().ok(),
             _ => tracing::debug!("Unknown field: {:?}", field),
         }
     }
@@ -462,6 +471,7 @@ impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
                 Some(self.last_transaction_timestamp.to_string())
             },
             MarketplaceField::TokenDataId => Some(self.token_data_id.clone().unwrap_or_default()),
+            MarketplaceField::BidKey => self.bid_key.map(|val| val.to_string()),
             _ => None,
         }
     }
@@ -500,6 +510,7 @@ impl CurrentNFTMarketplaceCollectionOffer {
             token_data_id: None,
             standard_event_type: event_type,
             expiration_time: None,
+            bid_key: None,
         }
     }
 }
@@ -526,6 +537,7 @@ pub enum MarketplaceField {
     LastTransactionTimestamp,
     RemainingTokenAmount,
     BlockTimestamp,
+    BidKey,
 }
 
 pub trait MarketplaceModel {

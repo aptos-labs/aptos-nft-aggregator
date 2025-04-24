@@ -12,7 +12,7 @@ rust-version = "1.81"
 ahash = { version = "0.8.7", features = ["serde"] }
 anyhow = "1.0.86"
 
-aptos-indexer-processor-sdk = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "27ac3611a917f3a5e181ea78d72c1acc5c449141", features = [
+aptos-indexer-processor-sdk = { git = "https://github.com/aptos-labs/aptos-indexer-processor-sdk.git", rev = "de12c1b13b170aa22b4ee397244a2a6f7065a23a", features = [
     "postgres_full",
     "testing_framework",
 ] }

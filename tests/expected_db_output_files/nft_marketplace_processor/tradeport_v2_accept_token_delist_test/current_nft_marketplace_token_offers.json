@@ -13,6 +13,7 @@
     "last_transaction_version": 2296098846,
     "last_transaction_timestamp": "2025-01-30T07:05:19.436414",
     "standard_event_type": "fill_token_offer",
-    "expiration_time": null
+    "expiration_time": null,
+    "bid_key": null
   }
 ]

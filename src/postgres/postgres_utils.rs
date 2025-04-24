@@ -67,7 +67,7 @@ fn establish_connection(database_url: &str) -> BoxFuture<ConnectionResult<AsyncP
             .expect("Could not connect to database");
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
         AsyncPgConnection::try_from(client).await
@@ -84,7 +84,7 @@ fn parse_and_clean_db_url(url: &str) -> (String, Option<String>) {
         if k == "sslrootcert" {
             cert_path = Some(v.parse().unwrap());
         } else {
-            query.push_str(&format!("{}={}&", k, v));
+            query.push_str(&format!("{k}={v}&"));
         }
     });
     db_url.set_query(Some(&query));
@@ -168,7 +168,7 @@ where
     let conn = &mut pool.get().await.map_err(|e| {
         warn!("Error getting connection from pool: {:?}", e);
         ProcessorError::DBStoreError {
-            message: format!("{:#}", e),
+            message: format!("{e:#}"),
             query: Some(debug_string.clone()),
         }
     })?;
@@ -179,7 +179,7 @@ where
             warn!("Error running query: {:?}\n{:?}", e, debug_string);
         })
         .map_err(|e| ProcessorError::DBStoreError {
-            message: format!("{:#}", e),
+            message: format!("{e:#}"),
             query: Some(debug_string),
         })
 }

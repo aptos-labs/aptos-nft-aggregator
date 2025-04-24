@@ -12,6 +12,7 @@
     "last_transaction_timestamp": "2025-02-19T12:13:39.744142",
     "standard_event_type": "fill_collection_offer",
     "token_data_id": "0x1cad42fedce28de2e45b1de11e26abe0d540edae729341135388cdbec4b8262d",
-    "expiration_time": null
+    "expiration_time": null,
+    "bid_key": null
   }
 ]

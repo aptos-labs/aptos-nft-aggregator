@@ -90,7 +90,7 @@ impl Processable for ProcessStep {
             })
             .collect::<anyhow::Result<Vec<_>>>()
             .map_err(|e| ProcessorError::ProcessError {
-                message: format!("{:#}", e),
+                message: format!("{e:#}"),
             })?;
 
         let (

@@ -449,7 +449,7 @@ fn generate_token_data_id(
             if !creator.is_empty() && !collection.is_empty() && !token.is_empty() =>
         {
             let creator_address = standardize_address(&creator);
-            let input = format!("{}::{}::{}", creator_address, collection, token);
+            let input = format!("{creator_address}::{collection}::{token}");
             let hash_str = hash_str(&input);
             Some(standardize_address(&hash_str))
         },
@@ -467,7 +467,7 @@ fn generate_collection_id(
     match (creator_address, collection_name) {
         (Some(creator), Some(collection)) if !creator.is_empty() && !collection.is_empty() => {
             let creator_address = standardize_address(&creator);
-            let input = format!("{}::{}", creator_address, collection);
+            let input = format!("{creator_address}::{collection}");
             let hash_str = hash_str(&input);
             Some(standardize_address(&hash_str))
         },
@@ -487,7 +487,7 @@ fn generate_collection_offer_id(
         (Some(creator), Some(buyer)) if !creator.is_empty() && !buyer.is_empty() => {
             let creator_address = standardize_address(&creator);
             let buyer_address = standardize_address(&buyer);
-            let input = format!("{}::{}", creator_address, buyer_address);
+            let input = format!("{creator_address}::{buyer_address}");
             let hash_str = hash_str(&input);
             Some(standardize_address(&hash_str))
         },
@@ -594,7 +594,7 @@ mod tests {
 
     fn build_test_token_data_id(creator: &str, collection: &str, token: &str) -> String {
         let creator_address = standardize_address(creator);
-        let input = format!("{}::{}::{}", creator_address, collection, token);
+        let input = format!("{creator_address}::{collection}::{token}");
         let hash_str = hash_str(&input);
         standardize_address(&hash_str)
     }

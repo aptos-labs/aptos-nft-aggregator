@@ -165,7 +165,7 @@ impl Processable for DBWritingStep {
                 Ok(_) => (),
                 Err(e) => {
                     return Err(ProcessorError::DBStoreError {
-                        message: format!("Failed to store : {:?}", e),
+                        message: format!("Failed to store: {e:?}"),
                         query: None,
                     })
                 },
@@ -243,6 +243,7 @@ pub fn insert_current_nft_marketplace_token_offers(
             last_transaction_version.eq(excluded(last_transaction_version)),
             last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             standard_event_type.eq(excluded(standard_event_type)),
+            bid_key.eq(excluded(bid_key)),
         ))
         .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
@@ -267,6 +268,7 @@ pub fn insert_current_nft_marketplace_collection_offers(
             last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             token_data_id.eq(excluded(token_data_id)),
             standard_event_type.eq(excluded(standard_event_type)),
+            bid_key.eq(excluded(bid_key)),
         ))
         .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
