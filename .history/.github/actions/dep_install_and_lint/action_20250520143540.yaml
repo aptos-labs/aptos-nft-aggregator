@@ -12,6 +12,7 @@ runs:
   steps:
     - name: Install Dependencies
       run: |
+      
         sudo apt update && sudo apt install libdw-dev
         cargo install cargo-sort
         rustup update

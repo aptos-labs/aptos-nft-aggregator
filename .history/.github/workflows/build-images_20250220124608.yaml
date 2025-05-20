@@ -45,6 +45,6 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build and push images
-        run: read/scripts/build_and_push_images.sh
+        run: ./scripts/build_and_push_images.sh
         env:
           GIT_BRANCH: ${{ steps.extract_branch.outputs.branch }}

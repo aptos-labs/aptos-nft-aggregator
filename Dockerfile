@@ -10,9 +10,9 @@ COPY --link . /app
 
 RUN apt-get update && apt-get install -y cmake curl clang git pkg-config libssl-dev libdw-dev libpq-dev lld
 ENV CARGO_NET_GIT_FETCH_WITH_CLI true
-# TODO: Fix this with real processors.
-RUN cargo build --locked --release -p nft-aggregator && ls -lah target/release/
-RUN cp target/release/nft-aggregator /usr/local/bin
+# Build from the read directory where the Rust code is located
+RUN cd read && cargo build --locked --release -p nft-aggregator && ls -lah target/release/
+RUN cp read/target/release/nft-aggregator /usr/local/bin
 
 # add build info
 ARG GIT_TAG

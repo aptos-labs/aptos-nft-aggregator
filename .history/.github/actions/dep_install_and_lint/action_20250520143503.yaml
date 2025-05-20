@@ -5,7 +5,7 @@ inputs:
   working-directory:
     description: 'The working directory for the linter'
     required: true
-    default: './read'
+    default: '.'
 
 runs:
   using: "composite"

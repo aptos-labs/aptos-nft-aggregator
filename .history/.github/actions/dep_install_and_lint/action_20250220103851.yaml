@@ -5,7 +5,7 @@ inputs:
   working-directory:
     description: 'The working directory for the linter'
     required: true
-    default: './read'
+    default: '.'
 
 runs:
   using: "composite"
@@ -23,6 +23,6 @@ runs:
 
     - name: Run Linter
       run: |
-        ../scripts/rust_lint.sh --check
+        scripts/rust_lint.sh --check
       shell: bash
       working-directory: ${{ inputs.working-directory }}

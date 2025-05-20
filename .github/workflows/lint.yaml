@@ -27,6 +27,6 @@ jobs:
           rustup toolchain install nightly
           rustup component add clippy --toolchain nightly
           rustup component add rustfmt --toolchain nightly
-          scripts/rust_lint.sh --check
+          cd read && scripts/rust_lint.sh --check
       - name: Ensure the --no-default-features build passes too
-        run: cargo build --no-default-features
+        run: cd read && cargo build --no-default-features
