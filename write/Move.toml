@@ -1,0 +1,54 @@
+[package]
+name = "nft-aggregator"
+version = "1.0.0"
+authors = []
+upgrade_policy = "compatible"
+
+
+[addresses]
+nft_aggregator = "_"
+admin_address = "0x6d28797608d4f589ecc3c4f9c456c9b6667ab0992863dc5ae58565d040d88ad8"
+on_chain_nft_marketplace = "0x274629be8f0a1c1c63434354ce75f2d09223bf6d7dccf4981df0504124f937a9"
+Marketplace = "0xa725394eb4f5da15e4241e7377651860b9f5a0738ef8981af7268c2588b72e61"
+
+# MarketPlace = "0xD1FD99C1944B84D1670A2536417E997864AD12303D19EAC725891691B04D614E"
+# bluemove_marketplace_token_v2 = "0x0d520d8669b0a3de23119898dcdff3e0a27910db247663646ad18cf16e44c6f5"
+# tradeport_v2="0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26"
+# tradeport="0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26"
+# MarketPlace="d1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e"
+
+[dev-addresses]
+nft_aggregator = "0xf3433a9153b6957b6ac98ef7a51e515ab20b83391ae3bff0a209aab58b39740d"
+
+[dependencies]
+# MarketPlace = { local = "./third_party_dependencies/bluemove_bytecode_output/MarketPlace" }
+# bluemove_marketplace_token_v2 = { local = "./third_party_dependencies/bluemove_bytecode_output/bluemove_marketplace_token_v2"}
+# Marketplace = { local = "./third_party_dependencies/wapal_bytecode_output/Marketplace"} # wapals
+on_chain_nft_marketplace = { local = "./third_party_dependencies/on_chain_nft_marketplace"}
+
+# greg's market
+Marketplace = { local = "./third_party_dependencies/Marketplace"}
+
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dependencies.AptosToken]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-token"
+
+[dependencies.AptosTokenObjects]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-token-objects"
+
+# # wapal marketplace
+# [dependencies.Marketplace]
+# git = "https://github.com/mokshyaprotocol/marketplace.git"
+# rev = "master"
+# subdir = "./"
+
+[dev-dependencies]

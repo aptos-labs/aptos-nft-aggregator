@@ -33,5 +33,4 @@ lcov.info
 
 # VSCode settings
 .vscode/
-
-.history/
+.history/*
