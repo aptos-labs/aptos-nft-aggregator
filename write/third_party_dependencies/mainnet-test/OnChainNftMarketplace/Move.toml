@@ -1,0 +1,22 @@
+[package]
+name = "OnChainNftMarketplace"
+version = "1.0.0"
+authors = []
+
+[addresses]
+open_marketplace = "0x27594035ca1c038bbe322e681b7d2a9c53c58bde432626bfcdd85d19dda222a5"
+
+[dev-addresses]
+open_marketplace = "0x27594035ca1c038bbe322e681b7d2a9c53c58bde432626bfcdd85d19dda222a5"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dependencies.AptosTokenObjects]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-token-objects"
+
+[dev-dependencies]
