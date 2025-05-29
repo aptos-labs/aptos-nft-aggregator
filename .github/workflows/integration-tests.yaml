@@ -34,7 +34,7 @@ jobs:
         run: |
           sudo apt update && sudo apt install libdw-dev
           cargo update -p aptos-indexer-test-transactions
-        working-directory: .
+        working-directory: ./read
 
       # Cache Cargo
       - name: Cache cargo
@@ -45,7 +45,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
+            read/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           
       # Run Integration Tests
@@ -54,7 +54,7 @@ jobs:
         run: |
           # TODO: until we have more comprehensive cli parsers, we will need to run tests separately.
           cargo test -- --nocapture
-        working-directory: .
+        working-directory: ./read
       
       # TODO: uncomment this when we are ready 
       # - name: Send Slack Notification to oncall

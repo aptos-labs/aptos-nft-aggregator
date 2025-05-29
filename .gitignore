@@ -1,4 +1,4 @@
-config.yaml
+read/config.yaml
 *-local.yaml
 cursor.txt
 build
@@ -33,3 +33,5 @@ lcov.info
 
 # VSCode settings
 .vscode/
+
+.history/
