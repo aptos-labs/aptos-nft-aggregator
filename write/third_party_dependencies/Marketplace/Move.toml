@@ -1,0 +1,11 @@
+[package]
+name = "Marketplace"
+version = "0.0.0"
+
+[addresses]
+marketplace = "0xa725394eb4f5da15e4241e7377651860b9f5a0738ef8981af7268c2588b72e61"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "mainnet" }
+AptosToken = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-token", rev = "mainnet" }
+AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-token-objects", rev = "mainnet" }
