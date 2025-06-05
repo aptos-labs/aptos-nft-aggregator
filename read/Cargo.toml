@@ -8,6 +8,10 @@ publish = false
 repository = "https://github.com/aptos-labs/aptos-nft-aggregator"
 rust-version = "1.81"
 
+[features]
+libpq = ["aptos-indexer-processor-sdk/postgres_full", "diesel/postgres"]
+default = ["libpq"]
+
 [dependencies]
 ahash = { version = "0.8.7", features = ["serde"] }
 anyhow = "1.0.86"
@@ -84,7 +88,3 @@ tonic = { version = "0.12.3", features = [
 ] }
 tracing = "0.1.34"
 url = { version = "2.4.0", features = ["serde"] }
-
-[features]
-libpq = ["aptos-indexer-processor-sdk/postgres_full", "diesel/postgres"]
-default = ["libpq"]

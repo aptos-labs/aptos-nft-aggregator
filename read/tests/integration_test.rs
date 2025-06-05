@@ -130,7 +130,7 @@ fn setup_nft_processor_config(
         nft_marketplace_config: build_test_nft_marketplace_config(marketplace_name),
     };
 
-    let processor_name = "nft_marketplace_processor";
+    let processor_name = processor_config.nft_marketplace_config.get_name();
     (processor_config, processor_name)
 }
 
