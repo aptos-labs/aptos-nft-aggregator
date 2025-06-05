@@ -33,7 +33,7 @@ impl RunnableConfig for IndexerProcessorConfig {
     }
 
     fn get_server_name(&self) -> String {
-        "nft_marketplace_processor".to_string()
+        self.nft_marketplace_config.get_name().to_string()
     }
 }
 

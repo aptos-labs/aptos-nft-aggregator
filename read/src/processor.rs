@@ -59,7 +59,7 @@ impl Processor {
 #[async_trait::async_trait]
 impl ProcessorTrait for Processor {
     fn name(&self) -> &'static str {
-        "nft_marketplace_processor"
+        self.config.nft_marketplace_config.get_name()
     }
 
     async fn run_processor(&self) -> Result<()> {

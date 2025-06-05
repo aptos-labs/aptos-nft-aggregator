@@ -49,6 +49,15 @@ pub struct NFTMarketplaceConfig {
     pub resources: ResourceRemappingConfig,
 }
 
+impl NFTMarketplaceConfig {
+    /// Returns the name of the marketplace.
+    pub fn get_name(&self) -> &'static str {
+        // Intentionally leak the string to satisfy &'static str requirement
+        // This is acceptable since processor names live for the application lifetime
+        Box::leak(self.name.clone().into_boxed_str())
+    }
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct EventRemapping {
     pub event_fields: HashMap<String, Vec<DbColumn>>,
