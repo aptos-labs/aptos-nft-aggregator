@@ -1,0 +1,57 @@
+[package]
+name = "nft-aggregator"
+version = "1.0.0"
+authors = []
+upgrade_policy = "compatible"
+
+
+[addresses]
+nft_aggregator = "_"
+admin_address = "0x6d28797608d4f589ecc3c4f9c456c9b6667ab0992863dc5ae58565d040d88ad8"
+OnChainNftMarketplace = "0x48ac47b64f890af66bb25b147f1d0afa439a584930f0f5060919e73f510ba80a"
+Marketplace = "0x9079b776f1e977eae264e8fccbc6ee7027df7262d129e43b7835f8cdd77b522b" # greg's marketplace I deployed on devnet
+
+# MarketPlace = "0xD1FD99C1944B84D1670A2536417E997864AD12303D19EAC725891691B04D614E"
+# bluemove_marketplace_token_v2 = "0x0d520d8669b0a3de23119898dcdff3e0a27910db247663646ad18cf16e44c6f5"
+# tradeport_v2="0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26"
+# tradeport="0xe11c12ec495f3989c35e1c6a0af414451223305b579291fc8f3d9d0575a23c26"
+# MarketPlace="d1fd99c1944b84d1670a2536417e997864ad12303d19eac725891691b04d614e" # wapal
+
+[dev-addresses]
+nft_aggregator = "0xf3433a9153b6957b6ac98ef7a51e515ab20b83391ae3bff0a209aab58b39740d"
+
+[dependencies]
+# devnet 
+OnChainNftMarketplace = { local = "./third_party_dependencies/OnChainNftMarketplace"}
+Marketplace = { local = "./third_party_dependencies/Marketplace"} # greg's market
+
+# mainet test
+# OnChainNftMarketplace = { local = "./third_party_dependencies/mainnet-test/OnChainNftMarketplace"}
+# Marketplace = { local = "./third_party_dependencies/mainnet-3rd/Marketplace"}
+
+# MarketPlace = { local = "./third_party_dependencies/bluemove_bytecode_output/MarketPlace" }
+# bluemove_marketplace_token_v2 = { local = "./third_party_dependencies/bluemove_bytecode_output/bluemove_marketplace_token_v2"}
+# Marketplace = { local = "./third_party_dependencies/wapal_bytecode_output/Marketplace"} # wapals
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dependencies.AptosToken]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-token"
+
+[dependencies.AptosTokenObjects]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-token-objects"
+
+# # wapal marketplace
+# [dependencies.Marketplace]
+# git = "https://github.com/mokshyaprotocol/marketplace.git"
+# rev = "master"
+# subdir = "./"
+
+[dev-dependencies]

@@ -1,0 +1,15 @@
+## This is a general top-level dockerignore
+## If you have a specific dockerignore for an image, you can add it next to the Dockerfile
+
+# common
+.git
+.gitignore
+*.md
+dist
+.vscode
+
+# top-level internal-ops dirs that we do not want to build
+.github/*
+
+# see https://stackoverflow.com/a/5534865/6147529 how this "un-exclude" works
+!.github/deployment-automation/
