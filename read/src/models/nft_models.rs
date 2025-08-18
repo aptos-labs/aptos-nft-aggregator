@@ -5,7 +5,10 @@ use crate::{
         current_nft_marketplace_token_offers, nft_marketplace_activities,
     },
 };
-use aptos_indexer_processor_sdk::aptos_indexer_transaction_stream::utils::time::parse_timestamp_secs;
+use aptos_indexer_processor_sdk::{
+    aptos_indexer_transaction_stream::utils::time::parse_timestamp_secs,
+    utils::convert::standardize_address,
+};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use field_count::FieldCount;
@@ -63,15 +66,19 @@ impl MarketplaceModel for NftMarketplaceActivity {
         }
 
         match field {
-            MarketplaceField::CollectionId => self.collection_id = Some(value),
-            MarketplaceField::TokenDataId => self.token_data_id = Some(value),
+            MarketplaceField::CollectionId => {
+                self.collection_id = Some(standardize_address(&value))
+            },
+            MarketplaceField::TokenDataId => self.token_data_id = Some(standardize_address(&value)),
             MarketplaceField::TokenName => self.token_name = Some(value),
-            MarketplaceField::CreatorAddress => self.creator_address = Some(value),
+            MarketplaceField::CreatorAddress => {
+                self.creator_address = Some(standardize_address(&value))
+            },
             MarketplaceField::CollectionName => self.collection_name = Some(value),
             MarketplaceField::Price => self.price = value.parse().unwrap_or(0),
             MarketplaceField::TokenAmount => self.token_amount = value.parse().ok(),
-            MarketplaceField::Buyer => self.buyer = Some(value),
-            MarketplaceField::Seller => self.seller = Some(value),
+            MarketplaceField::Buyer => self.buyer = Some(standardize_address(&value)),
+            MarketplaceField::Seller => self.seller = Some(standardize_address(&value)),
             MarketplaceField::ExpirationTime => {
                 if let Ok(timestamp_secs) = value.parse::<u64>() {
                     self.expiration_time =
@@ -85,7 +92,9 @@ impl MarketplaceModel for NftMarketplaceActivity {
                 self.offer_id = Some(value)
             },
             MarketplaceField::Marketplace => self.marketplace = value,
-            MarketplaceField::ContractAddress => self.contract_address = value,
+            MarketplaceField::ContractAddress => {
+                self.contract_address = standardize_address(&value)
+            },
             MarketplaceField::BlockTimestamp => {
                 self.block_timestamp = value.parse().unwrap_or(NaiveDateTime::default())
             },
@@ -173,15 +182,19 @@ pub struct CurrentNFTMarketplaceListing {
 impl MarketplaceModel for CurrentNFTMarketplaceListing {
     fn set_field(&mut self, field: MarketplaceField, value: String) {
         match field {
-            MarketplaceField::TokenDataId => self.token_data_id = value,
+            MarketplaceField::TokenDataId => self.token_data_id = standardize_address(&value),
             MarketplaceField::ListingId => self.listing_id = Some(value),
-            MarketplaceField::CollectionId => self.collection_id = Some(value),
-            MarketplaceField::Seller => self.seller = Some(value),
+            MarketplaceField::CollectionId => {
+                self.collection_id = Some(standardize_address(&value))
+            },
+            MarketplaceField::Seller => self.seller = Some(standardize_address(&value)),
             MarketplaceField::Price => self.price = value.parse().unwrap_or(0),
             MarketplaceField::TokenAmount => self.token_amount = value.parse().ok(),
             MarketplaceField::TokenName => self.token_name = Some(value),
             MarketplaceField::Marketplace => self.marketplace = value,
-            MarketplaceField::ContractAddress => self.contract_address = value,
+            MarketplaceField::ContractAddress => {
+                self.contract_address = standardize_address(&value)
+            },
             MarketplaceField::LastTransactionVersion => {
                 self.last_transaction_version = value.parse().unwrap_or(0)
             },
@@ -287,15 +300,19 @@ pub struct CurrentNFTMarketplaceTokenOffer {
 impl MarketplaceModel for CurrentNFTMarketplaceTokenOffer {
     fn set_field(&mut self, field: MarketplaceField, value: String) {
         match field {
-            MarketplaceField::TokenDataId => self.token_data_id = value,
+            MarketplaceField::TokenDataId => self.token_data_id = standardize_address(&value),
             MarketplaceField::OfferId => self.offer_id = Some(value),
             MarketplaceField::Marketplace => self.marketplace = value,
-            MarketplaceField::CollectionId => self.collection_id = Some(value),
-            MarketplaceField::Buyer => self.buyer = value,
+            MarketplaceField::CollectionId => {
+                self.collection_id = Some(standardize_address(&value))
+            },
+            MarketplaceField::Buyer => self.buyer = standardize_address(&value),
             MarketplaceField::Price => self.price = value.parse().unwrap_or(0),
             MarketplaceField::TokenAmount => self.token_amount = value.parse().ok(),
             MarketplaceField::TokenName => self.token_name = Some(value),
-            MarketplaceField::ContractAddress => self.contract_address = value,
+            MarketplaceField::ContractAddress => {
+                self.contract_address = standardize_address(&value)
+            },
             MarketplaceField::LastTransactionVersion => {
                 self.last_transaction_version = value.parse().unwrap_or(0)
             },
@@ -413,21 +430,25 @@ impl MarketplaceModel for CurrentNFTMarketplaceCollectionOffer {
     fn set_field(&mut self, field: MarketplaceField, value: String) {
         match field {
             MarketplaceField::CollectionOfferId => self.collection_offer_id = value,
-            MarketplaceField::CollectionId => self.collection_id = Some(value),
-            MarketplaceField::Buyer => self.buyer = value,
+            MarketplaceField::CollectionId => {
+                self.collection_id = Some(standardize_address(&value))
+            },
+            MarketplaceField::Buyer => self.buyer = standardize_address(&value),
             MarketplaceField::Price => self.price = value.parse().unwrap_or(0),
             MarketplaceField::RemainingTokenAmount => {
                 self.remaining_token_amount = value.parse().ok()
             },
             MarketplaceField::Marketplace => self.marketplace = value,
-            MarketplaceField::ContractAddress => self.contract_address = value,
+            MarketplaceField::ContractAddress => {
+                self.contract_address = standardize_address(&value)
+            },
             MarketplaceField::LastTransactionVersion => {
                 self.last_transaction_version = value.parse().unwrap_or(0)
             },
             MarketplaceField::LastTransactionTimestamp => {
                 self.last_transaction_timestamp = value.parse().unwrap_or(NaiveDateTime::default())
             },
-            MarketplaceField::TokenDataId => self.token_data_id = Some(value),
+            MarketplaceField::TokenDataId => self.token_data_id = Some(standardize_address(&value)),
             MarketplaceField::ExpirationTime => {
                 if let Ok(timestamp_secs) = value.parse::<u64>() {
                     self.expiration_time =

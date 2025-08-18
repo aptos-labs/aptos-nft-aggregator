@@ -195,7 +195,17 @@ pub fn insert_nft_marketplace_activities(
     diesel::insert_into(schema::nft_marketplace_activities::table)
         .values(items_to_insert)
         .on_conflict((txn_version, index, marketplace))
-        .do_nothing()
+        .do_update()
+        .set((
+            creator_address.eq(excluded(creator_address)),
+            collection_id.eq(excluded(collection_id)),
+            token_data_id.eq(excluded(token_data_id)),
+            buyer.eq(excluded(buyer)),
+            seller.eq(excluded(seller)),
+            listing_id.eq(excluded(listing_id)),
+            offer_id.eq(excluded(offer_id)),
+            contract_address.eq(excluded(contract_address)),
+        ))
 }
 
 pub fn insert_current_nft_marketplace_listings(
@@ -219,6 +229,7 @@ pub fn insert_current_nft_marketplace_listings(
             last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             last_transaction_version.eq(excluded(last_transaction_version)),
             standard_event_type.eq(excluded(standard_event_type)),
+            token_data_id.eq(excluded(token_data_id)),
         ))
         .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
@@ -244,6 +255,7 @@ pub fn insert_current_nft_marketplace_token_offers(
             last_transaction_timestamp.eq(excluded(last_transaction_timestamp)),
             standard_event_type.eq(excluded(standard_event_type)),
             bid_key.eq(excluded(bid_key)),
+            token_data_id.eq(excluded(token_data_id)),
         ))
         .filter(last_transaction_version.le(excluded(last_transaction_version)))
 }
